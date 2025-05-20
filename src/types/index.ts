@@ -8,57 +8,58 @@ export interface User {
   role: UserRole;
 }
 
-export type AmbulanceStatus = 'available' | 'unavailable' | 'on-mission';
-
-// Tipos de ambulancia españoles
 export type AmbulanceType =
   | "SVB"          // Soporte Vital Básico
   | "SVA"          // Soporte Vital Avanzado
   | "Convencional" // Ambulancia convencional
   | "UVI_Movil"    // Unidad de Vigilancia Intensiva móvil
-  | "A1"           // Ambulancia A1 (transporte sanitario programado)
-  | "Programado"   // Transporte sanitario programado
+  | "A1"           // Ambulancia A1 (transporte sanitario programado individual)
+  | "Programado"   // Transporte sanitario programado colectivo
   | "Otros";       // Cualquier otro tipo
+export const ALL_AMBULANCE_TYPES: AmbulanceType[] = ["SVB", "SVA", "Convencional", "UVI_Movil", "A1", "Programado", "Otros"];
 
-export interface AmbulanceEquipment {
-  seats: number;            // número total de asientos
-  wheelchairSlots: number;  // plazas para sillas de ruedas
-  stretcher: boolean;       // si dispone de camilla
-  chairs: number;           // número de sillas portátiles
-  oxygenUnits: number;      // unidades de oxígeno disponibles
-  // Aquí se podrían añadir más campos como:
-  // defibrillator: boolean;
-  // ventilator: boolean;
-  // basicFirstAidKit: boolean;
-  // advancedMedicalKit: boolean;
-}
 
-// Mapeo por tipo de ambulancia:
-export const defaultEquipmentByType: Record<AmbulanceType, AmbulanceEquipment> = {
-  SVB:         { seats: 4, wheelchairSlots: 0, stretcher: true,  chairs: 2, oxygenUnits: 2 },
-  SVA:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 4 },
-  Convencional:{ seats: 4, wheelchairSlots: 1, stretcher: false, chairs: 0, oxygenUnits: 1 },
-  UVI_Movil:   { seats: 2, wheelchairSlots: 0, stretcher: true,  chairs: 0, oxygenUnits: 6 },
-  A1:          { seats: 4, wheelchairSlots: 1, stretcher: false, chairs: 0, oxygenUnits: 1 },
-  Programado:  { seats: 6, wheelchairSlots: 2, stretcher: false, chairs: 0, oxygenUnits: 0 },
-  Otros:       { seats: 2, wheelchairSlots: 0, stretcher: false, chairs: 0, oxygenUnits: 0 },
-};
+export type AmbulanceStatus =
+  | 'available'    // Disponible
+  | 'busy'         // Ocupada / En misión
+  | 'maintenance'  // En mantenimiento
+  | 'unavailable'; // No disponible (general)
+export const ALL_AMBULANCE_STATUSES: AmbulanceStatus[] = ['available', 'busy', 'maintenance', 'unavailable'];
+
 
 export interface Ambulance {
-  id: string;
-  name: string;
+  id: string; // Unique identifier, e.g., "amb-001"
+  name: string; // Descriptive name, e.g., "Movil Alfa 1" or "SVB Logroño 2"
+  licensePlate: string; // e.g., "1234ABC"
+  model: string; // e.g., "Mercedes Sprinter"
   type: AmbulanceType;
+  baseLocation: string; // e.g., "Hospital San Pedro, Logroño" or "Base Norte"
+  zone?: string; // Operational zone, e.g., "Rioja Alta"
   status: AmbulanceStatus;
-  latitude: number;
-  longitude: number;
-  currentPatients: number;
-  capacity: number; // La capacidad general de pacientes podría ser diferente al número de asientos
-  equipment: AmbulanceEquipment;
+
+  // Capacity and direct equipment features
+  hasMedicalBed: boolean; // Tiene camilla
+  hasWheelchair: boolean; // Puede transportar silla de ruedas (espacio dedicado)
+  allowsWalking: boolean; // Permite transporte de pacientes que pueden ir sentados/andando
+
+  stretcherSeats: number; // Número de plazas para pacientes en camilla
+  wheelchairSeats: number; // Número de plazas para pacientes en silla de ruedas
+  walkingSeats: number; // Número de plazas para pacientes sentados/andando
+
+  specialEquipment: string[]; // Array of IDs from equipmentOptions (e.g., ["oxygen", "defibrillator"])
+
+  // Real-time/Operational data (optional for static definition, more for tracking)
+  latitude?: number; // Current geographic latitude
+  longitude?: number; // Current geographic longitude
+  currentPatients?: number; // Number of patients currently on board
+
+  notes?: string; // Internal administrative notes
 }
+
 
 export type RequestStatus = 'pending' | 'dispatched' | 'on-scene' | 'transporting' | 'completed' | 'cancelled';
 
-export interface AmbulanceRequest { // Renombrado de EmergencyRequest
+export interface AmbulanceRequest {
   id: string;
   requesterId: string;
   patientDetails: string;
