@@ -1,3 +1,4 @@
+
 'use client';
 
 import { RequestForm } from '@/components/request/request-form';
@@ -29,7 +30,7 @@ export default function NewRequestPage() {
 
   return (
     <div>
-      <h1 className="page-title mb-8">Crear Nueva Solicitud de Emergencia</h1>
+      <h1 className="page-title mb-8">Crear Nueva Solicitud de Ambulancia</h1>
       <RequestForm mode="create" />
     </div>
   );

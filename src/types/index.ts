@@ -36,11 +36,11 @@ export interface AmbulanceEquipment {
 // Mapeo por tipo de ambulancia:
 export const defaultEquipmentByType: Record<AmbulanceType, AmbulanceEquipment> = {
   SVB:         { seats: 4, wheelchairSlots: 0, stretcher: true,  chairs: 2, oxygenUnits: 2 },
-  SVA:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 4 }, // Ajustado seats para SVA
+  SVA:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 4 },
   Convencional:{ seats: 4, wheelchairSlots: 1, stretcher: false, chairs: 0, oxygenUnits: 1 },
-  UVI_Movil:   { seats: 2, wheelchairSlots: 0, stretcher: true,  chairs: 0, oxygenUnits: 6 }, // Ajustado seats para UVI
+  UVI_Movil:   { seats: 2, wheelchairSlots: 0, stretcher: true,  chairs: 0, oxygenUnits: 6 },
   A1:          { seats: 4, wheelchairSlots: 1, stretcher: false, chairs: 0, oxygenUnits: 1 },
-  Programado:  { seats: 6, wheelchairSlots: 2, stretcher: false, chairs: 0, oxygenUnits: 0 }, // Ajustado seats para Programado
+  Programado:  { seats: 6, wheelchairSlots: 2, stretcher: false, chairs: 0, oxygenUnits: 0 },
   Otros:       { seats: 2, wheelchairSlots: 0, stretcher: false, chairs: 0, oxygenUnits: 0 },
 };
 
@@ -53,12 +53,12 @@ export interface Ambulance {
   longitude: number;
   currentPatients: number;
   capacity: number; // La capacidad general de pacientes podría ser diferente al número de asientos
-  equipment: AmbulanceEquipment; // Actualizado de string[] a AmbulanceEquipment
+  equipment: AmbulanceEquipment;
 }
 
 export type RequestStatus = 'pending' | 'dispatched' | 'on-scene' | 'transporting' | 'completed' | 'cancelled';
 
-export interface EmergencyRequest {
+export interface AmbulanceRequest { // Renombrado de EmergencyRequest
   id: string;
   requesterId: string;
   patientDetails: string;

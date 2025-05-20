@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -11,7 +12,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as UiCardDescription } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { createRequest } from '@/lib/request-data';
-import type { EmergencyRequest } from '@/types';
+import type { AmbulanceRequest } from '@/types'; // Actualizado a AmbulanceRequest
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
@@ -28,7 +29,7 @@ type RequestFormValues = z.infer<typeof requestFormSchema>;
 interface RequestFormProps {
   onFormSubmit?: () => void; // Callback after successful submission
   mode?: 'create' | 'edit';
-  initialData?: Partial<EmergencyRequest>;
+  initialData?: Partial<AmbulanceRequest>; // Actualizado a AmbulanceRequest
 }
 
 export function RequestForm({ onFormSubmit, mode = 'create', initialData }: RequestFormProps) {
@@ -59,7 +60,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
       address: values.address,
     };
 
-    const requestData: Omit<EmergencyRequest, 'id' | 'createdAt' | 'updatedAt'> = {
+    const requestData: Omit<AmbulanceRequest, 'id' | 'createdAt' | 'updatedAt'> = { // Actualizado a AmbulanceRequest
       requesterId: user.id,
       patientDetails: values.patientDetails,
       location: mockLocation,
@@ -70,7 +71,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
     
     try {
       await createRequest(requestData);
-      toast({ title: "Solicitud Enviada", description: "Su solicitud de emergencia ha sido enviada exitosamente."});
+      toast({ title: "Solicitud Enviada", description: "Su solicitud de ambulancia ha sido enviada exitosamente."});
       form.reset();
       if (onFormSubmit) {
         onFormSubmit();
@@ -86,7 +87,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="section-title">{mode === 'create' ? 'Enviar Nueva Solicitud de Emergencia' : 'Editar Solicitud de Emergencia'}</CardTitle>
+        <CardTitle className="section-title">{mode === 'create' ? 'Enviar Nueva Solicitud de Ambulancia' : 'Editar Solicitud de Ambulancia'}</CardTitle>
         <UiCardDescription>Complete los detalles a continuación. Todos los campos marcados con * son obligatorios.</UiCardDescription>
       </CardHeader>
       <CardContent>
@@ -99,7 +100,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
                 <FormItem>
                   <FormLabel>Detalles del Paciente *</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Describa la condición del paciente, edad, género, etc." {...field} rows={4} />
+                    <Textarea placeholder="Describa la condición del paciente, edad, género, si es un traslado programado, etc." {...field} rows={4} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -110,11 +111,11 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Dirección de Ubicación *</FormLabel>
+                  <FormLabel>Dirección de Origen *</FormLabel>
                   <FormControl>
                     <Input placeholder="Ej: Calle Principal 123, Ciudad, País" {...field} />
                   </FormControl>
-                  <FormDescription>Proporcione la dirección completa de la emergencia.</FormDescription>
+                  <FormDescription>Proporcione la dirección completa donde se recogerá al paciente.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -132,9 +133,9 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="low">Baja</SelectItem>
+                      <SelectItem value="low">Baja (Programado)</SelectItem>
                       <SelectItem value="medium">Media</SelectItem>
-                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="high">Alta (Urgente)</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -148,7 +149,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
                 <FormItem>
                   <FormLabel>Notas Adicionales</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Cualquier otra información relevante (ej: códigos de acceso, peligros)." {...field} rows={3}/>
+                    <Textarea placeholder="Cualquier otra información relevante (ej: códigos de acceso, peligros, detalles del destino para programados)." {...field} rows={3}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>

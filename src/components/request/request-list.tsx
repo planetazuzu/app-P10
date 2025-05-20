@@ -1,11 +1,12 @@
+
 'use client';
 
-import type { EmergencyRequest, RequestStatus, UserRole } from '@/types';
+import type { AmbulanceRequest, RequestStatus, UserRole } from '@/types'; // Actualizado a AmbulanceRequest
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowUpDown, MessageSquare, MoreHorizontal, Eye } from 'lucide-react';
+import { ArrowUpDown, MessageSquare, MoreHorizontal, Eye, FileText } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -22,7 +23,7 @@ import { es } from 'date-fns/locale';
 
 
 interface RequestListProps {
-  requests: EmergencyRequest[];
+  requests: AmbulanceRequest[]; // Actualizado a AmbulanceRequest
   userRole: UserRole;
   onUpdateRequestStatus: (requestId: string, status: RequestStatus) => void;
   onViewDetails: (requestId: string) => void; // For modal or separate page
@@ -59,9 +60,9 @@ const translateRequestStatus = (status: RequestStatus): string => {
 // Helper para traducir la prioridad
 const translatePriority = (priority: 'high' | 'medium' | 'low'): string => {
     switch (priority) {
-        case 'high': return 'Alta';
+        case 'high': return 'Alta (Urgente)';
         case 'medium': return 'Media';
-        case 'low': return 'Baja';
+        case 'low': return 'Baja (Programado)';
         default: return priority;
     }
 }
@@ -117,8 +118,8 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="section-title">Solicitudes de Emergencia</CardTitle>
-        <CardDescription>Ver y gestionar todas las solicitudes enviadas.</CardDescription>
+        <CardTitle className="section-title">Solicitudes de Ambulancia</CardTitle>
+        <CardDescription>Ver y gestionar todas las solicitudes de ambulancia enviadas.</CardDescription>
         <div className="mt-4 flex flex-col sm:flex-row gap-4">
             <Input 
                 placeholder="Buscar por ID, paciente, dirección..."
@@ -140,7 +141,7 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
       <CardContent>
         {filteredAndSortedRequests.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
-                <FileText className="mx-auto h-12 w-12 mb-4" />
+                <FileText className="mx-auto h-12 w-12 mb-4 opacity-50" />
                 <p className="text-lg font-semibold">No se encontraron solicitudes.</p>
                 <p>Intente ajustar sus filtros o revise más tarde.</p>
             </div>

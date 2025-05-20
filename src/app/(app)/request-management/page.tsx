@@ -1,8 +1,9 @@
+
 'use client';
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import type { EmergencyRequest, RequestStatus } from '@/types';
+import type { AmbulanceRequest, RequestStatus } from '@/types'; // Actualizado a AmbulanceRequest
 import { getRequests, updateRequestStatus as apiUpdateRequestStatus } from '@/lib/request-data';
 import { RequestList } from '@/components/request/request-list';
 import { Button } from '@/components/ui/button';
@@ -15,7 +16,7 @@ import { Skeleton } from '@/components/ui/skeleton';
 
 export default function RequestManagementPage() {
   const { user } = useAuth();
-  const [requests, setRequests] = useState<EmergencyRequest[]>([]);
+  const [requests, setRequests] = useState<AmbulanceRequest[]>([]); // Actualizado a AmbulanceRequest
   const [isLoading, setIsLoading] = useState(true);
   const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
   const { toast } = useToast();
@@ -72,7 +73,7 @@ export default function RequestManagementPage() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <h1 className="page-title">Gestión de Solicitudes</h1>
+        <h1 className="page-title">Gestión de Solicitudes de Ambulancia</h1>
         <div className="flex gap-2">
             <Button variant="outline" onClick={fetchUserRequests} disabled={isLoading}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
