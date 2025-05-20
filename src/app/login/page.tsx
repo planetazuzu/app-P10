@@ -1,3 +1,4 @@
+
 'use client';
 
 import { Button } from '@/components/ui/button';
@@ -20,6 +21,8 @@ export default function LoginPage() {
   const { toast } = useToast();
 
   useEffect(() => {
+    // Si el usuario ya está autenticado y la carga inicial del contexto ha terminado, redirige al dashboard.
+    // Esto maneja el caso de que el usuario navegue a /login estando ya logueado.
     if (isAuthenticated && !authIsLoading) {
       router.replace('/dashboard');
     }
@@ -31,14 +34,17 @@ export default function LoginPage() {
     setIsSubmitting(true);
     const success = await login(email);
     if (success) {
-      router.push('/dashboard');
       toast({ title: "Inicio de Sesión Exitoso", description: "¡Bienvenido de nuevo!" });
+      // La redirección ahora es manejada por el useEffect de arriba,
+      // que se activará cuando isAuthenticated y authIsLoading se actualicen.
     } else {
       toast({ title: "Inicio de Sesión Fallido", description: "Email inválido o usuario no encontrado.", variant: "destructive" });
-      setIsSubmitting(false);
     }
+    setIsSubmitting(false); // Asegurar que se actualiza después de la operación asíncrona
   };
 
+  // Muestra la pantalla de carga si el contexto de autenticación está cargando,
+  // o si ya está autenticado (para dar tiempo al useEffect de redirigir).
   if (authIsLoading || (!authIsLoading && isAuthenticated)) {
      return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
@@ -101,3 +107,4 @@ export default function LoginPage() {
     </div>
   );
 }
+
