@@ -1,5 +1,7 @@
-import type { EmergencyRequest, RequestStatus } from '@/types';
+
+import type { EmergencyRequest, RequestStatus, UserRole } from '@/types';
 import { mockAmbulances } from './ambulance-data';
+import { MOCK_USERS } from './auth'; // Importar MOCK_USERS para obtener IDs de usuario válidos
 
 const patientDetailsSamples = [
   "65y/o male, chest pain, history of hypertension.",
@@ -25,6 +27,16 @@ function getRandomCoords(baseLat: number, baseLng: number, range: number) {
   };
 }
 
+// Obtener IDs de usuario reales que pueden ser solicitantes
+const mockRequesterIds = [
+  MOCK_USERS['admin@gmr.com'].id,
+  MOCK_USERS['hospital@gmr.com'].id,
+  MOCK_USERS['individual@gmr.com'].id,
+  // Podemos añadir algunos IDs genéricos si aún queremos solicitudes sin un "dueño" de demo específico
+  // 'user-generic-1', 'user-generic-2' 
+];
+
+
 export const mockRequests: EmergencyRequest[] = Array.from({ length: 15 }, (_, i) => {
   const baseLocation = { lat: 34.0522, lng: -118.2437 }; // Los Angeles
   const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2);
@@ -33,12 +45,17 @@ export const mockRequests: EmergencyRequest[] = Array.from({ length: 15 }, (_, i
   
   let assignedAmbulanceId: string | undefined = undefined;
   if (status !== 'pending' && status !== 'cancelled' && mockAmbulances.length > 0) {
-    assignedAmbulanceId = getRandomElement(mockAmbulances.filter(a => a.status === 'on-mission' || a.status === 'available')).id;
+    const availableAmbulances = mockAmbulances.filter(a => a.status === 'on-mission' || a.status === 'available');
+    if (availableAmbulances.length > 0) {
+        assignedAmbulanceId = getRandomElement(availableAmbulances).id;
+    }
   }
+  
+  const requesterId = getRandomElement(mockRequesterIds);
 
   return {
     id: `req-${i + 101}`,
-    requesterId: `user-${Math.floor(Math.random() * 3) + 1}`, // mock user IDs
+    requesterId: requesterId,
     patientDetails: getRandomElement(patientDetailsSamples),
     location: { 
         latitude: coords.latitude, 
@@ -54,17 +71,34 @@ export const mockRequests: EmergencyRequest[] = Array.from({ length: 15 }, (_, i
   };
 });
 
-export function getRequests(userId: string, userRole: string): Promise<EmergencyRequest[]> {
+export function getRequests(userId: string, userRole: UserRole): Promise<EmergencyRequest[]> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      if (userRole === 'admin' || userRole === 'hospital') {
-        resolve([...mockRequests].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      } else if (userRole === 'individual') {
-        resolve(mockRequests.filter(req => req.requesterId === userId).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-      } else if (userRole === 'ambulance') {
-         resolve(mockRequests.filter(req => req.assignedAmbulanceId && mockAmbulances.find(a => a.id === req.assignedAmbulanceId)).sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())); // Simplified: show if any ambulance assigned
+      let userRequests: EmergencyRequest[] = [];
+      switch (userRole) {
+        case 'admin':
+        case 'hospital':
+          userRequests = [...mockRequests];
+          break;
+        case 'individual':
+          userRequests = mockRequests.filter(req => req.requesterId === userId);
+          break;
+        case 'ambulance':
+          // Asegurarse de que mockAmbulances se usa correctamente si puede cambiar
+          // Esta lógica asume que el ID de ambulancia en la solicitud corresponde a una ambulancia real
+          // En un sistema real, la ambulancia tendría un ID de usuario o similar para filtrar las asignadas.
+          // Por ahora, se muestran las solicitudes que tienen *alguna* ambulancia asignada.
+          // Para un equipo de ambulancia específico, filtraríamos por req.assignedAmbulanceId === IdDeLaAmbulanciaDelUsuarioActual
+          userRequests = mockRequests.filter(req => req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId));
+          break;
+        default:
+          // Esto no debería ocurrir si userRole está correctamente tipado
+          console.warn(`Rol de usuario no manejado en getRequests: ${userRole}`);
+          userRequests = []; 
+          break;
       }
-      resolve([]);
+      // Ordenar siempre por fecha de creación descendente
+      resolve(userRequests.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
     }, 500);
   });
 }

@@ -5,7 +5,7 @@ import type { Ambulance, AmbulanceType, AmbulanceEquipment } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X, HelpCircle, Users, Package, Armchair, Bed, Droplets, Wheelchair } from 'lucide-react';
+import { X, HelpCircle, Users, Package, Armchair, Bed, Droplets, Accessibility } from 'lucide-react'; // Changed Wheelchair to Accessibility
 import Image from 'next/image';
 
 interface AmbulanceCardProps {
@@ -117,7 +117,7 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
           </h4>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 pl-2 border-l-2 border-primary/20">
             <EquipmentDetailItem icon={Users} label="Asientos" value={equipment.seats} />
-            <EquipmentDetailItem icon={Wheelchair} label="Sillas Ruedas" value={equipment.wheelchairSlots} />
+            <EquipmentDetailItem icon={Accessibility} label="Sillas Ruedas" value={equipment.wheelchairSlots} /> {/* Changed Wheelchair to Accessibility */}
             <EquipmentDetailItem icon={Bed} label="Camilla" value={equipment.stretcher} />
             <EquipmentDetailItem icon={Armchair} label="Sillas Port." value={equipment.chairs} />
             <EquipmentDetailItem icon={Droplets} label="Unid. Oxígeno" value={equipment.oxygenUnits} />
