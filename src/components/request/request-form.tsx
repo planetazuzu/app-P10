@@ -4,11 +4,11 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { Button } from '@/components/ui/button';
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle, CardDescription as UiCardDescription } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
 import { createRequest } from '@/lib/request-data';
 import type { EmergencyRequest } from '@/types';
@@ -87,7 +87,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
     <Card className="w-full">
       <CardHeader>
         <CardTitle className="section-title">{mode === 'create' ? 'Enviar Nueva Solicitud de Emergencia' : 'Editar Solicitud de Emergencia'}</CardTitle>
-        <CardDescription>Complete los detalles a continuación. Todos los campos marcados con * son obligatorios.</CardDescription>
+        <UiCardDescription>Complete los detalles a continuación. Todos los campos marcados con * son obligatorios.</UiCardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
