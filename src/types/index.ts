@@ -34,48 +34,48 @@ export interface AmbulanceEquipment {
   oxygenUnits: number;      // unidades de oxígeno disponibles
   defibrillator?: boolean;  // si dispone de desfibrilador
   monitor?: boolean;        // si dispone de monitor de constantes
-  // añadir más según necesidades (botiquín, etc.)
 }
 
-// Mapeo por tipo de ambulancia:
 export const defaultEquipmentByType: Record<AmbulanceType, AmbulanceEquipment> = {
-  SVB:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 1, monitor: true }, // 1 conductor + 1 tecnico + 1 paciente
-  SVA:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 2, monitor: true, defibrillator: true }, // 1 conductor + 1 medico/enfermero + 1 paciente
-  Convencional:{ seats: 2, wheelchairSlots: 1, stretcher: false, chairs: 0, oxygenUnits: 0 }, // 1 conductor + 1 paciente / acompañante
-  UVI_Movil:   { seats: 4, wheelchairSlots: 0, stretcher: true,  chairs: 0, oxygenUnits: 3, monitor: true, defibrillator: true }, // 1 conductor + 1 medico + 1 enfermero + 1 paciente
-  A1:          { seats: 2, wheelchairSlots: 1, stretcher: false, chairs: 1, oxygenUnits: 0 }, // 1 conductor + 1 paciente
-  Programado:  { seats: 8, wheelchairSlots: 2, stretcher: false, chairs: 0, oxygenUnits: 0 }, // 1 conductor + hasta 7 pacientes
+  SVB:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 1, monitor: true },
+  SVA:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 2, monitor: true, defibrillator: true },
+  Convencional:{ seats: 2, wheelchairSlots: 1, stretcher: false, chairs: 0, oxygenUnits: 0 },
+  UVI_Movil:   { seats: 4, wheelchairSlots: 0, stretcher: true,  chairs: 0, oxygenUnits: 3, monitor: true, defibrillator: true },
+  A1:          { seats: 2, wheelchairSlots: 1, stretcher: false, chairs: 1, oxygenUnits: 0 },
+  Programado:  { seats: 8, wheelchairSlots: 2, stretcher: false, chairs: 0, oxygenUnits: 0 },
   Otros:       { seats: 2, wheelchairSlots: 0, stretcher: false, chairs: 0, oxygenUnits: 0 },
 };
 
 
 export interface Ambulance {
-  id: string; 
-  name: string; 
-  licensePlate: string; 
-  model: string; 
+  id: string;
+  name: string;
+  licensePlate: string;
+  model: string;
   type: AmbulanceType;
-  baseLocation: string; 
-  zone?: string; 
+  baseLocation: string;
+  zone?: string;
   status: AmbulanceStatus;
 
-  // Unified equipment object
-  equipment: AmbulanceEquipment;
-  
-  // Specific additional equipment not covered by the general type definition
-  specialEquipment: string[]; // Array of IDs from equipmentOptions (e.g., ["stair-chair", "bariatric-stretcher"])
+  // Campos de capacidad que coinciden con el formulario
+  hasMedicalBed: boolean;
+  stretcherSeats: number; // Plazas si hasMedicalBed es true
+  hasWheelchair: boolean;
+  wheelchairSeats: number; // Plazas si hasWheelchair es true
+  allowsWalking: boolean;
+  walkingSeats: number; // Plazas si allowsWalking es true
 
-  latitude?: number; 
-  longitude?: number; 
-  currentPatients?: number; 
+  specialEquipment: string[]; // Array de IDs de equipmentOptions
 
-  notes?: string; 
+  latitude?: number;
+  longitude?: number;
+  currentPatients?: number;
+  notes?: string;
 }
 
 
 export type RequestStatus = 'pending' | 'dispatched' | 'on-scene' | 'transporting' | 'completed' | 'cancelled';
 
-// For simple/urgent requests
 export interface AmbulanceRequest {
   id: string;
   requesterId: string;
@@ -89,7 +89,6 @@ export interface AmbulanceRequest {
   priority: 'high' | 'medium' | 'low';
 }
 
-// For detailed programmed transport requests
 export type TipoServicioProgramado = 'consulta' | 'alta' | 'ingreso' | 'trasladoEntreCentros';
 export const ALL_TIPOS_SERVICIO_PROGRAMADO: TipoServicioProgramado[] = ['consulta', 'alta', 'ingreso', 'trasladoEntreCentros'];
 
@@ -110,10 +109,10 @@ export type EquipamientoEspecialProgramadoId = typeof EQUIPAMIENTO_ESPECIAL_PROG
 
 export interface ProgrammedTransportRequest {
   id: string;
-  requesterId: string; // User ID of the person making the request
+  requesterId: string; 
   status: RequestStatus;
-  createdAt: string; // ISO Date string
-  updatedAt: string; // ISO Date string
+  createdAt: string; 
+  updatedAt: string; 
   
   nombrePaciente: string;
   dniNieSsPaciente: string;
@@ -122,14 +121,35 @@ export interface ProgrammedTransportRequest {
   tipoTraslado: TipoTrasladoProgramado;
   centroOrigen: string;
   destino: string;
-  fechaIda: string; // ISO string for date part
-  horaIda: string; // HH:mm
+  fechaIda: string; 
+  horaIda: string; 
   medioRequerido: MedioRequeridoProgramado;
   equipamientoEspecialRequerido?: EquipamientoEspecialProgramadoId[];
   barrerasArquitectonicas?: string;
   necesidadesEspeciales?: string;
   observacionesMedicasAdicionales?: string;
-  autorizacionMedicaPdf?: string; // Placeholder for file path/URL or name
+  autorizacionMedicaPdf?: string; 
   assignedAmbulanceId?: string;
-  priority: 'low' | 'medium'; // Programmed usually not high
+  priority: 'low' | 'medium'; 
+}
+
+// Basic type for advanced multi-step transport request data
+export interface AdvancedTransportData {
+  // Step 1: Patient Info
+  patientName?: string;
+  patientId?: string;
+  serviceType?: string; // Example, will be more detailed
+  // Step 2: Scheduling
+  recurrence?: string; // daily, weekly, specificDates
+  dates?: Date[];
+  // Step 3: Locations
+  originAddress?: string;
+  destinationAddress?: string;
+  // Step 4: Configuration
+  transportType?: AmbulanceType; // e.g., 'A1', 'Programado'
+  additionalOptions?: string[];
+  // Step 5: Confirmation (no data, just action)
+  
+  // Add more fields as each step is defined
+  [key: string]: any; // Allow other fields for now
 }

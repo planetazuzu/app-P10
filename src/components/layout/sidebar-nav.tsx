@@ -34,30 +34,31 @@ const navItems: NavItem[] = [
   { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'ambulance'] },
   { title: 'Seguimiento Ambulancias', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital'] },
   { title: 'Despacho Inteligente', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital'] },
-  { 
-    title: 'Gestión Solicitudes', 
-    href: '/request-management', 
-    icon: 'RequestManagement', 
+  {
+    title: 'Gestión Solicitudes',
+    href: '/request-management',
+    icon: 'RequestManagement',
     roles: ['admin', 'hospital', 'individual', 'ambulance'],
     submenu: [
         { title: 'Ver Solicitudes', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'ambulance'], exactMatch: true },
         { title: 'Nueva Solicitud (Urgente)', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
         { title: 'Nueva Solicitud (Programada)', href: '/request-management/new-programmed', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
+        { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital'] },
     ]
   },
   { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'ambulance'], disabled: true },
-  { 
-    title: 'Admin', 
-    href: '/admin', 
-    icon: 'ShieldCheck', 
+  {
+    title: 'Admin',
+    href: '/admin',
+    icon: 'ShieldCheck',
     roles: ['admin'],
     submenu: [
         { title: 'Panel Admin', href: '/admin', icon: 'ShieldCheck', roles: ['admin'], exactMatch: true },
         { title: 'Gestión Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin'], disabled: true },
-        { 
-          title: 'Gestión Ambulancias', 
-          href: '/admin/ambulances', 
-          icon: 'Ambulance', 
+        {
+          title: 'Gestión Ambulancias',
+          href: '/admin/ambulances',
+          icon: 'Ambulance',
           roles: ['admin'],
           submenu: [
             { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin'] },
@@ -142,7 +143,7 @@ export function SidebarNav() {
         {hasSubmenu ? (
           <ButtonComponent
             onClick={() => toggleMenu(item.href)}
-            isActive={effectiveIsActiveForButton} 
+            isActive={effectiveIsActiveForButton}
             aria-expanded={isMenuOpen}
             className={cn(
                 {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen },
@@ -155,8 +156,8 @@ export function SidebarNav() {
           <Link href={item.href} passHref legacyBehavior>
             <ButtonComponent
               asChild={!isSubmenuItem}
-              // @ts-ignore 
-              href={isSubmenuItem ? item.href : undefined} 
+              // @ts-ignore
+              href={isSubmenuItem ? item.href : undefined}
               isActive={isActive}
               disabled={item.disabled}
               className={cn(
