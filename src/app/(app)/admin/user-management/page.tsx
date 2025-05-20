@@ -7,19 +7,19 @@ import Image from 'next/image';
 export default function UserManagementPage() {
   return (
     <div>
-      <h1 className="page-title mb-8">User Management</h1>
+      <h1 className="page-title mb-8">Gestión de Usuarios</h1>
       <Card>
         <CardHeader>
-          <CardTitle className="section-title">Manage Platform Users</CardTitle>
+          <CardTitle className="section-title">Gestionar Usuarios de la Plataforma</CardTitle>
           <CardDescription>
-            This section will allow administrators to add, edit, and remove users, as well as manage their roles and permissions. This feature is currently under development.
+            Esta sección permitirá a los administradores agregar, editar y eliminar usuarios, así como gestionar sus roles y permisos. Esta funcionalidad está actualmente en desarrollo.
           </CardDescription>
         </CardHeader>
         <CardContent className="text-center py-12">
           <div className="relative w-full max-w-md mx-auto h-64">
                  <Image 
                     src="https://placehold.co/600x400.png"
-                    alt="User Management Under Development" 
+                    alt="Gestión de Usuarios en Desarrollo" 
                     layout="fill"
                     objectFit="contain"
                     data-ai-hint="team collaboration"
@@ -27,10 +27,10 @@ export default function UserManagementPage() {
             </div>
           <Users className="mx-auto h-16 w-16 text-primary/30 mt-8" />
           <p className="mt-4 text-lg font-semibold text-muted-foreground">
-            User Management Coming Soon!
+            ¡Gestión de Usuarios Próximamente!
           </p>
           <p className="text-muted-foreground">
-            Stay tuned for powerful user administration tools.
+            Manténgase atento a las potentes herramientas de administración de usuarios.
           </p>
         </CardContent>
       </Card>

@@ -1,35 +1,35 @@
 'use server';
 
 /**
- * @fileOverview AI flow to suggest the optimal ambulance dispatch based on
- * real-time location, patient needs, traffic, weather, and vehicle availability.
+ * @fileOverview Flujo de IA para sugerir el despacho óptimo de ambulancias basado en
+ * la ubicación en tiempo real, necesidades del paciente, tráfico, clima y disponibilidad de vehículos.
  *
- * - suggestOptimalDispatch - A function that suggests the optimal ambulance dispatch.
- * - SuggestOptimalDispatchInput - The input type for the suggestOptimalDispatch function.
- * - SuggestOptimalDispatchOutput - The return type for the suggestOptimalDispatch function.
+ * - suggestOptimalDispatch - Una función que sugiere el despacho óptimo de ambulancias.
+ * - SuggestOptimalDispatchInput - El tipo de entrada para la función suggestOptimalDispatch.
+ * - SuggestOptimalDispatchOutput - El tipo de retorno para la función suggestOptimalDispatch.
  */
 
 import {ai} from '@/ai/genkit';
 import {z} from 'genkit';
 
 const SuggestOptimalDispatchInputSchema = z.object({
-  patientNeeds: z.string().describe('The patient needs and condition.'),
-  trafficConditions: z.string().describe('Real-time traffic conditions.'),
-  weatherConditions: z.string().describe('Real-time weather conditions.'),
+  patientNeeds: z.string().describe('Las necesidades y condición del paciente.'),
+  trafficConditions: z.string().describe('Condiciones del tráfico en tiempo real.'),
+  weatherConditions: z.string().describe('Condiciones climáticas en tiempo real.'),
   vehicleAvailability: z
     .string()
-    .describe('Information on available ambulances and their types.'),
+    .describe('Información sobre ambulancias disponibles y sus tipos.'),
   ambulanceLocations: z
     .string()
-    .describe('Real-time locations of available ambulances.'),
+    .describe('Ubicaciones en tiempo real de las ambulancias disponibles.'),
 });
 export type SuggestOptimalDispatchInput = z.infer<
   typeof SuggestOptimalDispatchInputSchema
 >;
 
 const SuggestOptimalDispatchOutputSchema = z.object({
-  optimalAmbulance: z.string().describe('The ID of the optimal ambulance.'),
-  reasoning: z.string().describe('The reasoning for choosing this ambulance.'),
+  optimalAmbulance: z.string().describe('El ID de la ambulancia óptima.'),
+  reasoning: z.string().describe('El razonamiento para elegir esta ambulancia.'),
 });
 export type SuggestOptimalDispatchOutput = z.infer<
   typeof SuggestOptimalDispatchOutputSchema
@@ -45,19 +45,19 @@ const prompt = ai.definePrompt({
   name: 'suggestOptimalDispatchPrompt',
   input: {schema: SuggestOptimalDispatchInputSchema},
   output: {schema: SuggestOptimalDispatchOutputSchema},
-  prompt: `You are an expert in emergency response coordination. Given the
-following information, determine the optimal ambulance to dispatch to the
-scene.
+  prompt: `Eres un experto en coordinación de respuesta a emergencias. Dada la
+siguiente información, determina la ambulancia óptima para despachar al
+lugar del incidente.
 
-Patient Needs: {{{patientNeeds}}}
-Traffic Conditions: {{{trafficConditions}}}
-Weather Conditions: {{{weatherConditions}}}
-Vehicle Availability: {{{vehicleAvailability}}}
-Ambulance Locations: {{{ambulanceLocations}}}
+Necesidades del Paciente: {{{patientNeeds}}}
+Condiciones del Tráfico: {{{trafficConditions}}}
+Condiciones Climáticas: {{{weatherConditions}}}
+Disponibilidad de Vehículos: {{{vehicleAvailability}}}
+Ubicaciones de Ambulancias: {{{ambulanceLocations}}}
 
-Consider all factors to choose the ambulance that can provide the quickest
-and most appropriate care. Explain your reasoning.  Respond only with the
-ambulance ID and a short explanation.
+Considera todos los factores para elegir la ambulancia que pueda proporcionar la
+atención más rápida y adecuada. Explica tu razonamiento. Responde solo con el
+ID de la ambulancia y una breve explicación.
 `,
 });
 

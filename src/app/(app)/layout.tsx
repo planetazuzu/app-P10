@@ -23,7 +23,7 @@ export default function AppLayout({ children }: { children: React.ReactNode }) {
       <div className="flex min-h-screen items-center justify-center bg-background">
         <div className="flex flex-col items-center gap-2">
           <Globe className="h-12 w-12 animate-pulse text-primary" />
-          <p className="text-xl font-semibold text-foreground">Verifying Access...</p>
+          <p className="text-xl font-semibold text-foreground">Verificando Acceso...</p>
         </div>
       </div>
     );

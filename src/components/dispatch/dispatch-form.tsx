@@ -13,9 +13,9 @@ import { getAmbulanceLocationsForAI, getVehicleAvailabilityForAI } from '@/lib/a
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  patientNeeds: z.string().min(10, { message: 'Patient needs must be at least 10 characters.' }),
-  trafficConditions: z.string().min(5, { message: 'Traffic conditions must be at least 5 characters.' }),
-  weatherConditions: z.string().min(5, { message: 'Weather conditions must be at least 5 characters.' }),
+  patientNeeds: z.string().min(10, { message: 'Las necesidades del paciente deben tener al menos 10 caracteres.' }),
+  trafficConditions: z.string().min(5, { message: 'Las condiciones del tráfico deben tener al menos 5 caracteres.' }),
+  weatherConditions: z.string().min(5, { message: 'Las condiciones climáticas deben tener al menos 5 caracteres.' }),
 });
 
 type DispatchFormValues = z.infer<typeof formSchema>;
@@ -32,7 +32,7 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
     defaultValues: {
       patientNeeds: '',
       trafficConditions: 'Normal',
-      weatherConditions: 'Clear',
+      weatherConditions: 'Despejado',
     },
   });
 
@@ -47,11 +47,11 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
       };
       const result = await suggestOptimalDispatch(aiInput);
       onSuggestion(result);
-      toast({ title: "Dispatch Suggestion Ready", description: "AI has provided an optimal dispatch." });
+      toast({ title: "Sugerencia de Despacho Lista", description: "La IA ha proporcionado un despacho óptimo." });
     } catch (error) {
-      console.error('Error getting dispatch suggestion:', error);
+      console.error('Error al obtener sugerencia de despacho:', error);
       onSuggestion(null);
-      toast({ title: "Error", description: "Failed to get dispatch suggestion.", variant: "destructive" });
+      toast({ title: "Error", description: "No se pudo obtener la sugerencia de despacho.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -60,7 +60,7 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="section-title">Dispatch Input</CardTitle>
+        <CardTitle className="section-title">Entrada de Despacho</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -70,11 +70,11 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
               name="patientNeeds"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Patient Needs & Condition</FormLabel>
+                  <FormLabel>Necesidades y Condición del Paciente</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="e.g., Elderly male, suspected cardiac arrest, unconscious..." {...field} rows={3} />
+                    <Textarea placeholder="Ej: Hombre mayor, sospecha de paro cardíaco, inconsciente..." {...field} rows={3} />
                   </FormControl>
-                  <FormDescription>Describe the patient's situation and requirements.</FormDescription>
+                  <FormDescription>Describa la situación y los requisitos del paciente.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -84,9 +84,9 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
               name="trafficConditions"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Traffic Conditions</FormLabel>
+                  <FormLabel>Condiciones del Tráfico</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Heavy congestion on Main St." {...field} />
+                    <Input placeholder="Ej: Congestión densa en Calle Principal." {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -97,16 +97,16 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
               name="weatherConditions"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Weather Conditions</FormLabel>
+                  <FormLabel>Condiciones Climáticas</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., Clear, light rain, heavy snow" {...field} />
+                    <Input placeholder="Ej: Despejado, lluvia ligera, nieve intensa" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Analyzing...' : 'Get Dispatch Suggestion'}
+              {form.formState.isSubmitting ? 'Analizando...' : 'Obtener Sugerencia de Despacho'}
             </Button>
           </form>
         </Form>

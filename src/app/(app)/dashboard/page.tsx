@@ -32,7 +32,7 @@ export default function DashboardPage() {
   const { user } = useAuth();
 
   if (!user) {
-    return <p>Loading user data...</p>;
+    return <p>Cargando datos del usuario...</p>;
   }
 
   // Mock data for dashboard cards
@@ -49,58 +49,58 @@ export default function DashboardPage() {
 
   return (
     <div>
-      <h1 className="page-title mb-8">Welcome, {user.name}!</h1>
+      <h1 className="page-title mb-8">¡Bienvenido, {user.name}!</h1>
       
       <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
         <StatsCard 
-          title="Active Ambulances" 
+          title="Ambulancias Activas" 
           value={stats.activeAmbulances}
           icon={<Ambulance className="h-5 w-5 text-muted-foreground" />}
-          description="+2 since last hour"
-          {...(canViewAmbulanceTracking && { link: "/ambulance-tracking", linkText: "View Map"})}
+          description="+2 desde la última hora"
+          {...(canViewAmbulanceTracking && { link: "/ambulance-tracking", linkText: "Ver Mapa"})}
         />
         <StatsCard 
-          title="Pending Requests" 
+          title="Solicitudes Pendientes" 
           value={stats.pendingRequests}
           icon={<FileText className="h-5 w-5 text-muted-foreground" />}
-          description="High priority: 3"
-          {...(canViewRequestManagement && { link: "/request-management", linkText: "Manage Requests"})}
+          description="Prioridad alta: 3"
+          {...(canViewRequestManagement && { link: "/request-management", linkText: "Gestionar Solicitudes"})}
         />
         {user.role === 'admin' && (
            <StatsCard 
-            title="Active Users" 
+            title="Usuarios Activos" 
             value={stats.activeUsers}
             icon={<Users className="h-5 w-5 text-muted-foreground" />}
-            description="Across all roles"
+            description="En todos los roles"
           />
         )}
         <StatsCard 
-          title="Avg. Response Time" 
+          title="Tiempo Medio Respuesta" 
           value={stats.averageResponseTime}
           icon={<Zap className="h-5 w-5 text-muted-foreground" />}
-          description="Last 24 hours"
-          {...(canViewSmartDispatch && { link: "/smart-dispatch", linkText: "Optimize Dispatch"})}
+          description="Últimas 24 horas"
+          {...(canViewSmartDispatch && { link: "/smart-dispatch", linkText: "Optimizar Despacho"})}
         />
       </div>
 
       <Card>
         <CardHeader>
-          <CardTitle className="section-title">Quick Actions</CardTitle>
+          <CardTitle className="section-title">Acciones Rápidas</CardTitle>
         </CardHeader>
         <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
           { (user.role === 'individual' || user.role === 'hospital' || user.role === 'admin') && (
             <Link href="/request-management/new" passHref>
-              <Button className="w-full" variant="default">Create New Request</Button>
+              <Button className="w-full" variant="default">Crear Nueva Solicitud</Button>
             </Link>
           )}
           { canViewAmbulanceTracking && (
              <Link href="/ambulance-tracking" passHref>
-                <Button className="w-full" variant="secondary">Track Ambulances</Button>
+                <Button className="w-full" variant="secondary">Seguimiento de Ambulancias</Button>
             </Link>
           )}
           { canViewSmartDispatch && (
              <Link href="/smart-dispatch" passHref>
-                <Button className="w-full" variant="outline">Smart Dispatch AI</Button>
+                <Button className="w-full" variant="outline">Despacho Inteligente IA</Button>
             </Link>
           )}
         </CardContent>
@@ -109,10 +109,10 @@ export default function DashboardPage() {
       {/* Placeholder for recent activity or notifications */}
       <Card className="mt-8">
         <CardHeader>
-          <CardTitle className="section-title">Recent Activity</CardTitle>
+          <CardTitle className="section-title">Actividad Reciente</CardTitle>
         </CardHeader>
         <CardContent>
-          <p className="text-muted-foreground">No recent activity to display.</p>
+          <p className="text-muted-foreground">No hay actividad reciente para mostrar.</p>
         </CardContent>
       </Card>
     </div>

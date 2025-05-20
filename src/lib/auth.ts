@@ -1,10 +1,10 @@
 import type { User, UserRole } from '@/types';
 
 export const MOCK_USERS: Record<string, User> = {
-  'admin@gmr.com': { id: 'user-admin', email: 'admin@gmr.com', name: 'Admin User', role: 'admin' },
-  'hospital@gmr.com': { id: 'user-hospital', email: 'hospital@gmr.com', name: 'Hospital Staff', role: 'hospital' },
-  'individual@gmr.com': { id: 'user-individual', email: 'individual@gmr.com', name: 'Individual User', role: 'individual' },
-  'ambulance@gmr.com': { id: 'user-ambulance', email: 'ambulance@gmr.com', name: 'Ambulance Crew', role: 'ambulance' },
+  'admin@gmr.com': { id: 'user-admin', email: 'admin@gmr.com', name: 'Usuario Admin', role: 'admin' },
+  'hospital@gmr.com': { id: 'user-hospital', email: 'hospital@gmr.com', name: 'Personal Hospital', role: 'hospital' },
+  'individual@gmr.com': { id: 'user-individual', email: 'individual@gmr.com', name: 'Usuario Individual', role: 'individual' },
+  'ambulance@gmr.com': { id: 'user-ambulance', email: 'ambulance@gmr.com', name: 'Equipo Ambulancia', role: 'ambulance' },
 };
 
 const AUTH_TOKEN_KEY = 'gmrAuthToken';

@@ -4,8 +4,8 @@ import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Global Medic Response',
-  description: 'Advanced Ambulance Dispatch and Management System',
+  title: 'Respuesta Médica Global',
+  description: 'Sistema Avanzado de Gestión y Despacho de Ambulancias',
 };
 
 export default function RootLayout({
@@ -14,7 +14,7 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
+    <html lang="es" suppressHydrationWarning>
       <body className="antialiased">
         <AuthProvider>
           {children}

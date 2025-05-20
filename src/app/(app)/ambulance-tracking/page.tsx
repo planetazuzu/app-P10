@@ -55,7 +55,7 @@ export default function AmbulanceTrackingPage() {
   if (isLoading && allAmbulances.length === 0) {
     return (
       <div>
-        <h1 className="page-title mb-8">Ambulance Tracking</h1>
+        <h1 className="page-title mb-8">Seguimiento de Ambulancias</h1>
         <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6">
           <div className="md:col-span-2 lg:col-span-3">
             <Skeleton className="h-[600px] w-full" />
@@ -71,7 +71,7 @@ export default function AmbulanceTrackingPage() {
 
   return (
     <div>
-      <h1 className="page-title mb-8">Ambulance Tracking</h1>
+      <h1 className="page-title mb-8">Seguimiento de Ambulancias</h1>
       <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
         <div className="md:col-span-2 lg:col-span-3 h-[calc(100vh-12rem)] min-h-[500px]">
           <AmbulanceMap 

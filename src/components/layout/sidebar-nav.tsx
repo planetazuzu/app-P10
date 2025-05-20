@@ -29,28 +29,28 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: 'Dashboard', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'ambulance'] },
-  { title: 'Ambulance Tracking', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital'] },
-  { title: 'Smart Dispatch', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital'] },
+  { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'ambulance'] },
+  { title: 'Seguimiento Ambulancias', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital'] },
+  { title: 'Despacho Inteligente', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital'] },
   { 
-    title: 'Request Management', 
+    title: 'Gestión Solicitudes', 
     href: '/request-management', 
     icon: 'RequestManagement', 
     roles: ['admin', 'hospital', 'individual', 'ambulance'],
     submenu: [
-        { title: 'New Request', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
-        { title: 'View Requests', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'ambulance'] },
+        { title: 'Nueva Solicitud', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
+        { title: 'Ver Solicitudes', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'ambulance'] },
     ]
   },
-  { title: 'Messages', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'ambulance'], disabled: true },
+  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'ambulance'], disabled: true },
   { 
     title: 'Admin', 
     href: '/admin', 
     icon: 'ShieldCheck', 
     roles: ['admin'],
     submenu: [
-        { title: 'User Management', href: '/admin/user-management', icon: 'Users', roles: ['admin'], disabled: true },
-        { title: 'System Settings', href: '/admin/system-settings', icon: 'Settings', roles: ['admin'], disabled: true },
+        { title: 'Gestión Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin'], disabled: true },
+        { title: 'Config. Sistema', href: '/admin/system-settings', icon: 'Settings', roles: ['admin'], disabled: true },
     ]
   },
 ];

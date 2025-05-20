@@ -15,8 +15,8 @@ export function DispatchSuggestion({ suggestion, isLoading }: DispatchSuggestion
     return (
       <Card className="mt-6 animate-pulse">
         <CardHeader>
-          <CardTitle className="section-title">AI Suggestion</CardTitle>
-          <CardDescription>Analyzing data to find the optimal dispatch...</CardDescription>
+          <CardTitle className="section-title">Sugerencia de IA</CardTitle>
+          <CardDescription>Analizando datos para encontrar el despacho óptimo...</CardDescription>
         </CardHeader>
         <CardContent className="space-y-3">
           <div className="h-6 bg-muted rounded w-3/4"></div>
@@ -28,7 +28,7 @@ export function DispatchSuggestion({ suggestion, isLoading }: DispatchSuggestion
   }
 
   if (!suggestion) {
-    return null; // Or a placeholder message if preferred
+    return null; // O un mensaje de marcador de posición si se prefiere
   }
 
   return (
@@ -36,13 +36,13 @@ export function DispatchSuggestion({ suggestion, isLoading }: DispatchSuggestion
       <CardHeader>
         <CardTitle className="section-title flex items-center gap-2">
             <Lightbulb className="h-7 w-7 text-primary" />
-            AI Dispatch Suggestion
+            Sugerencia de Despacho IA
         </CardTitle>
       </CardHeader>
       <CardContent>
         <Alert className="bg-primary/10 border-primary/30">
           <Ambulance className="h-5 w-5 text-primary" />
-          <AlertTitle className="font-semibold text-primary text-lg">Dispatch: {suggestion.optimalAmbulance}</AlertTitle>
+          <AlertTitle className="font-semibold text-primary text-lg">Despachar: {suggestion.optimalAmbulance}</AlertTitle>
           <AlertDescription className="text-foreground/80">
             {suggestion.reasoning}
           </AlertDescription>

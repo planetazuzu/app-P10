@@ -4,7 +4,6 @@ import type { AmbulanceType, AmbulanceStatus } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
 
 interface AmbulanceFiltersProps {
   types: AmbulanceType[];
@@ -14,6 +13,21 @@ interface AmbulanceFiltersProps {
   onTypeChange: (type: AmbulanceType | 'all') => void;
   onStatusChange: (status: AmbulanceStatus | 'all') => void;
 }
+
+// Helper para traducir el estado de la ambulancia para los filtros
+const translateFilterStatus = (status: AmbulanceStatus): string => {
+  switch (status) {
+    case 'available':
+      return 'Disponible';
+    case 'unavailable':
+      return 'No disponible';
+    case 'on-mission':
+      return 'En misión';
+    default:
+      return status.charAt(0).toUpperCase() + status.slice(1);
+  }
+};
+
 
 export function AmbulanceFilters({
   types,
@@ -26,17 +40,17 @@ export function AmbulanceFilters({
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="text-lg text-secondary">Filter Ambulances</CardTitle>
+        <CardTitle className="text-lg text-secondary">Filtrar Ambulancias</CardTitle>
       </CardHeader>
       <CardContent className="space-y-4">
         <div>
-          <Label htmlFor="ambulance-type" className="text-sm font-medium">Type</Label>
+          <Label htmlFor="ambulance-type" className="text-sm font-medium">Tipo</Label>
           <Select value={selectedType} onValueChange={(value) => onTypeChange(value as AmbulanceType | 'all')}>
             <SelectTrigger id="ambulance-type" className="w-full mt-1">
-              <SelectValue placeholder="Select type" />
+              <SelectValue placeholder="Seleccionar tipo" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Types</SelectItem>
+              <SelectItem value="all">Todos los Tipos</SelectItem>
               {types.map((type) => (
                 <SelectItem key={type} value={type}>
                   {type}
@@ -46,16 +60,16 @@ export function AmbulanceFilters({
           </Select>
         </div>
         <div>
-          <Label htmlFor="ambulance-status" className="text-sm font-medium">Status</Label>
+          <Label htmlFor="ambulance-status" className="text-sm font-medium">Estado</Label>
            <Select value={selectedStatus} onValueChange={(value) => onStatusChange(value as AmbulanceStatus | 'all')}>
             <SelectTrigger id="ambulance-status" className="w-full mt-1">
-              <SelectValue placeholder="Select status" />
+              <SelectValue placeholder="Seleccionar estado" />
             </SelectTrigger>
             <SelectContent>
-              <SelectItem value="all">All Statuses</SelectItem>
+              <SelectItem value="all">Todos los Estados</SelectItem>
               {statuses.map((status) => (
                 <SelectItem key={status} value={status}>
-                  {status.charAt(0).toUpperCase() + status.slice(1)}
+                  {translateFilterStatus(status)}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -18,6 +18,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Input } from '@/components/ui/input';
 import React, { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
+
 
 interface RequestListProps {
   requests: EmergencyRequest[];
@@ -39,6 +41,29 @@ const PRIORITY_STYLES: Record<'high' | 'medium' | 'low', string> = {
     high: "text-red-600 font-semibold",
     medium: "text-orange-500 font-medium",
     low: "text-green-600",
+};
+
+// Helper para traducir el estado de la solicitud
+const translateRequestStatus = (status: RequestStatus): string => {
+  switch (status) {
+    case 'pending': return 'Pendiente';
+    case 'dispatched': return 'Despachada';
+    case 'on-scene': return 'En el Lugar';
+    case 'transporting': return 'Transportando';
+    case 'completed': return 'Completada';
+    case 'cancelled': return 'Cancelada';
+    default: return status;
+  }
+};
+
+// Helper para traducir la prioridad
+const translatePriority = (priority: 'high' | 'medium' | 'low'): string => {
+    switch (priority) {
+        case 'high': return 'Alta';
+        case 'medium': return 'Media';
+        case 'low': return 'Baja';
+        default: return priority;
+    }
 }
 
 export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewDetails }: RequestListProps) {
@@ -92,22 +117,22 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="section-title">Emergency Requests</CardTitle>
-        <CardDescription>View and manage all submitted requests.</CardDescription>
+        <CardTitle className="section-title">Solicitudes de Emergencia</CardTitle>
+        <CardDescription>Ver y gestionar todas las solicitudes enviadas.</CardDescription>
         <div className="mt-4 flex flex-col sm:flex-row gap-4">
             <Input 
-                placeholder="Search by ID, patient, address..."
+                placeholder="Buscar por ID, paciente, dirección..."
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
                 className="max-w-sm"
             />
             <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as RequestStatus | 'all')}>
                 <SelectTrigger className="w-full sm:w-[180px]">
-                    <SelectValue placeholder="Filter by status" />
+                    <SelectValue placeholder="Filtrar por estado" />
                 </SelectTrigger>
                 <SelectContent>
-                    <SelectItem value="all">All Statuses</SelectItem>
-                    {Object.keys(STATUS_COLORS).map(s => <SelectItem key={s} value={s}>{s.charAt(0).toUpperCase() + s.slice(1)}</SelectItem>)}
+                    <SelectItem value="all">Todos los Estados</SelectItem>
+                    {Object.keys(STATUS_COLORS).map(s => <SelectItem key={s} value={s}>{translateRequestStatus(s as RequestStatus)}</SelectItem>)}
                 </SelectContent>
             </Select>
         </div>
@@ -116,31 +141,31 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
         {filteredAndSortedRequests.length === 0 ? (
             <div className="text-center py-10 text-muted-foreground">
                 <FileText className="mx-auto h-12 w-12 mb-4" />
-                <p className="text-lg font-semibold">No requests found.</p>
-                <p>Try adjusting your filters or check back later.</p>
+                <p className="text-lg font-semibold">No se encontraron solicitudes.</p>
+                <p>Intente ajustar sus filtros o revise más tarde.</p>
             </div>
         ) : (
         <Table>
           <TableHeader>
             <TableRow>
               <TableHead>ID</TableHead>
-              <TableHead>Patient Details</TableHead>
+              <TableHead>Detalles del Paciente</TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('priority')}>
-                    Priority <ArrowUpDown className="ml-2 h-4 w-4" />
+                    Prioridad <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('status')}>
-                    Status <ArrowUpDown className="ml-2 h-4 w-4" />
+                    Estado <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
               <TableHead>
                 <Button variant="ghost" onClick={() => handleSort('createdAt')}>
-                    Created At <ArrowUpDown className="ml-2 h-4 w-4" />
+                    Creado en <ArrowUpDown className="ml-2 h-4 w-4" />
                 </Button>
               </TableHead>
-              <TableHead>Actions</TableHead>
+              <TableHead>Acciones</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
@@ -150,42 +175,42 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
                 <TableCell>{request.patientDetails.substring(0, 30)}...</TableCell>
                 <TableCell>
                     <span className={PRIORITY_STYLES[request.priority]}>
-                        {request.priority.charAt(0).toUpperCase() + request.priority.slice(1)}
+                        {translatePriority(request.priority)}
                     </span>
                 </TableCell>
                 <TableCell>
                   <Badge className={`${STATUS_COLORS[request.status]} text-white`}>
-                    {request.status.charAt(0).toUpperCase() + request.status.slice(1)}
+                    {translateRequestStatus(request.status)}
                   </Badge>
                 </TableCell>
-                <TableCell>{format(parseISO(request.createdAt), 'MMM d, yyyy HH:mm')}</TableCell>
+                <TableCell>{format(parseISO(request.createdAt), 'MMM d, yyyy HH:mm', { locale: es })}</TableCell>
                 <TableCell>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
                       <Button variant="ghost" className="h-8 w-8 p-0">
-                        <span className="sr-only">Open menu</span>
+                        <span className="sr-only">Abrir menú</span>
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
-                      <DropdownMenuLabel>Actions</DropdownMenuLabel>
+                      <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                       <DropdownMenuItem onClick={() => onViewDetails(request.id)}>
-                        <Eye className="mr-2 h-4 w-4" /> View Details
+                        <Eye className="mr-2 h-4 w-4" /> Ver Detalles
                       </DropdownMenuItem>
                       {canManageStatus && request.status !== 'completed' && request.status !== 'cancelled' && (
                         <>
                           <DropdownMenuSeparator />
-                          <DropdownMenuLabel>Update Status</DropdownMenuLabel>
+                          <DropdownMenuLabel>Actualizar Estado</DropdownMenuLabel>
                           {Object.keys(STATUS_COLORS).filter(s => s !== request.status).map(newStatus => (
                             <DropdownMenuItem key={newStatus} onClick={() => onUpdateRequestStatus(request.id, newStatus as RequestStatus)}>
-                              Mark as {newStatus.charAt(0).toUpperCase() + newStatus.slice(1)}
+                              Marcar como {translateRequestStatus(newStatus as RequestStatus)}
                             </DropdownMenuItem>
                           ))}
                         </>
                       )}
                        <DropdownMenuSeparator />
                        <DropdownMenuItem disabled>
-                        <MessageSquare className="mr-2 h-4 w-4" /> Send Message (Soon)
+                        <MessageSquare className="mr-2 h-4 w-4" /> Enviar Mensaje (Pronto)
                        </DropdownMenuItem>
                     </DropdownMenuContent>
                   </DropdownMenu>

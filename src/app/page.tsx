@@ -23,7 +23,7 @@ export default function HomePage() {
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="flex flex-col items-center gap-2">
         <Globe className="h-16 w-16 animate-pulse text-primary" />
-        <p className="text-xl font-semibold text-foreground">Initializing Global Medic Response...</p>
+        <p className="text-xl font-semibold text-foreground">Iniciando Respuesta Médica Global...</p>
       </div>
     </div>
   );

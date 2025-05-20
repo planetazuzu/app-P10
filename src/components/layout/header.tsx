@@ -15,6 +15,22 @@ import { Icons } from '@/components/icons';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'; // Import useSidebar
 import { cn } from '@/lib/utils';
 
+// Helper para traducir el rol del usuario
+const translateUserRole = (role: 'admin' | 'hospital' | 'individual' | 'ambulance'): string => {
+  switch (role) {
+    case 'admin':
+      return 'Administrador';
+    case 'hospital':
+      return 'Personal Hospitalario';
+    case 'individual':
+      return 'Usuario Individual';
+    case 'ambulance':
+      return 'Equipo Ambulancia';
+    default:
+      return role;
+  }
+};
+
 export function Header() {
   const { user, logout } = useAuth();
   const { isMobile } = useSidebar(); // Get isMobile from useSidebar context
@@ -35,7 +51,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Icons.Logo className="h-7 w-7 text-primary" />
             <span className="hidden font-bold text-secondary sm:inline-block text-lg">
-              Global Medic Response
+              Respuesta Médica Global
             </span>
           </div>
         </div>
@@ -44,7 +60,7 @@ export function Header() {
           <div className="flex items-center gap-4">
             <div className="text-right hidden md:block">
               <p className="font-semibold text-sm text-foreground">{user.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{user.role}</p>
+              <p className="text-xs text-muted-foreground capitalize">{translateUserRole(user.role)}</p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -67,7 +83,7 @@ export function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="cursor-pointer">
                   <Icons.Logout className="mr-2 h-4 w-4" />
-                  Log out
+                  Cerrar Sesión
                 </DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>

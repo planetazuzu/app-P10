@@ -40,11 +40,11 @@ export default function RequestManagementPage() {
         setRequests(prevRequests => 
           prevRequests.map(req => req.id === requestId ? updatedRequest : req)
         );
-        toast({ title: "Status Updated", description: `Request ${requestId.substring(0,8)} marked as ${status}.` });
+        toast({ title: "Estado Actualizado", description: `Solicitud ${requestId.substring(0,8)} marcada como ${status}.` });
       }
     } catch (error) {
-      console.error("Failed to update request status", error);
-      toast({ title: "Update Failed", description: "Could not update request status.", variant: "destructive" });
+      console.error("Error al actualizar el estado de la solicitud", error);
+      toast({ title: "Actualización Fallida", description: "No se pudo actualizar el estado de la solicitud.", variant: "destructive" });
     }
   };
 
@@ -52,7 +52,7 @@ export default function RequestManagementPage() {
     setSelectedRequestId(requestId);
     // Implement modal display logic or navigate to a detail page:
     // router.push(`/request-management/${requestId}`);
-    toast({ title: "View Details", description: `(Placeholder) Viewing details for request ${requestId.substring(0,8)}...` });
+    toast({ title: "Ver Detalles", description: `(Simulado) Viendo detalles para la solicitud ${requestId.substring(0,8)}...` });
   };
 
   const canCreateRequest = user?.role === 'admin' || user?.role === 'hospital' || user?.role === 'individual';
@@ -72,17 +72,17 @@ export default function RequestManagementPage() {
   return (
     <div>
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
-        <h1 className="page-title">Request Management</h1>
+        <h1 className="page-title">Gestión de Solicitudes</h1>
         <div className="flex gap-2">
             <Button variant="outline" onClick={fetchUserRequests} disabled={isLoading}>
                 <RefreshCw className={`mr-2 h-4 w-4 ${isLoading ? 'animate-spin' : ''}`} />
-                Refresh
+                Actualizar
             </Button>
             {canCreateRequest && (
             <Link href="/request-management/new" passHref>
                 <Button>
                 <PlusCircle className="mr-2 h-4 w-4" />
-                New Request
+                Nueva Solicitud
                 </Button>
             </Link>
             )}

@@ -16,10 +16,10 @@ import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
 
 const requestFormSchema = z.object({
-  patientDetails: z.string().min(10, { message: 'Patient details must be at least 10 characters.' }),
-  address: z.string().min(5, { message: 'Address must be at least 5 characters.' }),
+  patientDetails: z.string().min(10, { message: 'Los detalles del paciente deben tener al menos 10 caracteres.' }),
+  address: z.string().min(5, { message: 'La dirección debe tener al menos 5 caracteres.' }),
   // For simplicity, latitude and longitude will be auto-generated or fixed in mock
-  priority: z.enum(['low', 'medium', 'high']),
+  priority: z.enum(['low', 'medium', 'high'], { required_error: 'La prioridad es obligatoria.' }),
   notes: z.string().optional(),
 });
 
@@ -48,7 +48,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
 
   async function onSubmit(values: RequestFormValues) {
     if (!user) {
-      toast({ title: "Authentication Error", description: "You must be logged in to create a request.", variant: "destructive"});
+      toast({ title: "Error de Autenticación", description: "Debe iniciar sesión para crear una solicitud.", variant: "destructive"});
       return;
     }
 
@@ -70,7 +70,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
     
     try {
       await createRequest(requestData);
-      toast({ title: "Request Submitted", description: "Your emergency request has been successfully submitted."});
+      toast({ title: "Solicitud Enviada", description: "Su solicitud de emergencia ha sido enviada exitosamente."});
       form.reset();
       if (onFormSubmit) {
         onFormSubmit();
@@ -78,16 +78,16 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
         router.push('/request-management'); // Default redirect
       }
     } catch (error) {
-      console.error('Error submitting request:', error);
-      toast({ title: "Submission Failed", description: "Could not submit your request. Please try again.", variant: "destructive"});
+      console.error('Error al enviar la solicitud:', error);
+      toast({ title: "Envío Fallido", description: "No se pudo enviar su solicitud. Por favor, inténtelo de nuevo.", variant: "destructive"});
     }
   }
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="section-title">{mode === 'create' ? 'Submit New Emergency Request' : 'Edit Emergency Request'}</CardTitle>
-        <CardDescription>Fill in the details below. All fields marked with * are required.</CardDescription>
+        <CardTitle className="section-title">{mode === 'create' ? 'Enviar Nueva Solicitud de Emergencia' : 'Editar Solicitud de Emergencia'}</CardTitle>
+        <CardDescription>Complete los detalles a continuación. Todos los campos marcados con * son obligatorios.</CardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
@@ -97,9 +97,9 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
               name="patientDetails"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Patient Details *</FormLabel>
+                  <FormLabel>Detalles del Paciente *</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Describe the patient's condition, age, gender, etc." {...field} rows={4} />
+                    <Textarea placeholder="Describa la condición del paciente, edad, género, etc." {...field} rows={4} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -110,11 +110,11 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
               name="address"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Location Address *</FormLabel>
+                  <FormLabel>Dirección de Ubicación *</FormLabel>
                   <FormControl>
-                    <Input placeholder="e.g., 123 Main St, Anytown, USA" {...field} />
+                    <Input placeholder="Ej: Calle Principal 123, Ciudad, País" {...field} />
                   </FormControl>
-                  <FormDescription>Provide the full address of the emergency.</FormDescription>
+                  <FormDescription>Proporcione la dirección completa de la emergencia.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -124,17 +124,17 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
               name="priority"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Priority *</FormLabel>
+                  <FormLabel>Prioridad *</FormLabel>
                   <Select onValueChange={field.onChange} defaultValue={field.value}>
                     <FormControl>
                       <SelectTrigger>
-                        <SelectValue placeholder="Select priority level" />
+                        <SelectValue placeholder="Seleccione el nivel de prioridad" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="low">Low</SelectItem>
-                      <SelectItem value="medium">Medium</SelectItem>
-                      <SelectItem value="high">High</SelectItem>
+                      <SelectItem value="low">Baja</SelectItem>
+                      <SelectItem value="medium">Media</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -146,16 +146,16 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
               name="notes"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Additional Notes</FormLabel>
+                  <FormLabel>Notas Adicionales</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Any other relevant information (e.g., access codes, hazards)." {...field} rows={3}/>
+                    <Textarea placeholder="Cualquier otra información relevante (ej: códigos de acceso, peligros)." {...field} rows={3}/>
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
             <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? (mode === 'create' ? 'Submitting...' : 'Updating...') : (mode === 'create' ? 'Submit Request' : 'Save Changes')}
+              {form.formState.isSubmitting ? (mode === 'create' ? 'Enviando...' : 'Actualizando...') : (mode === 'create' ? 'Enviar Solicitud' : 'Guardar Cambios')}
             </Button>
           </form>
         </Form>

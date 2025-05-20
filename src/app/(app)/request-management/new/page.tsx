@@ -13,23 +13,23 @@ export default function NewRequestPage() {
     if (!isLoading && user) {
       const canCreate = user.role === 'admin' || user.role === 'hospital' || user.role === 'individual';
       if (!canCreate) {
-        router.replace('/dashboard'); // Or an unauthorized page
+        router.replace('/dashboard'); // O una página de no autorizado
       }
     }
   }, [user, isLoading, router]);
 
   if (isLoading) {
-    return <p className="rioja-container text-center">Loading access permissions...</p>;
+    return <p className="rioja-container text-center">Cargando permisos de acceso...</p>;
   }
   
   if (!user || !(user.role === 'admin' || user.role === 'hospital' || user.role === 'individual')) {
-    return <p className="rioja-container text-center text-red-500">You do not have permission to create requests.</p>;
+    return <p className="rioja-container text-center text-red-500">No tiene permiso para crear solicitudes.</p>;
   }
 
 
   return (
     <div>
-      <h1 className="page-title mb-8">Create New Emergency Request</h1>
+      <h1 className="page-title mb-8">Crear Nueva Solicitud de Emergencia</h1>
       <RequestForm mode="create" />
     </div>
   );
