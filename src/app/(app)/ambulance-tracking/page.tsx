@@ -1,3 +1,4 @@
+
 'use client';
 
 import React, { useState, useEffect, useMemo } from 'react';
@@ -5,8 +6,9 @@ import type { Ambulance, AmbulanceType, AmbulanceStatus } from '@/types';
 import { getAmbulances } from '@/lib/ambulance-data';
 import { AmbulanceMap } from '@/components/ambulance/ambulance-map';
 import { AmbulanceFilters } from '@/components/ambulance/ambulance-filters';
-import { AmbulanceCard } from '@/components/ambulance/ambulance-card';
+import { AmbulanceCard as AmbulanceDetailCard } from '@/components/ambulance/ambulance-card'; // Renamed to avoid conflict if Card component itself is named AmbulanceCard
 import { Skeleton } from '@/components/ui/skeleton';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 
 const AMBULANCE_TYPES: AmbulanceType[] = ["SVB", "SVA", "Convencional", "UVI_Movil", "A1", "Programado", "Otros"];
 const AMBULANCE_STATUSES: AmbulanceStatus[] = ['available', 'unavailable', 'on-mission'];
@@ -94,7 +96,7 @@ export default function AmbulanceTrackingPage() {
             onStatusChange={setSelectedStatus}
           />
           {selectedAmbulance && (
-            <AmbulanceCard ambulance={selectedAmbulance} onClose={handleCloseDetailCard} />
+            <AmbulanceDetailCard ambulance={selectedAmbulance} onClose={handleCloseDetailCard} />
           )}
            {!selectedAmbulance && filteredAmbulances.length > 0 && (
             <Card className="hidden md:block">
