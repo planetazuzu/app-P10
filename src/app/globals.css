@@ -3,78 +3,80 @@
 @tailwind utilities;
 
 body {
-  font-family: Arial, Helvetica, sans-serif;
+  font-family: Georgia, 'Times New Roman', serif;
 }
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
-    --foreground: 0 0% 3.9%;
+    --background: 0 0% 100%; /* Blanco */
+    --foreground: 0 0% 3.9%; /* Default dark for text */
     --card: 0 0% 100%;
     --card-foreground: 0 0% 3.9%;
     --popover: 0 0% 100%;
     --popover-foreground: 0 0% 3.9%;
-    --primary: 0 0% 9%;
-    --primary-foreground: 0 0% 98%;
-    --secondary: 0 0% 96.1%;
-    --secondary-foreground: 0 0% 9%;
-    --muted: 0 0% 96.1%;
-    --muted-foreground: 0 0% 45.1%;
-    --accent: 0 0% 96.1%;
-    --accent-foreground: 0 0% 9%;
+    --primary: 85 69% 43%; /* Verde Rioja */
+    --primary-foreground: 0 0% 100%; /* White */
+    --secondary: 205 31% 21%; /* Azul Rioja */
+    --secondary-foreground: 0 0% 100%; /* White */
+    --muted: 205 31% 96%; /* Lighter Azul Rioja for muted backgrounds */
+    --muted-foreground: 205 31% 45%; /* Mid Azul Rioja for muted text */
+    --accent: 85 69% 90%; /* Lighter Verde Rioja for hover/accent backgrounds */
+    --accent-foreground: 85 69% 30%; /* Darker Verde Rioja for text on accent */
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 89.8%;
-    --input: 0 0% 89.8%;
-    --ring: 0 0% 3.9%;
+    --border: 205 31% 85%; /* Lighter Azul Rioja for borders */
+    --input: 0 0% 100%; /* White background for inputs */
+    --input-border: 205 31% 80%; /* Specific border for inputs */
+    --ring: 85 69% 43%; /* Verde Rioja for focus rings */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
     --radius: 0.5rem;
-    --sidebar-background: 0 0% 98%;
-    --sidebar-foreground: 240 5.3% 26.1%;
-    --sidebar-primary: 240 5.9% 10%;
-    --sidebar-primary-foreground: 0 0% 98%;
-    --sidebar-accent: 240 4.8% 95.9%;
-    --sidebar-accent-foreground: 240 5.9% 10%;
-    --sidebar-border: 220 13% 91%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+
+    /* Sidebar specific colors */
+    --sidebar-background: 0 0% 100%; /* White, or a very light off-white like 205 31% 98% */
+    --sidebar-foreground: 205 31% 21%; /* Azul Rioja */
+    --sidebar-primary: 85 69% 43%; /* Verde Rioja */
+    --sidebar-primary-foreground: 0 0% 100%; /* White */
+    --sidebar-accent: 85 69% 90%; /* Lighter Verde Rioja */
+    --sidebar-accent-foreground: 85 69% 30%; /* Darker Verde Rioja */
+    --sidebar-border: 205 31% 90%; /* Lighter Azul Rioja for sidebar internal borders */
+    --sidebar-ring: 85 69% 43%; /* Verde Rioja */
   }
+
   .dark {
-    --background: 0 0% 3.9%;
-    --foreground: 0 0% 98%;
-    --card: 0 0% 3.9%;
+    --background: 205 31% 10%; /* Dark Azul Rioja */
+    --foreground: 0 0% 98%; /* White */
+    --card: 205 31% 10%;
     --card-foreground: 0 0% 98%;
-    --popover: 0 0% 3.9%;
+    --popover: 205 31% 10%;
     --popover-foreground: 0 0% 98%;
-    --primary: 0 0% 98%;
-    --primary-foreground: 0 0% 9%;
-    --secondary: 0 0% 14.9%;
-    --secondary-foreground: 0 0% 98%;
-    --muted: 0 0% 14.9%;
-    --muted-foreground: 0 0% 63.9%;
-    --accent: 0 0% 14.9%;
-    --accent-foreground: 0 0% 98%;
+    --primary: 85 69% 43%; /* Verde Rioja */
+    --primary-foreground: 0 0% 100%; /* White */
+    --secondary: 205 31% 35%; /* Lighter Azul Rioja for dark mode secondary elements */
+    --secondary-foreground: 0 0% 98%; /* White */
+    --muted: 205 31% 15%;
+    --muted-foreground: 205 31% 65%;
+    --accent: 85 69% 30%; /* Darker Verde Rioja for dark mode accents */
+    --accent-foreground: 0 0% 98%; /* White */
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 0 0% 98%;
-    --border: 0 0% 14.9%;
-    --input: 0 0% 14.9%;
-    --ring: 0 0% 83.1%;
-    --chart-1: 220 70% 50%;
-    --chart-2: 160 60% 45%;
-    --chart-3: 30 80% 55%;
-    --chart-4: 280 65% 60%;
-    --chart-5: 340 75% 55%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
+    --border: 205 31% 25%;
+    --input: 205 31% 15%;
+    --input-border: 205 31% 25%;
+    --ring: 85 69% 43%; /* Verde Rioja */
+
+    /* Dark Sidebar specific colors */
+    --sidebar-background: 205 31% 8%;
+    --sidebar-foreground: 0 0% 98%;
+    --sidebar-primary: 85 69% 43%;
     --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    --sidebar-accent: 85 69% 30%;
+    --sidebar-accent-foreground: 0 0% 98%;
+    --sidebar-border: 205 31% 20%;
+    --sidebar-ring: 85 69% 43%;
   }
 }
 
@@ -84,5 +86,34 @@ body {
   }
   body {
     @apply bg-background text-foreground;
+    font-family: Georgia, 'Times New Roman', serif;
+  }
+  input,
+  textarea,
+  select {
+    /* The '*' rule already applies a border (width, style, and default color).
+       We just need to override the border-color here using the CSS variable. */
+    border-color: hsl(var(--input-border));
+  }
+}
+
+@layer components {
+  .rioja-container {
+    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+  }
+
+  .page-title {
+    @apply text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl;
+    color: hsl(var(--secondary));
+  }
+
+  .section-title {
+    @apply text-2xl font-semibold tracking-tight sm:text-3xl;
+    color: hsl(var(--secondary));
+  }
+
+  .card-stats {
+    @apply rounded-lg border-2 bg-card text-card-foreground shadow-sm;
+    border-color: hsl(var(--primary));
   }
 }

@@ -1,0 +1,43 @@
+'use client';
+
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
+import React, { useEffect } from 'react';
+import { Header } from '@/components/layout/header';
+import { AppSidebar } from '@/components/layout/sidebar';
+import { Globe } from 'lucide-react';
+import { SidebarProvider, SidebarInset } from '@/components/ui/sidebar';
+
+export default function AppLayout({ children }: { children: React.ReactNode }) {
+  const { isAuthenticated, isLoading, user } = useAuth();
+  const router = useRouter();
+
+  useEffect(() => {
+    if (!isLoading && !isAuthenticated) {
+      router.replace('/login');
+    }
+  }, [isAuthenticated, isLoading, router]);
+
+  if (isLoading || !isAuthenticated) {
+    return (
+      <div className="flex min-h-screen items-center justify-center bg-background">
+        <div className="flex flex-col items-center gap-2">
+          <Globe className="h-12 w-12 animate-pulse text-primary" />
+          <p className="text-xl font-semibold text-foreground">Verifying Access...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <SidebarProvider defaultOpen={true}>
+      <AppSidebar />
+      <SidebarInset>
+        <Header />
+        <main className="flex-1 rioja-container">
+          {children}
+        </main>
+      </SidebarInset>
+    </SidebarProvider>
+  );
+}
