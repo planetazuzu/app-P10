@@ -1,21 +1,23 @@
 
-import type { AmbulanceRequest, RequestStatus, UserRole } from '@/types'; // Actualizado a AmbulanceRequest
+import type { AmbulanceRequest, RequestStatus, UserRole, ProgrammedTransportRequest, TipoServicioProgramado, TipoTrasladoProgramado, MedioRequeridoProgramado, EquipamientoEspecialProgramadoId } from '@/types';
 import { mockAmbulances } from './ambulance-data';
 import { MOCK_USERS } from './auth';
+import { ALL_TIPOS_SERVICIO_PROGRAMADO, ALL_TIPOS_TRASLADO_PROGRAMADO, ALL_MEDIOS_REQUERIDOS_PROGRAMADO, EQUIPAMIENTO_ESPECIAL_PROGRAMADO_OPTIONS } from '@/types';
+
 
 const patientDetailsSamples = [
-  "65y/o male, chest pain, history of hypertension.",
-  "23y/o female, suspected ankle fracture after fall.",
-  "Child, difficulty breathing, possible asthma attack.",
-  "Unknown adult, found unconscious on street.",
-  "70y/o female, stroke symptoms, facial droop, arm weakness.",
+  "Varón 65 años, dolor torácico, HTA.",
+  "Mujer 23 años, posible fractura tobillo postcaída.",
+  "Niño, dificultad respiratoria, posible crisis asmática.",
+  "Adulto desconocido, hallado inconsciente en vía pública.",
+  "Mujer 70 años, síntomas de ictus, desviación comisura bucal, debilidad brazo.",
   "Traslado programado interhospitalario.",
   "Alta hospitalaria, traslado a domicilio.",
 ];
 
 const addresses = [
-    "123 Main St, Los Angeles, CA", "456 Oak Ave, Pasadena, CA", "789 Pine Ln, Santa Monica, CA",
-    "101 Elm Rd, Beverly Hills, CA", "202 Maple Dr, Long Beach, CA", "Calle Falsa 123, Madrid", "Avenida Siempreviva 742, Springfield"
+    "Gran Vía 12, Logroño", "Calle Laurel 5, Logroño", "Av. de la Paz 34, Calahorra",
+    "Plaza Mayor 1, Haro", "Paseo del Mercadal 8, Arnedo", "Calle Falsa 123, Logroño"
 ];
 
 function getRandomElement<T>(arr: T[]): T {
@@ -32,27 +34,30 @@ function getRandomCoords(baseLat: number, baseLng: number, range: number) {
 const mockRequesterIds = Object.values(MOCK_USERS).map(user => user.id);
 
 
-export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => { // Actualizado a AmbulanceRequest
-  const baseLocation = { lat: 34.0522, lng: -118.2437 }; 
-  const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2);
+export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
+  const baseLocation = { lat: 42.4659, lng: -2.4487 }; // Logroño
+  const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2); // Around La Rioja
   const createdAt = new Date(Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000)); 
   const status = getRandomElement<RequestStatus>(['pending', 'dispatched', 'on-scene', 'transporting', 'completed', 'cancelled']);
   
   let assignedAmbulanceId: string | undefined = undefined;
   if (status !== 'pending' && status !== 'cancelled' && mockAmbulances.length > 0) {
-    const availableAmbulances = mockAmbulances.filter(a => a.status === 'on-mission' || a.status === 'available');
+    const availableAmbulances = mockAmbulances.filter(a => a.status === 'busy' || a.status === 'available');
     if (availableAmbulances.length > 0) {
         assignedAmbulanceId = getRandomElement(availableAmbulances).id;
     }
   }
   
   const requesterId = getRandomElement(mockRequesterIds);
-  const isProgrammed = Math.random() > 0.6; // Some requests are programmed
+  // Ensure the 'individual@gmr.com' user has some requests
+  const individualUserId = MOCK_USERS['individual@gmr.com']?.id;
+  const effectiveRequesterId = (i < 3 && individualUserId) ? individualUserId : requesterId;
+
 
   return {
     id: `req-${i + 101}`,
-    requesterId: requesterId,
-    patientDetails: isProgrammed ? `Traslado programado: ${getRandomElement(patientDetailsSamples)}` : getRandomElement(patientDetailsSamples),
+    requesterId: effectiveRequesterId,
+    patientDetails: getRandomElement(patientDetailsSamples),
     location: { 
         latitude: coords.latitude, 
         longitude: coords.longitude,
@@ -62,29 +67,32 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
     assignedAmbulanceId,
     createdAt: createdAt.toISOString(),
     updatedAt: new Date(createdAt.getTime() + Math.floor(Math.random() * 60 * 60 * 1000)).toISOString(),
-    notes: Math.random() > 0.7 ? "Información adicional proporcionada." : (isProgrammed ? "Servicio programado, confirmar horario." : undefined),
-    priority: isProgrammed ? 'low' : getRandomElement<'high' | 'medium' | 'low'>(['high', 'medium', 'low']),
+    notes: Math.random() > 0.7 ? "Información adicional proporcionada." : undefined,
+    priority: getRandomElement<'high' | 'medium' | 'low'>(['high', 'medium', 'low']),
   };
 });
 
-export function getRequests(userId: string, userRole: UserRole): Promise<AmbulanceRequest[]> { // Actualizado a AmbulanceRequest
+export function getRequests(userId: string, userRole: UserRole): Promise<AmbulanceRequest[]> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      let userRequests: AmbulanceRequest[] = []; // Actualizado a AmbulanceRequest
+      let userRequests: AmbulanceRequest[] = [];
       switch (userRole) {
         case 'admin':
         case 'hospital':
-          userRequests = [...mockRequests];
+          userRequests = [...mockRequests]; // Admins and hospitals see all simple requests
           break;
         case 'individual':
           userRequests = mockRequests.filter(req => req.requesterId === userId);
           break;
         case 'ambulance':
-          userRequests = mockRequests.filter(req => req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId));
+          // Ambulance teams see requests assigned to their (conceptual) ambulance or active requests they might take
+          userRequests = mockRequests.filter(req => 
+            (req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId /* && a.crewId === userId */)) ||
+            (['pending', 'dispatched', 'on-scene'].includes(req.status)) // Or broadly active ones for now
+          );
           break;
         default:
           console.warn(`Rol de usuario no manejado en getRequests: ${userRole}`);
-          userRequests = []; 
           break;
       }
       resolve(userRequests.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
@@ -92,7 +100,7 @@ export function getRequests(userId: string, userRole: UserRole): Promise<Ambulan
   });
 }
 
-export function getRequestById(id: string): Promise<AmbulanceRequest | undefined> { // Actualizado a AmbulanceRequest
+export function getRequestById(id: string): Promise<AmbulanceRequest | undefined> {
    return new Promise((resolve) => {
     setTimeout(() => {
       resolve(mockRequests.find(req => req.id === id));
@@ -100,10 +108,10 @@ export function getRequestById(id: string): Promise<AmbulanceRequest | undefined
   });
 }
 
-export function createRequest(requestData: Omit<AmbulanceRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<AmbulanceRequest> { // Actualizado a AmbulanceRequest
+export function createRequest(requestData: Omit<AmbulanceRequest, 'id' | 'createdAt' | 'updatedAt'>): Promise<AmbulanceRequest> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const newRequest: AmbulanceRequest = { // Actualizado a AmbulanceRequest
+      const newRequest: AmbulanceRequest = {
         ...requestData,
         id: `req-${Date.now()}`,
         createdAt: new Date().toISOString(),
@@ -115,7 +123,7 @@ export function createRequest(requestData: Omit<AmbulanceRequest, 'id' | 'create
   });
 }
 
-export function updateRequestStatus(id: string, status: RequestStatus, ambulanceId?: string): Promise<AmbulanceRequest | undefined> { // Actualizado a AmbulanceRequest
+export function updateRequestStatus(id: string, status: RequestStatus, ambulanceId?: string): Promise<AmbulanceRequest | undefined> {
     return new Promise((resolve) => {
         setTimeout(() => {
             const requestIndex = mockRequests.findIndex(req => req.id === id);
@@ -131,4 +139,46 @@ export function updateRequestStatus(id: string, status: RequestStatus, ambulance
             }
         }, 300);
     });
+}
+
+
+// --- Programmed Transport Requests ---
+export const mockProgrammedTransportRequests: ProgrammedTransportRequest[] = [];
+
+export function createProgrammedTransportRequest(
+  requestData: Omit<ProgrammedTransportRequest, 'id'>
+): Promise<ProgrammedTransportRequest> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newProgrammedRequest: ProgrammedTransportRequest = {
+        ...requestData,
+        id: `prog-req-${Date.now()}`,
+      };
+      mockProgrammedTransportRequests.unshift(newProgrammedRequest);
+      console.log('Created programmed request:', newProgrammedRequest);
+      console.log('All programmed requests:', mockProgrammedTransportRequests);
+      resolve(newProgrammedRequest);
+    }, 300);
+  });
+}
+
+export function getProgrammedTransportRequests(userId: string, userRole: UserRole): Promise<ProgrammedTransportRequest[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      let userRequests: ProgrammedTransportRequest[] = [];
+      switch (userRole) {
+        case 'admin':
+        case 'hospital':
+          userRequests = [...mockProgrammedTransportRequests];
+          break;
+        case 'individual':
+          userRequests = mockProgrammedTransportRequests.filter(req => req.requesterId === userId);
+          break;
+        default:
+          // Ambulance role typically wouldn't see these unless specifically assigned in a different way
+          break;
+      }
+      resolve(userRequests.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    }, 500);
+  });
 }

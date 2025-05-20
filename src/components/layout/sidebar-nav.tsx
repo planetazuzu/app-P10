@@ -41,7 +41,8 @@ const navItems: NavItem[] = [
     roles: ['admin', 'hospital', 'individual', 'ambulance'],
     submenu: [
         { title: 'Ver Solicitudes', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'ambulance'], exactMatch: true },
-        { title: 'Nueva Solicitud', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
+        { title: 'Nueva Solicitud (Urgente)', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
+        { title: 'Nueva Solicitud (Programada)', href: '/request-management/new-programmed', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
     ]
   },
   { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'ambulance'], disabled: true },
@@ -58,8 +59,8 @@ const navItems: NavItem[] = [
           href: '/admin/ambulances', 
           icon: 'Ambulance', 
           roles: ['admin'],
-          submenu: [ // Sub-submenu para ambulancias
-            { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin'], exactMatch: true, disabled: true }, // Página de listado (futuro)
+          submenu: [
+            { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin'] },
             { title: 'Añadir Ambulancia', href: '/admin/ambulances/new', icon: 'Ambulance', roles: ['admin'] },
           ]
         },
@@ -82,6 +83,19 @@ export function SidebarNav() {
         }
       }
     });
+    // Ensure parent of active item is open
+     navItems.forEach(item => {
+        if (item.submenu) {
+            item.submenu.forEach(subItem => {
+                if (subItem.href === pathname || (subItem.submenu && subItem.submenu.some(s => s.href === pathname))) {
+                    initialOpen[item.href] = true; // Open parent
+                    if (subItem.submenu && subItem.submenu.some(s => s.href === pathname)) {
+                         initialOpen[subItem.href] = true; // Open sub-parent
+                    }
+                }
+            });
+        }
+    });
     return initialOpen;
   });
 
@@ -97,7 +111,12 @@ export function SidebarNav() {
     if (!userHasRole(item.roles)) return null;
 
     const Icon = Icons[item.icon];
-    const isActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
+    // For parent menu items with submenus, isActive should also consider if a child is active
+    let isActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
+    if (item.submenu && !isActive) { // if current item is not active, check children
+        isActive = item.submenu.some(sub => sub.exactMatch ? pathname === sub.href : pathname.startsWith(sub.href)) ||
+                   item.submenu.some(sub => sub.submenu && sub.submenu.some(s => s.exactMatch ? pathname === s.href : pathname.startsWith(s.href)));
+    }
     
     const hasSubmenu = item.submenu && item.submenu.length > 0 && item.submenu.some(sub => userHasRole(sub.roles));
     const isMenuOpen = openMenus[item.href] || false;
@@ -106,7 +125,7 @@ export function SidebarNav() {
     
     const buttonContent = (
         <>
-            <Icon className={cn("h-5 w-5", isActive && !hasSubmenu ? "text-sidebar-primary-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground")} />
+            <Icon className={cn("h-5 w-5", isActive && !hasSubmenu && !isSubmenuItem ? "text-sidebar-primary-foreground" : (isActive && isSubmenuItem ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"))} />
             <span className={cn({"pl-1" : level > 0 && isSubmenuItem})}>{item.title}</span>
             {item.label && <span className="ml-auto text-xs">{item.label}</span>}
             {hasSubmenu && (
@@ -115,19 +134,19 @@ export function SidebarNav() {
         </>
     );
     
-    const effectiveIsActive = hasSubmenu && isMenuOpen ? item.submenu?.some(subItem => subItem.exactMatch ? pathname === subItem.href : pathname.startsWith(subItem.href)) || isActive : isActive;
-
-
+    // An open menu with an active child should also highlight the parent button.
+    const effectiveIsActiveForButton = (isActive && !hasSubmenu) || (hasSubmenu && isMenuOpen && isActive);
+    
     return (
-      <SidebarMenuItem key={item.href} className={cn({"bg-sidebar-accent": effectiveIsActive && hasSubmenu && isMenuOpen })}>
+      <SidebarMenuItem key={item.href} className={cn({"bg-sidebar-accent/50": effectiveIsActiveForButton && hasSubmenu && isMenuOpen })}>
         {hasSubmenu ? (
           <ButtonComponent
             onClick={() => toggleMenu(item.href)}
-            isActive={effectiveIsActive}
+            isActive={effectiveIsActiveForButton} 
             aria-expanded={isMenuOpen}
             className={cn(
-                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActive },
-                {"hover:bg-sidebar-accent/80": effectiveIsActive}
+                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen },
+                {"hover:bg-sidebar-accent/80": effectiveIsActiveForButton && isMenuOpen}
             )}
           >
             {buttonContent}
@@ -141,8 +160,11 @@ export function SidebarNav() {
               isActive={isActive}
               disabled={item.disabled}
               className={cn(
+                // For non-submenu items OR final submenu items
                 {"bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90": isActive && !hasSubmenu },
-                {"hover:bg-sidebar-accent hover:text-sidebar-accent-foreground": !isActive || hasSubmenu }
+                // For submenu items themselves that are active
+                {"bg-sidebar-accent text-sidebar-accent-foreground": isActive && isSubmenuItem},
+                {"hover:bg-sidebar-accent hover:text-sidebar-accent-foreground": !isActive }
                 )}
               tooltip={item.title}
             >
@@ -158,7 +180,6 @@ export function SidebarNav() {
       </SidebarMenuItem>
     );
   };
-
 
   return (
     <SidebarMenu>
