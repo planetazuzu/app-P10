@@ -28,6 +28,20 @@ const translateFilterStatus = (status: AmbulanceStatus): string => {
   }
 };
 
+// Helper para obtener una descripción del tipo de ambulancia para filtros
+const getAmbulanceTypeFilterLabel = (type: AmbulanceType): string => {
+  switch (type) {
+    case "SVB": return "SVB (Soporte Vital Básico)";
+    case "SVA": return "SVA (Soporte Vital Avanzado)";
+    case "Convencional": return "Convencional";
+    case "UVI_Movil": return "UVI Móvil";
+    case "A1": return "A1 (Programado Ind.)";
+    case "Programado": return "Programado Col.";
+    case "Otros": return "Otros Tipos";
+    default: return type;
+  }
+}
+
 
 export function AmbulanceFilters({
   types,
@@ -53,7 +67,7 @@ export function AmbulanceFilters({
               <SelectItem value="all">Todos los Tipos</SelectItem>
               {types.map((type) => (
                 <SelectItem key={type} value={type}>
-                  {type}
+                  {getAmbulanceTypeFilterLabel(type)}
                 </SelectItem>
               ))}
             </SelectContent>

@@ -1,15 +1,16 @@
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
 
 const ambulanceNames = [
-  "City Rover", "Metro Medic", "County Cruiser", "Rapid Response Unit", "Life Line Express",
-  "Emergency One", "First Aid Flyer", "Rescue Runner", "Trauma Transporter", "Care Carrier"
+  "Movil Rápida", "Asistencia Express", "Unidad Vital", "Respuesta Inmediata", "Soporte Médico Móvil",
+  "Emergencia Sur", "Auxilio Norte", "Transporte Sanitario Veloz", "Protección Ciudadana", "Servicio Urgente"
 ];
 
 const equipmentSets: string[][] = [
-  ['defibrillator', 'ventilator', 'IV kit', 'oxygen tank'],
-  ['basic first aid', 'oxygen mask', 'splints'],
-  ['advanced cardiac monitor', 'ventilator', 'infusion pump', 'portable lab'],
-  ['defibrillator', 'EKG machine', 'suction unit'],
+  ['desfibrilador', 'ventilador', 'kit IV', 'tanque de oxígeno', 'monitor multiparamétrico'],
+  ['material de cura básico', 'oxígeno medicinal', 'férulas'],
+  ['monitor cardíaco avanzado', 'ventilador mecánico', 'bomba de infusión', 'material de intubación'],
+  ['desfibrilador DEA', 'equipo de EKG', 'unidad de succión'],
+  ['camilla', 'botiquín primeros auxilios'],
 ];
 
 function getRandomElement<T>(arr: T[]): T {
@@ -23,10 +24,18 @@ function getRandomCoords(baseLat: number, baseLng: number, range: number) {
   };
 }
 
+// Definición de los nuevos tipos de ambulancia españoles
+const spanishAmbulanceTypes: AmbulanceType[] = ["SVB", "SVA", "Convencional", "UVI_Movil", "A1", "Programado", "Otros"];
+
 export const mockAmbulances: Ambulance[] = Array.from({ length: 20 }, (_, i) => {
-  const baseLocation = { lat: 34.0522, lng: -118.2437 }; // Los Angeles
+  const baseLocation = { lat: 40.416775, lng: -3.703790 }; // Madrid, Spain for example
   const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.5);
-  const type = getRandomElement<AmbulanceType>(['ALS', 'BLS', 'MICU']);
+  const type = getRandomElement<AmbulanceType>(spanishAmbulanceTypes);
+  
+  let capacity = 2;
+  if (type === 'UVI_Movil') capacity = 1;
+  if (type === 'Convencional' || type === 'A1' || type === 'Programado') capacity = 1; // Typically for non-critical transport
+
   return {
     id: `amb-${i + 1}`,
     name: `${getRandomElement(ambulanceNames)} #${i + 1}`,
@@ -34,8 +43,8 @@ export const mockAmbulances: Ambulance[] = Array.from({ length: 20 }, (_, i) => 
     status: getRandomElement<AmbulanceStatus>(['available', 'unavailable', 'on-mission']),
     latitude: coords.latitude,
     longitude: coords.longitude,
-    currentPatients: Math.random() > 0.7 ? Math.floor(Math.random() * 2) + 1 : 0,
-    capacity: type === 'MICU' ? 1 : 2,
+    currentPatients: Math.random() > 0.8 ? 1 : 0, // Usually one patient for UVI/A1/Programado
+    capacity,
     equipment: getRandomElement(equipmentSets),
   };
 });
@@ -65,7 +74,7 @@ export function getAmbulanceById(id: string): Promise<Ambulance | undefined> {
 export function getAmbulanceLocationsForAI(): string {
  return mockAmbulances
     .filter(a => a.status === 'available')
-    .map(a => `ID: ${a.id}, Type: ${a.type}, Lat: ${a.latitude.toFixed(4)}, Lng: ${a.longitude.toFixed(4)}`)
+    .map(a => `ID: ${a.id}, Tipo: ${a.type}, Lat: ${a.latitude.toFixed(4)}, Lng: ${a.longitude.toFixed(4)}`)
     .join('; ');
 }
 
@@ -76,7 +85,7 @@ export function getVehicleAvailabilityForAI(): string {
     return acc;
   }, {} as Record<AmbulanceType, number>);
   
-  let availabilityString = available.length > 0 ? `${available.length} ambulances available. ` : "No ambulances currently available. ";
+  let availabilityString = available.length > 0 ? `${available.length} ambulancias disponibles. ` : "Ninguna ambulancia disponible actualmente. ";
   availabilityString += Object.entries(counts).map(([type, count]) => `${count} ${type}`).join(', ');
   return availabilityString;
 }

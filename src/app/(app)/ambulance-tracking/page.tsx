@@ -8,7 +8,7 @@ import { AmbulanceFilters } from '@/components/ambulance/ambulance-filters';
 import { AmbulanceCard } from '@/components/ambulance/ambulance-card';
 import { Skeleton } from '@/components/ui/skeleton';
 
-const AMBULANCE_TYPES: AmbulanceType[] = ['ALS', 'BLS', 'MICU'];
+const AMBULANCE_TYPES: AmbulanceType[] = ["SVB", "SVA", "Convencional", "UVI_Movil", "A1", "Programado", "Otros"];
 const AMBULANCE_STATUSES: AmbulanceStatus[] = ['available', 'unavailable', 'on-mission'];
 
 export default function AmbulanceTrackingPage() {
@@ -42,7 +42,11 @@ export default function AmbulanceTrackingPage() {
       ambulances = ambulances.filter(amb => amb.status === selectedStatus);
     }
     setFilteredAmbulances(ambulances);
-  }, [allAmbulances, selectedType, selectedStatus]);
+    // Deselect ambulance if it's no longer in the filtered list
+    if (selectedAmbulance && !ambulances.find(amb => amb.id === selectedAmbulance.id)) {
+        setSelectedAmbulance(null);
+    }
+  }, [allAmbulances, selectedType, selectedStatus, selectedAmbulance]);
 
   const handleAmbulanceSelect = (ambulance: Ambulance | null) => {
     setSelectedAmbulance(ambulance);
@@ -91,6 +95,16 @@ export default function AmbulanceTrackingPage() {
           />
           {selectedAmbulance && (
             <AmbulanceCard ambulance={selectedAmbulance} onClose={handleCloseDetailCard} />
+          )}
+           {!selectedAmbulance && filteredAmbulances.length > 0 && (
+            <Card className="hidden md:block">
+              <CardHeader>
+                <CardTitle className="text-base text-muted-foreground">Seleccione una ambulancia</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">Haga clic en una ambulancia en el mapa o en la lista para ver sus detalles.</p>
+              </CardContent>
+            </Card>
           )}
         </div>
       </div>

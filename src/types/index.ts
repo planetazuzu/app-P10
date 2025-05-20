@@ -8,12 +8,21 @@ export interface User {
 }
 
 export type AmbulanceStatus = 'available' | 'unavailable' | 'on-mission';
-export type AmbulanceType = 'ALS' | 'BLS' | 'MICU'; // Advanced Life Support, Basic Life Support, Mobile ICU
+
+// Tipos de ambulancia españoles
+export type AmbulanceType =
+  | "SVB"          // Soporte Vital Básico
+  | "SVA"          // Soporte Vital Avanzado
+  | "Convencional" // Ambulancia convencional
+  | "UVI_Movil"    // Unidad de Vigilancia Intensiva móvil
+  | "A1"           // Ambulancia A1 (transporte sanitario programado)
+  | "Programado"   // Transporte sanitario programado
+  | "Otros";       // Cualquier otro tipo
 
 export interface Ambulance {
   id: string;
   name: string;
-  type: AmbulanceType;
+  type: AmbulanceType; // Actualizado para usar los nuevos tipos
   status: AmbulanceStatus;
   latitude: number;
   longitude: number;
