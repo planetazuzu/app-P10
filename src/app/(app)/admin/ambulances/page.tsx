@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit3, Trash2, Search, Filter, ArrowLeft } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, Search, Filter, ArrowLeft, Loader2 } from 'lucide-react';
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
 import { getAmbulances } from '@/lib/ambulance-data'; // Assuming this will be updated
 import { Input } from '@/components/ui/input';
@@ -63,7 +63,7 @@ export default function ManageAmbulancesPage() {
     async function loadAmbulances() {
       setIsLoading(true);
       try {
-        const data = await getAmbulances(); // Ensure getAmbulances is updated for new structure
+        const data = await getAmbulances(); 
         setAmbulances(data);
       } catch (error) {
         toast({ title: "Error", description: "No se pudieron cargar las ambulancias.", variant: "destructive" });
@@ -80,14 +80,15 @@ export default function ManageAmbulancesPage() {
       (searchTerm === '' || 
        amb.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
        amb.licensePlate.toLowerCase().includes(searchTerm.toLowerCase()) ||
-       amb.model.toLowerCase().includes(searchTerm.toLowerCase()) ||
+       (amb.model && amb.model.toLowerCase().includes(searchTerm.toLowerCase())) ||
        amb.baseLocation.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-  const handleDelete = (id: string) => {
-    // Mock deletion
-    toast({ title: "Simulación", description: `Ambulancia ${id} sería eliminada.`});
-    // setAmbulances(prev => prev.filter(amb => amb.id !== id));
+  const handleDelete = (id: string, name: string) => {
+    // Mock deletion: filter out the ambulance from the local state
+    setAmbulances(prev => prev.filter(amb => amb.id !== id));
+    toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${name}" (ID: ${id}) ha sido eliminada del listado.`});
+    // In a real app, you would call an API to delete the ambulance from the database.
   };
   
   if (isLoading) {
@@ -98,14 +99,28 @@ export default function ManageAmbulancesPage() {
                 <Skeleton className="h-10 w-36" />
             </div>
             <Card>
-                <CardHeader><Skeleton className="h-8 w-1/4" /></CardHeader>
+                <CardHeader>
+                    <Skeleton className="h-8 w-1/4 mb-2" />
+                    <Skeleton className="h-6 w-1/2" />
+                </CardHeader>
                 <CardContent>
-                    <div className="flex gap-4 mb-4">
-                        <Skeleton className="h-10 w-1/2" />
-                        <Skeleton className="h-10 w-1/4" />
-                        <Skeleton className="h-10 w-1/4" />
+                    <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                        <Skeleton className="h-10 flex-grow" />
+                        <Skeleton className="h-10 w-full sm:w-[180px]" />
+                        <Skeleton className="h-10 w-full sm:w-[180px]" />
                     </div>
-                    <Skeleton className="h-64 w-full" />
+                    <div className="space-y-3">
+                        {[...Array(5)].map((_, i) => (
+                            <div key={i} className="flex items-center space-x-4">
+                                <Skeleton className="h-8 w-1/6" />
+                                <Skeleton className="h-8 w-1/6" />
+                                <Skeleton className="h-8 w-1/6" />
+                                <Skeleton className="h-8 w-1/6" />
+                                <Skeleton className="h-8 w-1/6" />
+                                <Skeleton className="h-8 w-1/6" />
+                            </div>
+                        ))}
+                    </div>
                 </CardContent>
             </Card>
         </div>
@@ -191,7 +206,7 @@ export default function ManageAmbulancesPage() {
                       <TableCell>
                         <Badge variant="secondary" className="whitespace-nowrap">{getAmbulanceTypeLabel(ambulance.type)}</Badge>
                       </TableCell>
-                      <TableCell>{ambulance.model}</TableCell>
+                      <TableCell>{ambulance.model || 'N/A'}</TableCell>
                       <TableCell>{ambulance.baseLocation}</TableCell>
                       <TableCell>
                         <Badge className={`${getStatusBadgeVariantClass(ambulance.status)} text-white text-xs`}>
@@ -199,10 +214,12 @@ export default function ManageAmbulancesPage() {
                         </Badge>
                       </TableCell>
                       <TableCell className="text-right">
-                        <Button variant="ghost" size="icon" onClick={() => toast({title: "Próximamente", description: "La edición de ambulancias estará disponible pronto."})} className="hover:text-primary">
-                          <Edit3 className="h-4 w-4" />
-                        </Button>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(ambulance.id)} className="hover:text-destructive">
+                        <Link href={`/admin/ambulances/${ambulance.id}/edit`} passHref>
+                          <Button variant="ghost" size="icon" className="hover:text-primary">
+                            <Edit3 className="h-4 w-4" />
+                          </Button>
+                        </Link>
+                        <Button variant="ghost" size="icon" onClick={() => handleDelete(ambulance.id, ambulance.name)} className="hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -217,3 +234,5 @@ export default function ManageAmbulancesPage() {
     </div>
   );
 }
+
+    

@@ -20,8 +20,6 @@ interface AmbulanceFormProps {
   ambulance: Partial<Ambulance>;
   isEditing: boolean;
   onFieldChange: (field: keyof Ambulance, value: any) => void;
-  // If field is nested, path can be like "equipmentDetails.stretcher"
-  onNestedFieldChange?: (path: string, value: any) => void; 
   onSpecialEquipmentToggle: (equipmentId: string) => void;
 }
 
@@ -58,13 +56,10 @@ export const AmbulanceForm = ({
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
-        <Label htmlFor="id">
-          Identificador {isEditing && "(no modificable)"}
-        </Label>
+        <Label htmlFor="id">Identificador</Label>
         <Input
           id="id"
-          placeholder="Ej: AMB-001"
-          value={ambulance.id || (isEditing ? "" : "Se generará automáticamente")}
+          value={ambulance.id || (isEditing ? "" : "Se generará automáticamente al guardar")}
           disabled={true}
         />
       </div>
@@ -107,6 +102,7 @@ export const AmbulanceForm = ({
         <Select
           value={ambulance.type || ""}
           onValueChange={(value) => onFieldChange("type", value as AmbulanceType)}
+          required
         >
           <SelectTrigger id="type">
             <SelectValue placeholder="Seleccionar tipo de ambulancia" />
@@ -126,6 +122,7 @@ export const AmbulanceForm = ({
           onValueChange={(value) => 
             onFieldChange("status", value as AmbulanceStatus)
           }
+          required
         >
           <SelectTrigger id="status">
             <SelectValue placeholder="Seleccionar estado" />
@@ -265,3 +262,5 @@ export const AmbulanceForm = ({
     </div>
   );
 };
+
+    
