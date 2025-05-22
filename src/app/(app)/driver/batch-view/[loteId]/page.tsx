@@ -13,7 +13,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, AlertTriangle, MapPin, Clock, User, ChevronsRight, CheckCircle, PlayCircle, PauseCircle, SkipForward, Ban, HelpCircle } from 'lucide-react';
+import { Loader2, AlertTriangle, MapPin, Clock, User, ChevronsRight, CheckCircle, PlayCircle, PauseCircle, SkipForward, Ban, HelpCircle, UserX } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
 
@@ -322,5 +322,6 @@ export default function DriverBatchViewPage() {
     </div>
   );
 }
+
 
     
