@@ -32,6 +32,11 @@ function getRandomCoords(baseLat: number, baseLng: number, range: number) {
 }
 
 const mockUserValues = Object.values(MOCK_USERS);
+const individualUser = mockUserValues.find(u => u.role === 'individual');
+const hospitalUser = mockUserValues.find(u => u.role === 'hospital');
+const adminUser = mockUserValues.find(u => u.role === 'admin');
+const centroCoordinadorUser = mockUserValues.find(u => u.role === 'centroCoordinador');
+
 
 export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
   const baseLocation = { lat: 42.4659, lng: -2.4487 }; // Logroño
@@ -48,7 +53,16 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
     }
   }
   
-  const requesterUser = getRandomElement(mockUserValues);
+  let requesterUser = getRandomElement(mockUserValues); // Default to random
+  // Assign specific requesters for demo purposes
+  if (i < 3 && individualUser) { // First 3 requests for individual user
+    requesterUser = individualUser;
+  } else if (i >= 3 && i < 6 && hospitalUser) { // Next 3 for hospital user
+    requesterUser = hospitalUser;
+  } else if (i >= 6 && i < 9 && centroCoordinadorUser) { // Next 3 for centroCoordinador user
+    requesterUser = centroCoordinadorUser;
+  }
+  // Remaining requests will have a random requesterId or admin
 
 
   return {
@@ -69,14 +83,6 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
   };
 });
 
-// Ensure some requests belong to the individual demo user
-const individualUser = mockUserValues.find(u => u.role === 'individual');
-if (individualUser) {
-    for(let i=0; i<3; i++) {
-        if (mockRequests[i]) mockRequests[i].requesterId = individualUser.id;
-    }
-}
-
 
 export function getRequests(userId: string, userRole: UserRole): Promise<AmbulanceRequest[]> {
   return new Promise((resolve) => {
@@ -86,15 +92,16 @@ export function getRequests(userId: string, userRole: UserRole): Promise<Ambulan
         case 'admin':
         case 'hospital':
         case 'centroCoordinador': 
-          userRequests = [...mockRequests]; 
+          userRequests = [...mockRequests]; // Admin, Hospital, and Centro Coordinador see all requests
           break;
         case 'individual':
-          userRequests = mockRequests.filter(req => req.requesterId === userId);
+          userRequests = mockRequests.filter(req => req.requesterId === userId); // Individual users only see their own requests
           break;
         case 'equipoMovil': 
-             userRequests = []; // Equipo Móvil no ve estas solicitudes directamente, sino a través de lotes.
+             userRequests = []; // Equipo Móvil does not see these requests directly, but through batches.
              break;
         default:
+          // This ensures that if a new role is added, we're reminded to handle it.
           const _exhaustiveCheck: never = userRole; 
           console.warn(`Rol de usuario no manejado en getRequests: ${_exhaustiveCheck}`);
           break;
