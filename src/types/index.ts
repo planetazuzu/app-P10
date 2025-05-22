@@ -9,7 +9,7 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
-  password?: string; // Added for form, though not used by mock login
+  password?: string; 
 }
 
 export type AmbulanceType =
@@ -288,8 +288,8 @@ export interface SolicitudModificacionHorario {
   notasResolucion?: string;
 }
 
-// Zod schema for user creation/editing
-export const UserFormSchema = z.object({
+// Zod schema for user creation
+export const UserCreateFormSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
   email: z.string().email({ message: "Correo electrónico inválido." }),
   role: z.enum(ALL_USER_ROLES, { required_error: "El rol es obligatorio." }),
@@ -297,7 +297,39 @@ export const UserFormSchema = z.object({
   confirmPassword: z.string().min(6, { message: "La confirmación de contraseña debe tener al menos 6 caracteres." }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden.",
-  path: ["confirmPassword"], // path of error
+  path: ["confirmPassword"], 
 });
+export type UserCreateFormValues = z.infer<typeof UserCreateFormSchema>;
 
-export type UserFormValues = z.infer<typeof UserFormSchema>;
+
+// Zod schema for user editing
+export const UserEditFormSchema = z.object({
+  name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
+  email: z.string().email({ message: "Correo electrónico inválido." }), // Email might be non-editable in real app
+  role: z.enum(ALL_USER_ROLES, { required_error: "El rol es obligatorio." }),
+  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }).optional().or(z.literal('')),
+  confirmPassword: z.string().min(6, { message: "La confirmación de contraseña debe tener al menos 6 caracteres." }).optional().or(z.literal('')),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden.",
+  path: ["confirmPassword"],
+});
+export type UserEditFormValues = z.infer<typeof UserEditFormSchema>;
+
+// Combined type for form values if needed, or use discriminated union
+export type UserFormValues = UserCreateFormValues | UserEditFormValues;
+
+// Default equipment is no longer string[], it's a structured object. This type might be unused or refactored.
+export type SpecialEquipmentId = typeof equipmentOptions[number]['id'];
+
+// Keep equipmentOptions for ambulance form (special checkboxes)
+export const equipmentOptions = [
+  { id: "stair-chair", label: "Silla oruga" },
+  { id: "bariatric-stretcher", label: "Camilla bariátrica" },
+  { id: "bariatric-equipment", label: "Equipamiento para pacientes bariátricos" },
+  { id: "vital-signs-monitor", label: "Monitorización de constantes vitales" },
+  { id: "oxygen-supply", label: "Suministro de Oxígeno" },
+  { id: "defibrillator", label: "Desfibrilador" },
+  { id: "ventilator", label: "Ventilador mecánico" },
+  { id: "incubator", label: "Incubadora neonatal" },
+  { id: "gps-navigation", label: "Navegación GPS avanzada" },
+];

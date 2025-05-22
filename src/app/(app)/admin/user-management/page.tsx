@@ -45,21 +45,20 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     if (currentUser && ['admin', 'centroCoordinador'].includes(currentUser.role)) {
-      // Object.values might change order, sort by name or email if consistent order is needed
       setUsers(Object.values(MOCK_USERS).sort((a, b) => a.name.localeCompare(b.name)));
     }
-  }, [currentUser]); // Re-fetch if MOCK_USERS could change (though it's mock here)
-
-  const handleEditUser = (userId: string) => {
-    toast({ title: 'Editar Usuario (Próximamente)', description: `Funcionalidad para editar el usuario ${userId} aún no implementada.` });
-    // router.push(`/admin/user-management/${userId}/edit`); // Future route
-  };
+  }, [currentUser]); 
 
   const handleDeleteUser = (userId: string, userName: string) => {
     // Simulate deletion for UI. In a real app, this would be an API call.
-    // MOCK_USERS is a const, so we can't truly delete from it here without more complex state management
-    // or making MOCK_USERS a mutable variable (not ideal for mocks).
     // For now, we'll just filter the local state.
+    if (currentUser?.id === userId) {
+        toast({ title: 'Acción no Permitida', description: 'No puede eliminarse a sí mismo.', variant: 'destructive' });
+        return;
+    }
+    // This won't actually delete from MOCK_USERS as it's re-read on each load.
+    // In a real app, you'd call an API and then re-fetch or update state.
+    delete MOCK_USERS[Object.keys(MOCK_USERS).find(key => MOCK_USERS[key].id === userId) || ''];
     setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     toast({ title: 'Usuario Eliminado (Simulado)', description: `El usuario "${userName}" ha sido eliminado de la lista (simulación).` });
   };
@@ -129,13 +128,15 @@ export default function UserManagementPage() {
                           </DropdownMenuTrigger>
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                            <DropdownMenuItem onClick={() => handleEditUser(user.id)} disabled>
-                              <Edit3 className="mr-2 h-4 w-4" /> Editar (Próximamente)
+                            <DropdownMenuItem asChild>
+                                <Link href={`/admin/user-management/${user.id}/edit`} className="flex items-center">
+                                  <Edit3 className="mr-2 h-4 w-4" /> Editar
+                                </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem 
                               onClick={() => handleDeleteUser(user.id, user.name)} 
                               className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                              disabled={user.id === currentUser.id} // Prevent self-deletion
+                              disabled={user.id === currentUser.id || user.email === 'admin@gmr.com'} // Prevent self-deletion and main admin deletion
                             >
                               <Trash2 className="mr-2 h-4 w-4" /> Eliminar (Próximamente)
                             </DropdownMenuItem>
