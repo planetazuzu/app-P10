@@ -2,12 +2,22 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MOCK_USERS } from '@/lib/auth';
+import { MOCK_USERS, mockGetUserById } from '@/lib/auth'; // mockGetUserById might not be needed here if we pass full user object
 import type { User, UserRole } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 import { MoreHorizontal, PlusCircle, Edit3, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
@@ -32,6 +42,9 @@ export default function UserManagementPage() {
   const { user: currentUser, isLoading: authIsLoading } = useAuth();
   const router = useRouter();
 
+  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
+  const [userToDelete, setUserToDelete] = useState<User | null>(null);
+
   useEffect(() => {
     if (!authIsLoading && currentUser && !['admin', 'centroCoordinador'].includes(currentUser.role)) {
       toast({
@@ -49,18 +62,29 @@ export default function UserManagementPage() {
     }
   }, [currentUser]); 
 
-  const handleDeleteUser = (userId: string, userName: string) => {
-    // Simulate deletion for UI. In a real app, this would be an API call.
-    // For now, we'll just filter the local state.
-    if (currentUser?.id === userId) {
+  const openDeleteConfirmDialog = (user: User) => {
+    if (currentUser?.id === user.id) {
         toast({ title: 'Acción no Permitida', description: 'No puede eliminarse a sí mismo.', variant: 'destructive' });
         return;
     }
-    // This won't actually delete from MOCK_USERS as it's re-read on each load.
-    // In a real app, you'd call an API and then re-fetch or update state.
-    delete MOCK_USERS[Object.keys(MOCK_USERS).find(key => MOCK_USERS[key].id === userId) || ''];
-    setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
-    toast({ title: 'Usuario Eliminado (Simulado)', description: `El usuario "${userName}" ha sido eliminado de la lista (simulación).` });
+    if (user.email === 'admin@gmr.com') {
+        toast({ title: 'Acción no Permitida', description: 'La cuenta principal de administrador no puede ser eliminada.', variant: 'destructive' });
+        return;
+    }
+    setUserToDelete(user);
+    setIsConfirmDeleteDialogOpen(true);
+  };
+
+  const handleDeleteUser = () => {
+    if (!userToDelete) return;
+
+    // Simulate deletion for UI.
+    delete MOCK_USERS[Object.keys(MOCK_USERS).find(key => MOCK_USERS[key].id === userToDelete.id) || ''];
+    setUsers(prevUsers => prevUsers.filter(user => user.id !== userToDelete.id));
+    toast({ title: 'Usuario Eliminado (Simulado)', description: `El usuario "${userToDelete.name}" ha sido eliminado de la lista (simulación).` });
+    
+    setUserToDelete(null);
+    setIsConfirmDeleteDialogOpen(false);
   };
 
   if (authIsLoading || (!currentUser || !['admin', 'centroCoordinador'].includes(currentUser.role))) {
@@ -129,16 +153,16 @@ export default function UserManagementPage() {
                           <DropdownMenuContent align="end">
                             <DropdownMenuLabel>Acciones</DropdownMenuLabel>
                             <DropdownMenuItem asChild>
-                                <Link href={`/admin/user-management/${user.id}/edit`} className="flex items-center">
+                                <Link href={`/admin/user-management/${user.id}/edit`} className="flex items-center cursor-pointer">
                                   <Edit3 className="mr-2 h-4 w-4" /> Editar
                                 </Link>
                             </DropdownMenuItem>
                             <DropdownMenuItem 
-                              onClick={() => handleDeleteUser(user.id, user.name)} 
-                              className="text-destructive focus:text-destructive focus:bg-destructive/10"
-                              disabled={user.id === currentUser.id || user.email === 'admin@gmr.com'} // Prevent self-deletion and main admin deletion
+                              onClick={() => openDeleteConfirmDialog(user)} 
+                              className="text-destructive focus:text-destructive focus:bg-destructive/10 cursor-pointer"
+                              disabled={user.id === currentUser.id || user.email === 'admin@gmr.com'}
                             >
-                              <Trash2 className="mr-2 h-4 w-4" /> Eliminar (Próximamente)
+                              <Trash2 className="mr-2 h-4 w-4" /> Eliminar
                             </DropdownMenuItem>
                           </DropdownMenuContent>
                         </DropdownMenu>
@@ -151,6 +175,24 @@ export default function UserManagementPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={isConfirmDeleteDialogOpen} onOpenChange={setIsConfirmDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Eliminación</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro de que desea eliminar al usuario "{userToDelete?.name || ''}"? 
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setUserToDelete(null)}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteUser} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              Eliminar Usuario
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
