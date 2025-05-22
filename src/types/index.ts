@@ -1,4 +1,5 @@
 
+
 export type UserRole = 'admin' | 'hospital' | 'individual' | 'ambulance';
 
 export interface User {
@@ -133,23 +134,36 @@ export interface ProgrammedTransportRequest {
   priority: 'low' | 'medium'; 
 }
 
-// Basic type for advanced multi-step transport request data
+// Type for advanced multi-step transport request data
 export interface AdvancedTransportData {
   // Step 1: Patient Info
   patientName?: string;
   patientId?: string;
-  serviceType?: string; // Example, will be more detailed
+  serviceType?: string;
+  patientContact?: string;
+  patientObservations?: string;
+
   // Step 2: Scheduling
-  recurrence?: string; // daily, weekly, specificDates
-  dates?: Date[];
+  recurrenceType?: 'specificDates' | 'daily' | 'weekly' | 'monthly';
+  startDate?: string; // YYYY-MM-DD
+  specificDatesNotes?: string; // For listing specific dates or complex patterns
+  pickupTime?: string; // HH:MM
+  returnTime?: string; // HH:MM
+  durationEstimate?: string;
+
+
   // Step 3: Locations
   originAddress?: string;
+  originDetails?: string;
   destinationAddress?: string;
+  destinationDetails?: string;
+
   // Step 4: Configuration
-  transportType?: AmbulanceType; // e.g., 'A1', 'Programado'
-  additionalOptions?: string[];
-  // Step 5: Confirmation (no data, just action)
+  transportType?: AmbulanceType;
+  transportTypeOther?: string; // If transportType is 'Otros'
+  mobilityNeeds?: MedioRequeridoProgramado;
+  advancedEquipment?: string[]; // IDs from ADVANCED_EQUIPMENT_OPTIONS
+  additionalNotes?: string;
   
-  // Add more fields as each step is defined
   [key: string]: any; // Allow other fields for now
 }

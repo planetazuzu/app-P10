@@ -3,9 +3,10 @@
 
 import React from 'react';
 import type { AdvancedTransportData } from '@/types';
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
+import { CardDescription } from '@/components/ui/card';
 import { Label } from '@/components/ui/label';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 
 interface StepProps {
   formData: AdvancedTransportData;
@@ -38,7 +39,7 @@ export default function Step1PatientInfo({ formData, updateFormData }: StepProps
           />
         </div>
         <div>
-          <Label htmlFor="serviceType">Tipo de Servicio</Label>
+          <Label htmlFor="serviceType">Tipo de Servicio/Motivo del Traslado</Label>
           <Input 
             id="serviceType" 
             value={formData.serviceType || ''} 
@@ -46,8 +47,27 @@ export default function Step1PatientInfo({ formData, updateFormData }: StepProps
             placeholder="Ej: Consulta médica, rehabilitación, diálisis"
           />
         </div>
+         <div>
+          <Label htmlFor="patientContact">Teléfono de Contacto (Paciente o Responsable)</Label>
+          <Input 
+            id="patientContact" 
+            type="tel"
+            value={formData.patientContact || ''} 
+            onChange={(e) => updateFormData({ patientContact: e.target.value })}
+            placeholder="Número de teléfono"
+          />
+        </div>
+        <div>
+          <Label htmlFor="patientObservations">Observaciones sobre el Paciente</Label>
+          <Textarea
+            id="patientObservations"
+            value={formData.patientObservations || ''}
+            onChange={(e) => updateFormData({ patientObservations: e.target.value })}
+            placeholder="Alergias conocidas, movilidad reducida, condiciones preexistentes relevantes, etc."
+            rows={3}
+          />
+        </div>
       </div>
-      <p className="mt-6 text-sm text-muted-foreground">Este es un marcador de posición para el Paso 1. Se añadirán más campos y validación.</p>
     </div>
   );
 }
