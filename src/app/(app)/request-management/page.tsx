@@ -3,22 +3,22 @@
 
 import React, { useState, useEffect, useCallback } from 'react';
 import { useAuth } from '@/hooks/use-auth';
-import type { AmbulanceRequest, RequestStatus } from '@/types'; // Actualizado a AmbulanceRequest
-import { getRequests, updateRequestStatus as apiUpdateRequestStatus } from '@/lib/request-data';
+import type { AmbulanceRequest, RequestStatus } from '@/types'; 
+import { getRequests, updateRequestStatus as apiUpdateRequestStatus, getRequestById } from '@/lib/request-data';
 import { RequestList } from '@/components/request/request-list';
 import { Button } from '@/components/ui/button';
-import { PlusCircle, RefreshCw } from 'lucide-react';
+import { PlusCircle, RefreshCw, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from "@/hooks/use-toast";
 import { Skeleton } from '@/components/ui/skeleton';
-// Modal for viewing request details (optional - could be a new page)
-// import { RequestDetailModal } from '@/components/request/request-detail-modal'; 
+import { RequestDetailModal } from '@/components/request/request-detail-modal'; 
 
 export default function RequestManagementPage() {
   const { user } = useAuth();
-  const [requests, setRequests] = useState<AmbulanceRequest[]>([]); // Actualizado a AmbulanceRequest
+  const [requests, setRequests] = useState<AmbulanceRequest[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
-  const [selectedRequestId, setSelectedRequestId] = useState<string | null>(null);
+  const [selectedRequest, setSelectedRequest] = useState<AmbulanceRequest | null>(null);
+  const [isModalOpen, setIsModalOpen] = useState(false);
   const { toast } = useToast();
 
   const fetchUserRequests = useCallback(async () => {
@@ -49,18 +49,26 @@ export default function RequestManagementPage() {
     }
   };
 
-  const handleViewDetails = (requestId: string) => {
-    setSelectedRequestId(requestId);
-    // Implement modal display logic or navigate to a detail page:
-    // router.push(`/request-management/${requestId}`);
-    toast({ title: "Ver Detalles", description: `(Simulado) Viendo detalles para la solicitud ${requestId.substring(0,8)}...` });
+  const handleViewDetails = async (requestId: string) => {
+    const requestData = await getRequestById(requestId); // Fetch full request details
+    if (requestData) {
+      setSelectedRequest(requestData);
+      setIsModalOpen(true);
+    } else {
+      toast({ title: "Error", description: "No se pudieron cargar los detalles de la solicitud.", variant: "destructive"});
+    }
   };
 
-  const canCreateRequest = user?.role === 'admin' || user?.role === 'hospital' || user?.role === 'individual';
+  const handleCloseModal = () => {
+    setIsModalOpen(false);
+    setSelectedRequest(null);
+  };
+
+  const canCreateRequest = user?.role === 'admin' || user?.role === 'hospital' || user?.role === 'individual' || user?.role === 'centroCoordinador';
 
   if (isLoading && !user) {
     return (
-        <div>
+        <div className="rioja-container">
             <div className="flex justify-between items-center mb-8">
                 <Skeleton className="h-12 w-1/2" />
                 <Skeleton className="h-10 w-36" />
@@ -71,7 +79,7 @@ export default function RequestManagementPage() {
   }
   
   return (
-    <div>
+    <div className="rioja-container">
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-8 gap-4">
         <h1 className="page-title">Gestión de Solicitudes de Ambulancia</h1>
         <div className="flex gap-2">
@@ -81,7 +89,7 @@ export default function RequestManagementPage() {
             </Button>
             {canCreateRequest && (
             <Link href="/request-management/new" passHref>
-                <Button>
+                <Button className="btn-primary">
                 <PlusCircle className="mr-2 h-4 w-4" />
                 Nueva Solicitud
                 </Button>
@@ -91,7 +99,10 @@ export default function RequestManagementPage() {
       </div>
 
       {isLoading ? (
-        <Skeleton className="h-[500px] w-full" />
+         <div className="flex items-center justify-center min-h-[calc(100vh-20rem)]">
+            <Loader2 className="h-10 w-10 animate-spin text-primary" />
+            <p className="ml-3 text-muted-foreground">Cargando solicitudes...</p>
+        </div>
       ) : (
         <RequestList
             requests={requests}
@@ -101,16 +112,13 @@ export default function RequestManagementPage() {
         />
       )}
 
-      {/* 
-        Optional: Modal for request details 
-        {selectedRequestId && (
-            <RequestDetailModal 
-                requestId={selectedRequestId} 
-                isOpen={!!selectedRequestId} 
-                onClose={() => setSelectedRequestId(null)} 
-            />
-        )} 
-      */}
+      {selectedRequest && (
+          <RequestDetailModal 
+              request={selectedRequest} 
+              isOpen={isModalOpen} 
+              onClose={handleCloseModal} 
+          />
+      )} 
     </div>
   );
 }

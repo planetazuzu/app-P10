@@ -32,13 +32,11 @@ function getRandomCoords(baseLat: number, baseLng: number, range: number) {
 }
 
 const mockUserValues = Object.values(MOCK_USERS);
-const mockRequesterIds = mockUserValues.map(user => user.id);
-
 
 export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
   const baseLocation = { lat: 42.4659, lng: -2.4487 }; // Logroño
   const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2); // Around La Rioja
-  const createdAt = new Date(Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000)); 
+  const createdAt = new Date(Date.now() - Math.floor(Math.random() * 24 * 3 * 60 * 60 * 1000)); // Up to 3 days ago
   const statusOptions: RequestStatus[] = ['pending', 'dispatched', 'on-scene', 'transporting', 'completed', 'cancelled'];
   const status = getRandomElement<RequestStatus>(statusOptions);
   
@@ -50,16 +48,12 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
     }
   }
   
-  let requesterId = getRandomElement(mockRequesterIds);
-  const individualUser = mockUserValues.find(u => u.role === 'individual');
-  if (i < 3 && individualUser) { 
-    requesterId = individualUser.id;
-  }
+  const requesterUser = getRandomElement(mockUserValues);
 
 
   return {
-    id: `req-${i + 101}`,
-    requesterId: requesterId,
+    id: `req-${101 + i}-${Math.random().toString(36).substring(2, 7)}`, // More unique ID
+    requesterId: requesterUser.id,
     patientDetails: getRandomElement(patientDetailsSamples),
     location: { 
         latitude: coords.latitude, 
@@ -70,10 +64,19 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
     assignedAmbulanceId,
     createdAt: createdAt.toISOString(),
     updatedAt: new Date(createdAt.getTime() + Math.floor(Math.random() * 60 * 60 * 1000)).toISOString(),
-    notes: Math.random() > 0.7 ? "Información adicional proporcionada." : undefined,
+    notes: Math.random() > 0.7 ? `Información adicional para la solicitud ${101+i}. Contactar antes de llegar.` : undefined,
     priority: getRandomElement<'high' | 'medium' | 'low'>(['high', 'medium', 'low']),
   };
 });
+
+// Ensure some requests belong to the individual demo user
+const individualUser = mockUserValues.find(u => u.role === 'individual');
+if (individualUser) {
+    for(let i=0; i<3; i++) {
+        if (mockRequests[i]) mockRequests[i].requesterId = individualUser.id;
+    }
+}
+
 
 export function getRequests(userId: string, userRole: UserRole): Promise<AmbulanceRequest[]> {
   return new Promise((resolve) => {
@@ -82,17 +85,16 @@ export function getRequests(userId: string, userRole: UserRole): Promise<Ambulan
       switch (userRole) {
         case 'admin':
         case 'hospital':
-        case 'centroCoordinador': // centroCoordinador can see these requests
+        case 'centroCoordinador': 
           userRequests = [...mockRequests]; 
           break;
         case 'individual':
           userRequests = mockRequests.filter(req => req.requesterId === userId);
           break;
         case 'equipoMovil': 
-             userRequests = [];
+             userRequests = []; // Equipo Móvil no ve estas solicitudes directamente, sino a través de lotes.
              break;
         default:
-          // This ensures exhaustive check for UserRole if new roles are added
           const _exhaustiveCheck: never = userRole; 
           console.warn(`Rol de usuario no manejado en getRequests: ${_exhaustiveCheck}`);
           break;
@@ -115,7 +117,7 @@ export function createRequest(requestData: Omit<AmbulanceRequest, 'id' | 'create
     setTimeout(() => {
       const newRequest: AmbulanceRequest = {
         ...requestData,
-        id: `req-${Date.now()}`,
+        id: `req-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
@@ -154,7 +156,7 @@ export function createProgrammedTransportRequest(
     setTimeout(() => {
       const newProgrammedRequest: ProgrammedTransportRequest = {
         ...requestData,
-        id: `prog-req-${Date.now()}`,
+        id: `prog-req-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       };
       mockProgrammedTransportRequests.unshift(newProgrammedRequest);
       console.log('Created programmed request:', newProgrammedRequest);
@@ -171,7 +173,7 @@ export function getProgrammedTransportRequests(userId: string, userRole: UserRol
       switch (userRole) {
         case 'admin':
         case 'hospital':
-        case 'centroCoordinador': // centroCoordinador can see these requests
+        case 'centroCoordinador': 
           userRequests = [...mockProgrammedTransportRequests];
           break;
         case 'individual':
