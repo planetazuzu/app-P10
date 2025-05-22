@@ -17,6 +17,7 @@ import { Separator } from '@/components/ui/separator';
 import { MapPin, User, AlertTriangle, Info, CalendarDays, Edit } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { cn } from '@/lib/utils';
 
 interface RequestDetailModalProps {
   request: AmbulanceRequest | null;
