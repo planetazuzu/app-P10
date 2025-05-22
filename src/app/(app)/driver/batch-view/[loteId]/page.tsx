@@ -4,7 +4,7 @@
 import React, { useEffect, useState } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import { useAuth } from '@/hooks/use-auth';
-import type { LoteProgramado, RutaCalculada, ParadaRuta, Ambulance } from '@/types';
+import type { LoteProgramado, RutaCalculada, ParadaRuta, Ambulance, MedioRequeridoProgramado } from '@/types';
 import { getLoteByIdMock, getRutaCalculadaByLoteIdMock, updateParadaEstadoMock } from '@/lib/driver-data'; // To be created
 import { getAmbulanceById } from '@/lib/ambulance-data';
 import { Button } from '@/components/ui/button';
@@ -13,9 +13,11 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, AlertTriangle, MapPin, Clock, User, ChevronsRight, CheckCircle, PlayCircle, PauseCircle, SkipForward, Ban, HelpCircle, UserX } from 'lucide-react';
+import { Loader2, AlertTriangle, MapPin, Clock, User, ChevronsRight, CheckCircle, PlayCircle, PauseCircle, SkipForward, Ban, HelpCircle, UserX, Info, BriefcaseMedical } from 'lucide-react';
 import Link from 'next/link';
 import { useToast } from '@/hooks/use-toast';
+import { format, parseISO } from 'date-fns';
+import { es } from 'date-fns/locale';
 
 // Helper to translate parada status
 const translateParadaStatus = (status: ParadaRuta['estado']): string => {
@@ -44,6 +46,15 @@ const getStatusBadgeVariant = (status: ParadaRuta['estado']) => {
   }
 };
 
+const translateMedioRequerido = (medio: MedioRequeridoProgramado): string => {
+    switch (medio) {
+        case 'camilla': return 'Camilla';
+        case 'sillaDeRuedas': return 'Silla de Ruedas';
+        case 'andando': return 'Andando/Autónomo';
+        default: return medio;
+    }
+};
+
 const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus: (servicioId: string, newStatus: ParadaRuta['estado']) => void; isCurrent: boolean }> = ({ parada, loteId, onUpdateStatus, isCurrent }) => {
   const { toast } = useToast();
   
@@ -64,7 +75,7 @@ const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus:
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-lg text-secondary">Parada {parada.orden}: {parada.paciente.nombre}</CardTitle>
-            <CardDescription>Servicio ID: {parada.servicioId.slice(0,8)}... | Cita: {parada.horaConsultaMedica}</CardDescription>
+            <CardDescription>Servicio ID: {parada.servicioId} | Cita: {parada.horaConsultaMedica}</CardDescription>
           </div>
           <Badge className={`${getStatusBadgeVariant(parada.estado)} text-white text-xs`}>{translateParadaStatus(parada.estado)}</Badge>
         </div>
@@ -73,8 +84,9 @@ const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus:
         <div className="flex items-center"><MapPin className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Origen:</strong> {parada.paciente.direccionOrigen}</div>
         <div className="flex items-center"><Clock className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Recogida Estimada:</strong> {parada.horaRecogidaEstimada} | <strong>Llegada Destino Estimada:</strong> {parada.horaLlegadaDestinoEstimada}</div>
         {parada.paciente.contacto && <div className="flex items-center"><User className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Contacto:</strong> {parada.paciente.contacto}</div>}
-        {parada.paciente.observaciones && <p className="text-xs text-muted-foreground pl-6">Observaciones Paciente: {parada.paciente.observaciones}</p>}
-         {parada.notasParada && <p className="text-xs text-yellow-700 bg-yellow-100 p-1 rounded pl-6">Notas Parada: {parada.notasParada}</p>}
+        <div className="flex items-center"><BriefcaseMedical className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Medio Requerido:</strong> {translateMedioRequerido(parada.paciente.medioRequerido)}</div>
+        {parada.paciente.observaciones && <p className="text-xs text-muted-foreground pl-6"><Info className="inline h-3 w-3 mr-1"/>Observaciones Paciente: {parada.paciente.observaciones}</p>}
+        {parada.notasParada && <p className="text-xs text-yellow-700 bg-yellow-100 p-1 rounded pl-6"><Info className="inline h-3 w-3 mr-1"/>Notas Parada: {parada.notasParada}</p>}
 
         {isActionable && isCurrent && (
           <div className="pt-3 border-t mt-3 flex flex-wrap gap-2">
@@ -105,6 +117,7 @@ const DropdownMenuStatus: React.FC<{ parada: ParadaRuta; onStatusChange: (newSta
                     size="sm"
                     className="w-full justify-start text-xs"
                     onClick={() => onStatusChange(status)}
+                    disabled={parada.estado === 'finalizado' || parada.estado === 'cancelado' || parada.estado === 'noPresentado'}
                 >
                     {status === 'noPresentado' ? <UserX className="mr-2 h-3.5 w-3.5"/> : <Ban className="mr-2 h-3.5 w-3.5"/>}
                     Marcar como {translateParadaStatus(status)}
@@ -278,7 +291,7 @@ export default function DriverBatchViewPage() {
                  </div>
             )}
           </div>
-           <div className="mt-4 grid grid-cols-2 md:grid-cols-4 gap-3 text-center">
+           <div className="mt-4 grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3 text-center">
                 <div className="p-3 bg-muted rounded-md">
                     <p className="text-xs text-muted-foreground">Total Servicios</p>
                     <p className="text-xl font-bold text-primary">{totalServicios}</p>
@@ -292,10 +305,19 @@ export default function DriverBatchViewPage() {
                     <p className="text-xl font-bold text-green-600">{serviciosFinalizados}</p>
                 </div>
                  <div className="p-3 bg-muted rounded-md">
-                    <p className="text-xs text-muted-foreground">Salida Base Estimada</p>
+                    <p className="text-xs text-muted-foreground">Salida Base</p>
                     <p className="text-xl font-bold text-secondary">{ruta.horaSalidaBaseEstimada}</p>
                 </div>
+                <div className="p-3 bg-muted rounded-md">
+                    <p className="text-xs text-muted-foreground">Distancia Total</p>
+                    <p className="text-xl font-bold text-secondary">{ruta.distanciaTotalEstimadaKm || 'N/A'} km</p>
+                </div>
            </div>
+           {ruta.optimizadaEn && (
+                <p className="text-xs text-muted-foreground mt-2">
+                    Ruta optimizada el: {format(parseISO(ruta.optimizadaEn), "PPPp", { locale: es })}
+                </p>
+           )}
         </CardHeader>
       </Card>
 
@@ -306,7 +328,7 @@ export default function DriverBatchViewPage() {
         </TabsList>
         <TabsContent value="programados">
           {serviciosProgramados.length > 0 ? (
-            <ScrollArea className="h-[calc(100vh-26rem)] pr-3"> {/* Adjust height as needed */}
+            <ScrollArea className="h-[calc(100vh-28rem)] pr-3"> {/* Adjust height as needed */}
               {serviciosProgramados.map((parada, index) => (
                 <ParadaCard key={parada.servicioId} parada={parada} loteId={lote.id} onUpdateStatus={handleUpdateParadaStatus} isCurrent={index === currentStopIndex}/>
               ))}
@@ -322,6 +344,3 @@ export default function DriverBatchViewPage() {
     </div>
   );
 }
-
-
-    

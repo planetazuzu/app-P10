@@ -1,5 +1,5 @@
 
-import type { LoteProgramado, RutaCalculada, ParadaRuta, PacienteLote, DestinoLote, ProgrammedTransportRequest, ParadaEstado } from '@/types';
+import type { LoteProgramado, RutaCalculada, ParadaRuta, PacienteLote, DestinoLote, ProgrammedTransportRequest, ParadaEstado, MedioRequeridoProgramado } from '@/types';
 import { mockProgrammedTransportRequests } from './request-data'; // Assuming this is where they are
 import { mockAmbulances } from './ambulance-data';
 
@@ -9,6 +9,8 @@ const mockPacientes: Record<string, PacienteLote> = {
   "pac-002": { id: "pac-002", nombre: "Juan Rodríguez López", direccionOrigen: "Avenida de la Paz 50, Calahorra", medioRequerido: "sillaDeRuedas" },
   "pac-003": { id: "pac-003", nombre: "María Sánchez Martín", direccionOrigen: "Plaza del Ayuntamiento 1, Haro", contacto: "600333444", observaciones: "Paciente con movilidad reducida.", medioRequerido: "camilla" },
   "pac-004": { id: "pac-004", nombre: "Carlos Gómez Ruiz", direccionOrigen: "Paseo del Espolón 2, Logroño", medioRequerido: "andando"},
+  "pac-005": { id: "pac-005", nombre: "Laura Martínez Soler", direccionOrigen: "Calle San Agustín 22, Logroño", contacto: "600555666", observaciones: "Alérgica a AINES.", medioRequerido: "andando" },
+  "pac-006": { id: "pac-006", nombre: "Pedro Jiménez Vega", direccionOrigen: "Avenida de Colón 10, Logroño", observaciones: "Traslado post-operatorio, delicado.", medioRequerido: "camilla" },
 };
 
 const mockDestinos: Record<string, DestinoLote> = {
@@ -22,7 +24,7 @@ if (mockProgrammedTransportRequests.length === 0) {
     const today = new Date().toISOString().split('T')[0];
     const pacienteIds = Object.keys(mockPacientes);
     
-    const createMockRequest = (pId: string, loteId: string, index: number, destinoKey: keyof typeof mockDestinos): ProgrammedTransportRequest => ({
+    const createMockRequest = (pId: string, loteId: string, index: number, destinoKey: keyof typeof mockDestinos, horaCita: string, observaciones?: string): ProgrammedTransportRequest => ({
         id: `prog-req-${loteId}-${index}`,
         requesterId: 'user-hospital', // Example requester
         status: 'batched', // Initially batched
@@ -37,17 +39,20 @@ if (mockProgrammedTransportRequests.length === 0) {
         destino: mockDestinos[destinoKey].nombre,
         destinoId: mockDestinos[destinoKey].id,
         fechaIda: today,
-        horaIda: `${10+index}:00`, // Staggered times
-        horaConsultaMedica: `${11+index}:00`,
+        horaIda: `${parseInt(horaCita.split(':')[0]) - 1}:${horaCita.split(':')[1]}`, // Recogida 1h antes
+        horaConsultaMedica: horaCita,
         medioRequerido: mockPacientes[pId].medioRequerido,
         priority: 'low',
         loteId: loteId,
+        observacionesMedicasAdicionales: observaciones || mockPacientes[pId].observaciones,
     });
 
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[0], "lote-demo-123", 1, "dest-hsp"));
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[1], "lote-demo-123", 2, "dest-hsp"));
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[2], "lote-demo-123", 3, "dest-carpa"));
-     mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[3], "lote-demo-123", 4, "dest-hsp"));
+    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[0], "lote-demo-123", 1, "dest-hsp", "11:00"));
+    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[1], "lote-demo-123", 2, "dest-hsp", "12:00"));
+    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[3], "lote-demo-123", 4, "dest-hsp", "13:00")); // Carlos
+    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[2], "lote-demo-123", 3, "dest-carpa", "14:00")); // Maria
+    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[4], "lote-demo-123", 5, "dest-hsp", "10:30")); // Laura
+    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[5], "lote-demo-123", 6, "dest-carpa", "15:00")); // Pedro
 }
 
 
@@ -55,14 +60,17 @@ const mockRutas: RutaCalculada[] = [
   {
     id: "ruta-lote-demo-123",
     loteId: "lote-demo-123",
-    horaSalidaBaseEstimada: "09:30",
-    duracionTotalEstimadaMin: 240, // 4 hours
-    optimizadaEn: new Date().toISOString(),
+    horaSalidaBaseEstimada: "08:30",
+    duracionTotalEstimadaMin: 330, // 5.5 hours
+    distanciaTotalEstimadaKm: 68,
+    optimizadaEn: new Date(Date.now() - 3600000 * 3).toISOString(), // Hace 3 horas
     paradas: [
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-001")?.id || "prog-req-error-1", paciente: mockPacientes["pac-001"], horaConsultaMedica: "11:00", horaRecogidaEstimada: "10:00", horaLlegadaDestinoEstimada: "10:45", tiempoTrasladoDesdeAnteriorMin: 30, orden: 1, estado: 'pendiente' },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-002")?.id || "prog-req-error-2", paciente: mockPacientes["pac-002"], horaConsultaMedica: "12:00", horaRecogidaEstimada: "10:50", horaLlegadaDestinoEstimada: "11:35", tiempoTrasladoDesdeAnteriorMin: 15, orden: 2, estado: 'pendiente' },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-004")?.id || "prog-req-error-4", paciente: mockPacientes["pac-004"], horaConsultaMedica: "13:00", horaRecogidaEstimada: "11:45", horaLlegadaDestinoEstimada: "12:30", tiempoTrasladoDesdeAnteriorMin: 20, orden: 3, estado: 'pendiente' },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-003")?.id || "prog-req-error-3", paciente: mockPacientes["pac-003"], horaConsultaMedica: "14:00", horaRecogidaEstimada: "12:40", horaLlegadaDestinoEstimada: "13:35", tiempoTrasladoDesdeAnteriorMin: 25, orden: 4, estado: 'pendiente', notasParada: "Precaución: Acceso con escalones, usar silla oruga si es necesario." },
+      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-005")?.id || "prog-req-error-5", paciente: mockPacientes["pac-005"], horaConsultaMedica: "10:30", horaRecogidaEstimada: "09:30", horaLlegadaDestinoEstimada: "10:15", tiempoTrasladoDesdeAnteriorMin: 60, orden: 1, estado: 'pendiente', notasParada: "Recoger primero, cita más temprana." },
+      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-001")?.id || "prog-req-error-1", paciente: mockPacientes["pac-001"], horaConsultaMedica: "11:00", horaRecogidaEstimada: "10:20", horaLlegadaDestinoEstimada: "10:50", tiempoTrasladoDesdeAnteriorMin: 25, orden: 2, estado: 'pendiente', notasParada: "Asegurar que el paciente ha tomado su medicación matutina." },
+      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-002")?.id || "prog-req-error-2", paciente: mockPacientes["pac-002"], horaConsultaMedica: "12:00", horaRecogidaEstimada: "11:00", horaLlegadaDestinoEstimada: "11:45", tiempoTrasladoDesdeAnteriorMin: 20, orden: 3, estado: 'pendiente' },
+      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-004")?.id || "prog-req-error-4", paciente: mockPacientes["pac-004"], horaConsultaMedica: "13:00", horaRecogidaEstimada: "12:00", horaLlegadaDestinoEstimada: "12:40", tiempoTrasladoDesdeAnteriorMin: 20, orden: 4, estado: 'pendiente' },
+      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-003")?.id || "prog-req-error-3", paciente: mockPacientes["pac-003"], horaConsultaMedica: "14:00", horaRecogidaEstimada: "12:50", horaLlegadaDestinoEstimada: "13:45", tiempoTrasladoDesdeAnteriorMin: 25, orden: 5, estado: 'pendiente', notasParada: "Precaución: Acceso con escalones, usar silla oruga si es necesario. Destino CARPA." },
+      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-006")?.id || "prog-req-error-6", paciente: mockPacientes["pac-006"], horaConsultaMedica: "15:00", horaRecogidaEstimada: "14:00", horaLlegadaDestinoEstimada: "14:45", tiempoTrasladoDesdeAnteriorMin: 30, orden: 6, estado: 'pendiente', notasParada: "Paciente muy sensible al movimiento. Conducir con suavidad. Destino CARPA." },
     ]
   }
 ];
