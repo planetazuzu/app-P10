@@ -11,8 +11,6 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 import { Textarea } from '@/components/ui/textarea';
 import { Checkbox } from '@/components/ui/checkbox';
 
-// Ampliamos las opciones para el formulario avanzado si es necesario,
-// podrían ser más detalladas que las de ProgrammedTransportRequest
 const ADVANCED_EQUIPMENT_OPTIONS = [
   { id: 'oxigeno', label: 'Oxígeno' },
   { id: 'sillaOruga', label: 'Silla oruga para escaleras' },
@@ -26,13 +24,13 @@ const ADVANCED_EQUIPMENT_OPTIONS = [
   { id: 'bariatrico', label: 'Material bariátrico (camilla, silla especial)' },
 ];
 
-
 interface StepProps {
   formData: AdvancedTransportData;
   updateFormData: (data: Partial<AdvancedTransportData>) => void;
+  errors?: Record<string, string | undefined>;
 }
 
-export default function Step4Configuration({ formData, updateFormData }: StepProps) {
+export default function Step4Configuration({ formData, updateFormData, errors }: StepProps) {
   const handleEquipmentChange = (equipmentId: string, checked: boolean) => {
     const currentEquipment = formData.advancedEquipment || [];
     const newEquipment = checked
@@ -41,47 +39,52 @@ export default function Step4Configuration({ formData, updateFormData }: StepPro
     updateFormData({ advancedEquipment: newEquipment });
   };
 
-
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4 text-secondary">Configuración del Traslado</h2>
-      <CardDescription className="mb-6">Seleccione el tipo de transporte, necesidades de movilidad y equipamiento adicional requerido.</CardDescription>
+      <CardDescription className="mb-6">Seleccione el tipo de transporte, necesidades de movilidad y equipamiento adicional. Los campos con * son obligatorios.</CardDescription>
       
       <div className="space-y-6">
         <div>
-          <Label htmlFor="transportType">Tipo de Ambulancia Solicitada</Label>
+          <Label htmlFor="transportType">Tipo de Ambulancia Solicitada *</Label>
            <Select
             value={formData.transportType || ''}
-            onValueChange={(value) => updateFormData({ transportType: value as AmbulanceType })}
+            onValueChange={(value) => updateFormData({ transportType: value as AmbulanceType | 'Otros' })}
           >
-            <SelectTrigger id="transportType">
+            <SelectTrigger id="transportType" className={errors?.transportType ? "border-red-500" : ""}>
               <SelectValue placeholder="Seleccionar tipo de ambulancia" />
             </SelectTrigger>
             <SelectContent>
-              {ALL_AMBULANCE_TYPES.filter(type => type === 'A1' || type === 'Programado' || type === 'Convencional' || type === 'SVB').map(type => (
-                // Filtrado para tipos comunes en transporte programado o básico
+              {ALL_AMBULANCE_TYPES.map(type => (
                 <SelectItem key={type} value={type}>{type}</SelectItem>
               ))}
               <SelectItem value="Otros">Otro (especificar)</SelectItem>
             </SelectContent>
           </Select>
+          {errors?.transportType && <p className="text-sm text-red-500 mt-1">{errors.transportType}</p>}
+          
           {formData.transportType === 'Otros' && (
-            <Input 
-              className="mt-2"
-              placeholder="Especificar otro tipo de ambulancia"
-              value={formData.transportTypeOther || ''}
-              onChange={(e) => updateFormData({ transportTypeOther: e.target.value })}
-            />
+            <div className="mt-2">
+              <Label htmlFor="transportTypeOther">Especificar otro tipo *</Label>
+              <Input 
+                id="transportTypeOther"
+                placeholder="Especificar otro tipo de ambulancia"
+                value={formData.transportTypeOther || ''}
+                onChange={(e) => updateFormData({ transportTypeOther: e.target.value })}
+                className={errors?.transportTypeOther ? "border-red-500" : ""}
+              />
+              {errors?.transportTypeOther && <p className="text-sm text-red-500 mt-1">{errors.transportTypeOther}</p>}
+            </div>
           )}
         </div>
 
         <div>
-          <Label htmlFor="mobilityNeeds">Necesidades de Movilidad del Paciente</Label>
+          <Label htmlFor="mobilityNeeds">Necesidades de Movilidad del Paciente *</Label>
             <Select
               value={formData.mobilityNeeds || ''}
               onValueChange={(value) => updateFormData({ mobilityNeeds: value as MedioRequeridoProgramado })}
             >
-            <SelectTrigger id="mobilityNeeds">
+            <SelectTrigger id="mobilityNeeds" className={errors?.mobilityNeeds ? "border-red-500" : ""}>
               <SelectValue placeholder="Seleccionar medio requerido" />
             </SelectTrigger>
             <SelectContent>
@@ -92,11 +95,12 @@ export default function Step4Configuration({ formData, updateFormData }: StepPro
               ))}
             </SelectContent>
           </Select>
+          {errors?.mobilityNeeds && <p className="text-sm text-red-500 mt-1">{errors.mobilityNeeds}</p>}
         </div>
         
         <div>
           <Label className="block mb-2">Equipamiento Especial y Otras Necesidades</Label>
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 p-3 border rounded-md bg-muted/30">
             {ADVANCED_EQUIPMENT_OPTIONS.map(item => (
               <div key={item.id} className="flex items-center space-x-2">
                 <Checkbox
@@ -108,6 +112,7 @@ export default function Step4Configuration({ formData, updateFormData }: StepPro
               </div>
             ))}
           </div>
+           {errors?.advancedEquipment && <p className="text-sm text-red-500 mt-1">{errors.advancedEquipment}</p>}
         </div>
 
         <div>
@@ -118,7 +123,9 @@ export default function Step4Configuration({ formData, updateFormData }: StepPro
             onChange={(e) => updateFormData({ additionalNotes: e.target.value })}
             placeholder="Cualquier otra información importante para el equipo de transporte: barreras arquitectónicas, necesidad de más de un técnico, etc."
             rows={3}
+            className={errors?.additionalNotes ? "border-red-500" : ""}
           />
+          {errors?.additionalNotes && <p className="text-sm text-red-500 mt-1">{errors.additionalNotes}</p>}
         </div>
       </div>
     </div>

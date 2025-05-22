@@ -12,23 +12,24 @@ import { Textarea } from '@/components/ui/textarea';
 interface StepProps {
   formData: AdvancedTransportData;
   updateFormData: (data: Partial<AdvancedTransportData>) => void;
+  errors?: Record<string, string | undefined>;
 }
 
-export default function Step2Scheduling({ formData, updateFormData }: StepProps) {
+export default function Step2Scheduling({ formData, updateFormData, errors }: StepProps) {
   return (
     <div>
       <h2 className="text-xl font-semibold mb-4 text-secondary">Programación</h2>
-      <CardDescription className="mb-6">Configure la recurrencia, fechas y horarios para los traslados.</CardDescription>
+      <CardDescription className="mb-6">Configure la recurrencia, fechas y horarios para los traslados. Los campos con * son obligatorios.</CardDescription>
       
       <div className="space-y-6">
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="recurrenceType">Tipo de Recurrencia</Label>
+            <Label htmlFor="recurrenceType">Tipo de Recurrencia *</Label>
             <Select
               value={formData.recurrenceType || 'specificDates'}
               onValueChange={(value) => updateFormData({ recurrenceType: value as 'specificDates' | 'daily' | 'weekly' | 'monthly' })}
             >
-              <SelectTrigger id="recurrenceType">
+              <SelectTrigger id="recurrenceType" className={errors?.recurrenceType ? "border-red-500" : ""}>
                 <SelectValue placeholder="Seleccionar tipo de recurrencia" />
               </SelectTrigger>
               <SelectContent>
@@ -38,41 +39,45 @@ export default function Step2Scheduling({ formData, updateFormData }: StepProps)
                 <SelectItem value="monthly">Mensual</SelectItem>
               </SelectContent>
             </Select>
+            {errors?.recurrenceType && <p className="text-sm text-red-500 mt-1">{errors.recurrenceType}</p>}
           </div>
            <div>
-            <Label htmlFor="startDate">Fecha de Inicio</Label>
+            <Label htmlFor="startDate">Fecha de Inicio *</Label>
             <Input 
               id="startDate" 
               type="date"
               value={formData.startDate || ''} 
               onChange={(e) => updateFormData({ startDate: e.target.value })}
+              className={errors?.startDate ? "border-red-500" : ""}
             />
+            {errors?.startDate && <p className="text-sm text-red-500 mt-1">{errors.startDate}</p>}
           </div>
         </div>
 
-        {/* Campos condicionales basados en recurrenceType podrían ir aquí */}
-        {/* Por ejemplo, para 'weekly', mostrar checkboxes para días de la semana */}
-
         <div>
-          <Label htmlFor="specificDates">Fechas Específicas (si aplica)</Label>
+          <Label htmlFor="specificDatesNotes">Detalles de Recurrencia / Fechas Específicas</Label>
           <Textarea 
-            id="specificDates" 
+            id="specificDatesNotes" 
             value={formData.specificDatesNotes || ''} 
             onChange={(e) => updateFormData({ specificDatesNotes: e.target.value })}
-            placeholder="Si ha seleccionado 'Fechas Específicas', liste las fechas aquí (ej: 01/08/2024, 05/08/2024, 10/08/2024). Para otros tipos de recurrencia, puede detallar aquí el patrón (ej: Lunes, Miércoles y Viernes durante 3 semanas)."
+            placeholder="Si es 'Fechas Específicas', liste las fechas aquí (ej: 01/08/2024, 05/08/2024). Para otros patrones (ej: L, X, V durante 3 semanas), detalle aquí."
             rows={3}
+            className={errors?.specificDatesNotes ? "border-red-500" : ""}
           />
+           {errors?.specificDatesNotes && <p className="text-sm text-red-500 mt-1">{errors.specificDatesNotes}</p>}
         </div>
         
         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div>
-            <Label htmlFor="pickupTime">Hora de Recogida (Ida)</Label>
+            <Label htmlFor="pickupTime">Hora de Recogida (Ida) *</Label>
             <Input 
               id="pickupTime" 
               type="time"
               value={formData.pickupTime || ''} 
               onChange={(e) => updateFormData({ pickupTime: e.target.value })}
+              className={errors?.pickupTime ? "border-red-500" : ""}
             />
+            {errors?.pickupTime && <p className="text-sm text-red-500 mt-1">{errors.pickupTime}</p>}
           </div>
           <div>
             <Label htmlFor="returnTime">Hora de Retorno (Vuelta, si aplica)</Label>
@@ -81,7 +86,9 @@ export default function Step2Scheduling({ formData, updateFormData }: StepProps)
               type="time"
               value={formData.returnTime || ''} 
               onChange={(e) => updateFormData({ returnTime: e.target.value })}
+              className={errors?.returnTime ? "border-red-500" : ""}
             />
+            {errors?.returnTime && <p className="text-sm text-red-500 mt-1">{errors.returnTime}</p>}
           </div>
         </div>
          <div>
@@ -91,7 +98,9 @@ export default function Step2Scheduling({ formData, updateFormData }: StepProps)
             value={formData.durationEstimate || ''} 
             onChange={(e) => updateFormData({ durationEstimate: e.target.value })}
             placeholder="Ej: 2 horas, 45 minutos"
+            className={errors?.durationEstimate ? "border-red-500" : ""}
           />
+          {errors?.durationEstimate && <p className="text-sm text-red-500 mt-1">{errors.durationEstimate}</p>}
         </div>
       </div>
     </div>
