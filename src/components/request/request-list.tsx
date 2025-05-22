@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { AmbulanceRequest, RequestStatus, UserRole } from '@/types'; // Actualizado a AmbulanceRequest
+import type { AmbulanceRequest, RequestStatus, UserRole } from '@/types'; 
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
@@ -23,10 +23,10 @@ import { es } from 'date-fns/locale';
 
 
 interface RequestListProps {
-  requests: AmbulanceRequest[]; // Actualizado a AmbulanceRequest
+  requests: AmbulanceRequest[]; 
   userRole: UserRole;
   onUpdateRequestStatus: (requestId: string, status: RequestStatus) => void;
-  onViewDetails: (requestId: string) => void; // For modal or separate page
+  onViewDetails: (requestId: string) => void; 
 }
 
 const STATUS_COLORS: Record<RequestStatus, string> = {
@@ -45,7 +45,6 @@ const PRIORITY_STYLES: Record<'high' | 'medium' | 'low', string> = {
     low: "text-green-600",
 };
 
-// Helper para traducir el estado de la solicitud
 const translateRequestStatus = (status: RequestStatus): string => {
   switch (status) {
     case 'pending': return 'Pendiente';
@@ -59,7 +58,6 @@ const translateRequestStatus = (status: RequestStatus): string => {
   }
 };
 
-// Helper para traducir la prioridad
 const translatePriority = (priority: 'high' | 'medium' | 'low'): string => {
     switch (priority) {
         case 'high': return 'Alta (Urgente)';
@@ -115,7 +113,7 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
     }
   };
 
-  const canManageStatus = userRole === 'admin' || userRole === 'hospital' || userRole === 'equipoTraslado';
+  const canManageStatus = userRole === 'admin' || userRole === 'hospital' || userRole === 'centroCoordinador';
 
   return (
     <Card>
@@ -204,7 +202,7 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Actualizar Estado</DropdownMenuLabel>
-                          {Object.keys(STATUS_COLORS).filter(s => s !== request.status && s !== 'batched').map(newStatus => ( // Exclude 'batched' from manual updates here
+                          {Object.keys(STATUS_COLORS).filter(s => s !== request.status && s !== 'batched').map(newStatus => ( 
                             <DropdownMenuItem key={newStatus} onClick={() => onUpdateRequestStatus(request.id, newStatus as RequestStatus)}>
                               Marcar como {translateRequestStatus(newStatus as RequestStatus)}
                             </DropdownMenuItem>
@@ -227,3 +225,5 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
     </Card>
   );
 }
+
+    

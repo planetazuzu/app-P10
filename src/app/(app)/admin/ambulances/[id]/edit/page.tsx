@@ -12,6 +12,7 @@ import { AmbulanceForm } from '@/components/ambulance/ambulance-form';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft, Loader2 } from 'lucide-react';
+import { defaultEquipmentByType } from '@/types';
 
 const MOCK_UPDATE_AMBULANCE_DELAY = 500;
 
@@ -27,17 +28,17 @@ export default function EditAmbulancePage() {
   const { user, isLoading: authIsLoading } = useAuth();
 
   useEffect(() => {
-    if (!authIsLoading && user && user.role !== 'admin') {
+    if (!authIsLoading && user && !['admin', 'centroCoordinador'].includes(user.role)) {
       toast({
         title: 'Acceso Denegado',
         description: 'No tiene permisos para editar ambulancias.',
         variant: 'destructive',
       });
       router.replace('/dashboard');
-      return; // Important: stop further execution if not admin
+      return; 
     }
 
-    if (user && user.role === 'admin' && ambulanceId) {
+    if (user && ['admin', 'centroCoordinador'].includes(user.role) && ambulanceId) {
       setIsLoading(true);
       getAmbulanceById(ambulanceId)
         .then((data) => {
@@ -53,8 +54,7 @@ export default function EditAmbulancePage() {
           router.push('/admin/ambulances');
         })
         .finally(() => setIsLoading(false));
-    } else if (user && user.role === 'admin' && !ambulanceId) {
-        // Handle case where ID might be missing, though route should provide it
+    } else if (user && ['admin', 'centroCoordinador'].includes(user.role) && !ambulanceId) {
         toast({ title: 'Error', description: 'ID de ambulancia no especificado.', variant: 'destructive' });
         router.push('/admin/ambulances');
         setIsLoading(false);
@@ -74,6 +74,9 @@ export default function EditAmbulancePage() {
       }
       if (field === 'allowsWalking' && !value) {
         updatedAmbulance.walkingSeats = 0;
+      }
+      if (field === 'type' && value) { // If type changes, update default equipment
+        updatedAmbulance.equipment = defaultEquipmentByType[value as Ambulance['type']];
       }
       return updatedAmbulance;
     });
@@ -123,7 +126,7 @@ export default function EditAmbulancePage() {
     setIsSaving(false);
   };
 
-  if (authIsLoading || (!user || user.role !== 'admin')) {
+  if (authIsLoading || (!user || !['admin', 'centroCoordinador'].includes(user.role))) {
     return (
       <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -196,3 +199,5 @@ export default function EditAmbulancePage() {
     </div>
   );
 }
+
+    

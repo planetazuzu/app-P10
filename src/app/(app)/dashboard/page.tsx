@@ -42,13 +42,14 @@ export default function DashboardPage() {
     pendingRequests: 8,
     activeUsers: 120,
     averageResponseTime: '12 min',
-    servicesTodayForEquipoMovil: 5, // Example for Equipo Móvil
+    servicesTodayForEquipoMovil: 5, 
   };
 
-  const canViewAmbulanceTracking = user.role === 'admin' || user.role === 'hospital';
-  const canViewSmartDispatch = user.role === 'admin' || user.role === 'hospital';
-  const canViewRequestManagement = ['admin', 'hospital', 'individual', 'equipoTraslado'].includes(user.role);
+  const canViewAmbulanceTracking = ['admin', 'hospital', 'centroCoordinador'].includes(user.role);
+  const canViewSmartDispatch = ['admin', 'hospital', 'centroCoordinador'].includes(user.role);
+  const canViewRequestManagement = ['admin', 'hospital', 'individual', 'centroCoordinador'].includes(user.role);
   const isEquipoMovil = user.role === 'equipoMovil';
+  const isAdminOrCoordinator = ['admin', 'centroCoordinador'].includes(user.role);
 
   return (
     <div>
@@ -61,7 +62,7 @@ export default function DashboardPage() {
                 value={stats.servicesTodayForEquipoMovil}
                 icon={<MapIcon className="h-5 w-5 text-muted-foreground" />}
                 description="Ruta asignada"
-                link="/driver/batch-view/lote-demo-123" // Example link
+                link="/driver/batch-view/lote-demo-123" 
                 linkText="Ver Mi Ruta"
             />
         ) : (
@@ -80,12 +81,13 @@ export default function DashboardPage() {
                 description="Prioridad alta: 3"
                 {...(canViewRequestManagement && { link: "/request-management", linkText: "Gestionar Solicitudes"})}
                 />
-                 {user.role === 'admin' && (
+                 {isAdminOrCoordinator && (
                     <StatsCard 
                         title="Usuarios Activos" 
                         value={stats.activeUsers}
                         icon={<Users className="h-5 w-5 text-muted-foreground" />}
                         description="En todos los roles"
+                        {...(user.role === 'admin' && { link: "/admin/user-management", linkText: "Gestionar Usuarios"})}
                     />
                     )}
                 <StatsCard 
@@ -109,7 +111,7 @@ export default function DashboardPage() {
                 <Button className="w-full btn-primary">Ver Mi Ruta de Hoy</Button>
             </Link>
           )}
-          { (user.role === 'individual' || user.role === 'hospital' || user.role === 'admin') && (
+          { (user.role === 'individual' || user.role === 'hospital' || isAdminOrCoordinator) && (
             <Link href="/request-management/new" passHref>
               <Button className="w-full btn-primary">Crear Nueva Solicitud</Button>
             </Link>
@@ -122,6 +124,11 @@ export default function DashboardPage() {
           { canViewSmartDispatch && (
              <Link href="/smart-dispatch" passHref>
                 <Button className="w-full btn-outline">Despacho Inteligente IA</Button>
+            </Link>
+          )}
+           { isAdminOrCoordinator && (
+             <Link href="/admin" passHref>
+                <Button className="w-full btn-primary" variant="default">Panel de Administración</Button>
             </Link>
           )}
         </CardContent>

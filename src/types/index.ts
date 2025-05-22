@@ -1,7 +1,7 @@
 
 import { z } from 'zod';
 
-export type UserRole = 'admin' | 'hospital' | 'individual' | 'equipoTraslado' | 'equipoMovil';
+export type UserRole = 'admin' | 'hospital' | 'individual' | 'centroCoordinador' | 'equipoMovil';
 
 export interface User {
   id: string;
@@ -50,7 +50,7 @@ export const defaultEquipmentByType: Record<AmbulanceType, AmbulanceEquipment> =
 
 
 export interface Ambulance {
-  id: string; // Should correspond to a vehicle ID that an 'equipoMovil' user might be associated with
+  id: string;
   name: string;
   licensePlate: string;
   model: string;
@@ -58,9 +58,8 @@ export interface Ambulance {
   baseLocation: string;
   zone?: string;
   status: AmbulanceStatus;
-  equipment: AmbulanceEquipment; // Using the structured equipment
-
-  // Campos de capacidad que coinciden con el formulario (podrían derivarse de 'equipment' o ser específicos)
+  
+  // Campos de capacidad que coinciden con el formulario
   hasMedicalBed: boolean;
   stretcherSeats: number;
   hasWheelchair: boolean;
@@ -69,12 +68,13 @@ export interface Ambulance {
   walkingSeats: number;
 
   specialEquipment: string[]; // IDs de equipmentOptions (complementario a 'equipment' o para detalles adicionales)
+  equipment?: AmbulanceEquipment; // Estructura de equipamiento principal
 
   latitude?: number;
   longitude?: number;
   currentPatients?: number;
   notes?: string;
-  equipoMovilUserId?: string; // Links this ambulance to an 'equipoMovil' user account
+  equipoMovilUserId?: string; 
 }
 
 
@@ -114,7 +114,7 @@ export type EquipamientoEspecialProgramadoId = typeof EQUIPAMIENTO_ESPECIAL_PROG
 export interface ProgrammedTransportRequest {
   id: string;
   requesterId: string;
-  status: RequestStatus; // Can use the same status as AmbulanceRequest or have its own
+  status: RequestStatus; 
   createdAt: string;
   updatedAt: string;
 
@@ -138,9 +138,9 @@ export interface ProgrammedTransportRequest {
   necesidadesEspeciales?: string;
   observacionesMedicasAdicionales?: string;
   autorizacionMedicaPdf?: string;
-  assignedAmbulanceId?: string; // ID de la ambulancia asignada (vehículo)
-  priority: 'low' | 'medium'; // Programmed usually low, but can be medium
-  loteId?: string; // Link to LoteProgramado
+  assignedAmbulanceId?: string; 
+  priority: 'low' | 'medium'; 
+  loteId?: string; 
 }
 
 // Zod Schemas for AdvancedTransportData Steps
@@ -223,20 +223,20 @@ export interface PacienteLote {
 
 export interface DestinoLote {
   id: string;
-  nombre: string; // Ej: "Hospital San Pedro - Consultas Externas"
+  nombre: string; 
   direccion: string;
-  detalles?: string; // Ej: "Planta 2, Consulta de Traumatología"
+  detalles?: string; 
 }
 
 export type ParadaEstado = 'pendiente' | 'enRutaRecogida' | 'pacienteRecogido' | 'enDestino' | 'finalizado' | 'cancelado' | 'noPresentado';
 
 export interface ParadaRuta {
-  servicioId: string; // ID de ProgrammedTransportRequest original
+  servicioId: string; 
   paciente: PacienteLote;
-  horaConsultaMedica: string; // HH:MM (Hora de la cita)
-  horaRecogidaEstimada: string; // HH:MM
-  horaLlegadaDestinoEstimada: string; // HH:MM
-  tiempoTrasladoDesdeAnteriorMin: number; // en minutos
+  horaConsultaMedica: string; 
+  horaRecogidaEstimada: string; 
+  horaLlegadaDestinoEstimada: string; 
+  tiempoTrasladoDesdeAnteriorMin: number; 
   orden: number;
   estado: ParadaEstado;
   horaRealLlegadaRecogida?: string;
@@ -249,27 +249,26 @@ export interface RutaCalculada {
   id: string;
   loteId: string;
   paradas: ParadaRuta[];
-  horaSalidaBaseEstimada: string; // HH:MM
-  duracionTotalEstimadaMin: number; // en minutos
-  distanciaTotalEstimadaKm?: number; // en km
-  optimizadaEn?: string; // ISO Date
+  horaSalidaBaseEstimada: string; 
+  duracionTotalEstimadaMin: number; 
+  distanciaTotalEstimadaKm?: number; 
+  optimizadaEn?: string; 
 }
 
 export interface LoteProgramado {
-  id: string; // Identificador único del lote, ej: "lote-20240727-AMB101"
-  fechaServicio: string; // YYYY-MM-DD
-  destinoPrincipal: DestinoLote; // El destino común o más relevante del lote
-  serviciosIds: string[]; // IDs de ProgrammedTransportRequest incluidas
+  id: string; 
+  fechaServicio: string; 
+  destinoPrincipal: DestinoLote; 
+  serviciosIds: string[]; 
   estadoLote: 'pendienteCalculo' | 'calculado' | 'asignado' | 'enCurso' | 'completado' | 'modificado' | 'cancelado';
-  equipoMovilUserIdAsignado?: string; // ID del User con rol 'equipoMovil'
-  ambulanciaIdAsignada?: string; // ID de la Ambulance asignada
-  rutaCalculadaId?: string; // ID de la RutaCalculada asociada
+  equipoMovilUserIdAsignado?: string; 
+  ambulanciaIdAsignada?: string; 
+  rutaCalculadaId?: string; 
   notasLote?: string;
   createdAt: string;
   updatedAt: string;
 }
 
-// Para el formulario de modificación de horario
 export type MotivoModificacionHorario = 'trafico' | 'pacienteNoLocalizable' | 'retrasoPaciente' | 'incidenciaVehiculo' | 'otro';
 export const ALL_MOTIVOS_MODIFICACION_HORARIO: MotivoModificacionHorario[] = ['trafico', 'pacienteNoLocalizable', 'retrasoPaciente', 'incidenciaVehiculo', 'otro'];
 
@@ -278,7 +277,7 @@ export interface SolicitudModificacionHorario {
   loteId: string;
   servicioIdAfectado: string;
   equipoMovilIdSolicitante: string;
-  fechaSolicitud: string; // ISO Date
+  fechaSolicitud: string; 
   minutosRetrasoEstimado: number;
   motivo: MotivoModificacionHorario;
   descripcionMotivo?: string;

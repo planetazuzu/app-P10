@@ -5,7 +5,7 @@ export const MOCK_USERS: Record<string, User> = {
   'admin@gmr.com': { id: 'user-admin', email: 'admin@gmr.com', name: 'Usuario Admin', role: 'admin' },
   'hospital@gmr.com': { id: 'user-hospital', email: 'hospital@gmr.com', name: 'Personal Hospital', role: 'hospital' },
   'individual@gmr.com': { id: 'user-individual', email: 'individual@gmr.com', name: 'Usuario Individual', role: 'individual' },
-  'equipo.traslado@gmr.com': { id: 'user-equipo-traslado-01', email: 'equipo.traslado@gmr.com', name: 'Equipo de Traslado 01', role: 'equipoTraslado' },
+  'coordinador@gmr.com': { id: 'user-centro-coordinador-01', email: 'coordinador@gmr.com', name: 'Centro Coordinador 01', role: 'centroCoordinador' },
   'vehiculo.AMB101@gmr.com': { id: 'user-vehiculo-AMB101', email: 'vehiculo.AMB101@gmr.com', name: 'Vehículo AMB101 (Móvil)', role: 'equipoMovil'},
 };
 

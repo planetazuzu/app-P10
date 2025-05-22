@@ -8,7 +8,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit3, Trash2, Search, Filter, ArrowLeft, Loader2, MapPin } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, Search, ArrowLeft, Loader2, MapPin } from 'lucide-react';
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
 import { getAmbulances, mockAmbulances } from '@/lib/ambulance-data'; 
 import { Input } from '@/components/ui/input';
@@ -18,7 +18,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
 
-// Helper to translate types for display
 const getAmbulanceTypeLabel = (type: AmbulanceType): string => {
   switch (type) {
     case "SVB": return "SVB";
@@ -64,7 +63,7 @@ export default function ManageAmbulancesPage() {
   const router = useRouter();
 
   useEffect(() => {
-    if (!authIsLoading && user && user.role !== 'admin') {
+    if (!authIsLoading && user && !['admin', 'centroCoordinador'].includes(user.role)) {
       toast({
         title: 'Acceso Denegado',
         description: 'No tiene permisos para acceder a esta sección.',
@@ -75,11 +74,10 @@ export default function ManageAmbulancesPage() {
   }, [user, authIsLoading, router, toast]);
   
   useEffect(() => {
-    if (user && user.role === 'admin') {
+    if (user && ['admin', 'centroCoordinador'].includes(user.role)) {
         async function loadAmbulances() {
           setIsLoading(true);
           try {
-            // Replace with your actual data fetching logic if not using mockAmbulances directly
             const data = await getAmbulances(); 
             setAmbulances(data);
           } catch (error) {
@@ -103,19 +101,17 @@ export default function ManageAmbulancesPage() {
     );
 
   const handleDelete = (id: string, name: string) => {
-    // Mock deletion
     const index = mockAmbulances.findIndex(a => a.id === id);
     if (index !== -1) {
-        mockAmbulances.splice(index, 1); // Remove from global mock array
-        setAmbulances(prev => prev.filter(amb => amb.id !== id)); // Update local state
+        mockAmbulances.splice(index, 1); 
+        setAmbulances(prev => prev.filter(amb => amb.id !== id)); 
         toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${name}" (ID: ${id}) ha sido eliminada.`});
     } else {
         toast({ title: "Error al Eliminar", description: `No se encontró la ambulancia "${name}".`, variant: "destructive"});
     }
-    // In a real app, call API to delete.
   };
   
-  if (authIsLoading || (!user || user.role !== 'admin')) {
+  if (authIsLoading || (!user || !['admin', 'centroCoordinador'].includes(user.role))) {
     return (
       <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -277,3 +273,5 @@ export default function ManageAmbulancesPage() {
     </div>
   );
 }
+
+    

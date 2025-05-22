@@ -1,5 +1,5 @@
 
-import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapIcon, UserX } from 'lucide-react';
+import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapIcon, UserX, Waypoints, ListChecks } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 
 export const Icons = {
@@ -11,8 +11,8 @@ export const Icons = {
   Users: (props: LucideProps) => <Users {...props} />,
   Settings: (props: LucideProps) => <Settings {...props} />,
   Dashboard: (props: LucideProps) => <LayoutDashboard {...props} />,
-  Map: (props: LucideProps) => <Map {...props} />, // Used for general map/route
-  MapIcon: (props: LucideProps) => <MapIcon {...props} />, // Alternative map icon
+  Map: (props: LucideProps) => <Map {...props} />, 
+  MapIcon: (props: LucideProps) => <MapIcon {...props} />, 
   SmartDispatch: (props: LucideProps) => <Zap {...props} />, 
   RequestManagement: (props: LucideProps) => <FileText {...props} />,
   Messages: (props: LucideProps) => <MessageSquare {...props} />,
@@ -20,7 +20,10 @@ export const Icons = {
   ChevronDown: (props: LucideProps) => <ChevronDown {...props} />,
   ChevronRight: (props: LucideProps) => <ChevronRight {...props} />,
   UserX: (props: LucideProps) => <UserX {...props} />,
+  Waypoints: (props: LucideProps) => <Waypoints {...props} />,
+  ListChecks: (props: LucideProps) => <ListChecks {...props} />,
 };
 
 export type IconName = keyof typeof Icons;
 
+    

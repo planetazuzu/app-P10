@@ -8,9 +8,11 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from '@/components/ui/dropdown-menu';
-import { MoreHorizontal, PlusCircle, Edit3, Trash2, ArrowLeft } from 'lucide-react';
+import { MoreHorizontal, PlusCircle, Edit3, Trash2, ArrowLeft, Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { useRouter } from 'next/navigation';
 
 // Helper para traducir roles de usuario
 const translateUserRole = (role: UserRole): string => {
@@ -18,7 +20,7 @@ const translateUserRole = (role: UserRole): string => {
     case 'admin': return 'Administrador';
     case 'hospital': return 'Personal Hospitalario';
     case 'individual': return 'Usuario Individual';
-    case 'equipoTraslado': return 'Equipo de Traslado';
+    case 'centroCoordinador': return 'Centro Coordinador';
     case 'equipoMovil': return 'Equipo Móvil (Vehículo)';
     default: return role.charAt(0).toUpperCase() + role.slice(1);
   }
@@ -27,23 +29,42 @@ const translateUserRole = (role: UserRole): string => {
 export default function UserManagementPage() {
   const [users, setUsers] = useState<User[]>([]);
   const { toast } = useToast();
+  const { user: currentUser, isLoading: authIsLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    // En una aplicación real, esto sería una llamada a una API
-    setUsers(Object.values(MOCK_USERS));
-  }, []);
+    if (!authIsLoading && currentUser && !['admin', 'centroCoordinador'].includes(currentUser.role)) {
+      toast({
+        title: 'Acceso Denegado',
+        description: 'No tiene permisos para acceder a esta sección.',
+        variant: 'destructive',
+      });
+      router.replace('/dashboard');
+    }
+  }, [currentUser, authIsLoading, router, toast]);
+
+  useEffect(() => {
+    if (currentUser && ['admin', 'centroCoordinador'].includes(currentUser.role)) {
+      setUsers(Object.values(MOCK_USERS));
+    }
+  }, [currentUser]);
 
   const handleEditUser = (userId: string) => {
     toast({ title: 'Editar Usuario (Próximamente)', description: `Funcionalidad para editar el usuario ${userId} aún no implementada.` });
-    // router.push(`/admin/user-management/${userId}/edit`);
   };
 
   const handleDeleteUser = (userId: string, userName: string) => {
-    // Simulación de eliminación
     setUsers(prevUsers => prevUsers.filter(user => user.id !== userId));
     toast({ title: 'Usuario Eliminado (Simulado)', description: `El usuario "${userName}" ha sido eliminado de la lista.` });
-    // En una aplicación real, se haría una llamada a la API para eliminar el usuario
   };
+
+  if (authIsLoading || (!currentUser || !['admin', 'centroCoordinador'].includes(currentUser.role))) {
+    return (
+      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="rioja-container">

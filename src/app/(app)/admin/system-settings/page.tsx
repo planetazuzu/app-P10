@@ -1,10 +1,38 @@
+
 'use client';
 
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Settings } from 'lucide-react';
+import { Settings, Loader2 } from 'lucide-react';
 import Image from 'next/image';
+import { useAuth } from '@/hooks/use-auth';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
 
 export default function SystemSettingsPage() {
+  const { user, isLoading: authIsLoading } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!authIsLoading && user && !['admin', 'centroCoordinador'].includes(user.role)) {
+      toast({
+        title: 'Acceso Denegado',
+        description: 'No tiene permisos para acceder a esta sección.',
+        variant: 'destructive',
+      });
+      router.replace('/dashboard');
+    }
+  }, [user, authIsLoading, router, toast]);
+
+  if (authIsLoading || (!user || !['admin', 'centroCoordinador'].includes(user.role))) {
+    return (
+      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+  
   return (
     <div>
       <h1 className="page-title mb-8">Configuración del Sistema</h1>
@@ -37,3 +65,5 @@ export default function SystemSettingsPage() {
     </div>
   );
 }
+
+    

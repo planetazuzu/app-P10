@@ -24,7 +24,7 @@ export default function NewAmbulancePage() {
   const { user, isLoading: authIsLoading } = useAuth();
 
   useEffect(() => {
-    if (!authIsLoading && user && user.role !== 'admin') {
+    if (!authIsLoading && user && !['admin', 'centroCoordinador'].includes(user.role)) {
       toast({
         title: 'Acceso Denegado',
         description: 'No tiene permisos para crear ambulancias.',
@@ -81,9 +81,10 @@ export default function NewAmbulancePage() {
         ...emptyAmbulance,
         ...ambulance,
         id: `amb-${Date.now().toString().slice(-6)}`, 
+        equipment: ambulance.type ? defaultEquipmentByType[ambulance.type] : undefined, // Add default equipment based on type
     } as Ambulance;
 
-    mockAmbulances.push(newAmbulanceWithId); // Add to global mock array
+    mockAmbulances.push(newAmbulanceWithId); 
 
     toast({
       title: "Ambulancia Creada",
@@ -94,7 +95,7 @@ export default function NewAmbulancePage() {
     setIsSaving(false);
   };
 
-  if (authIsLoading || (!user || user.role !== 'admin')) {
+  if (authIsLoading || (!user || !['admin', 'centroCoordinador'].includes(user.role))) {
     return (
       <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
@@ -106,7 +107,7 @@ export default function NewAmbulancePage() {
     <div className="rioja-container">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link href="/admin/ambulances" passHref> {/* Updated link to go back to the list */}
+          <Link href="/admin/ambulances" passHref> 
              <Button variant="outline" size="icon" className="h-9 w-9">
                 <ArrowLeft className="h-5 w-5" />
              </Button>
@@ -142,3 +143,5 @@ export default function NewAmbulancePage() {
     </div>
   );
 }
+
+    

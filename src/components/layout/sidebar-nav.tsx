@@ -31,47 +31,53 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'equipoTraslado', 'equipoMovil'] },
-  { title: 'Seguimiento Ambulancias', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital'] },
-  { title: 'Despacho Inteligente', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital'] },
+  { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
+  { title: 'Seguimiento Ambulancias', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital', 'centroCoordinador'] },
+  { title: 'Despacho Inteligente', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital', 'centroCoordinador'] },
   {
     title: 'Gestión Solicitudes',
     href: '/request-management',
     icon: 'RequestManagement',
-    roles: ['admin', 'hospital', 'individual', 'equipoTraslado'],
+    roles: ['admin', 'hospital', 'individual', 'centroCoordinador'],
     submenu: [
-        { title: 'Ver Solicitudes', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'equipoTraslado'], exactMatch: true },
-        { title: 'Nueva Solicitud (Urgente)', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
-        { title: 'Nueva Solicitud (Programada)', href: '/request-management/new-programmed', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
-        { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital'] },
+        { title: 'Ver Solicitudes', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'], exactMatch: true },
+        { title: 'Nueva Solicitud (Urgente)', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
+        { title: 'Nueva Solicitud (Programada)', href: '/request-management/new-programmed', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
+        { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital', 'centroCoordinador'] },
     ]
   },
-  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'equipoTraslado', 'equipoMovil'], disabled: true },
+  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'], disabled: true },
   {
-    title: 'Mi Ruta de Hoy', // For Equipo Móvil (Vehicles)
-    href: '/driver/batch-view/lote-demo-123', // Example route with a demo batch ID
-    icon: 'Map', // Or a 'Route' icon if available
+    title: 'Mi Ruta de Hoy', 
+    href: '/driver/batch-view/lote-demo-123', 
+    icon: 'MapIcon', 
     roles: ['equipoMovil'],
   },
   {
     title: 'Admin',
     href: '/admin',
     icon: 'ShieldCheck',
-    roles: ['admin'],
+    roles: ['admin', 'centroCoordinador'],
     submenu: [
-        { title: 'Panel Admin', href: '/admin', icon: 'ShieldCheck', roles: ['admin'], exactMatch: true },
-        { title: 'Gestión Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin'] },
+        { title: 'Panel Admin', href: '/admin', icon: 'ShieldCheck', roles: ['admin', 'centroCoordinador'], exactMatch: true },
+        { title: 'Gestión Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin', 'centroCoordinador'] },
         {
           title: 'Gestión Ambulancias',
           href: '/admin/ambulances',
           icon: 'Ambulance',
-          roles: ['admin'],
+          roles: ['admin', 'centroCoordinador'],
           submenu: [
-            { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin'], exactMatch: true },
-            { title: 'Añadir Ambulancia', href: '/admin/ambulances/new', icon: 'Ambulance', roles: ['admin'] },
+            { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin', 'centroCoordinador'], exactMatch: true },
+            { title: 'Añadir Ambulancia', href: '/admin/ambulances/new', icon: 'Ambulance', roles: ['admin', 'centroCoordinador'] },
           ]
         },
-        { title: 'Config. Sistema', href: '/admin/system-settings', icon: 'Settings', roles: ['admin'], disabled: true },
+        { 
+          title: 'Gestión Lotes y Rutas', 
+          href: '/admin/lotes', 
+          icon: 'Waypoints', 
+          roles: ['admin', 'centroCoordinador'] 
+        },
+        { title: 'Config. Sistema', href: '/admin/system-settings', icon: 'Settings', roles: ['admin', 'centroCoordinador'], disabled: true },
     ]
   },
 ];

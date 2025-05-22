@@ -25,8 +25,8 @@ const translateUserRole = (role: UserRole): string => {
       return 'Hospital';
     case 'individual':
       return 'Individual';
-    case 'equipoTraslado':
-      return 'Equipo Traslado';
+    case 'centroCoordinador':
+      return 'Centro Coord.';
     case 'equipoMovil':
       return 'Equipo Móvil';
     default:

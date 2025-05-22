@@ -1,11 +1,39 @@
 
 'use client';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ShieldCheck, Users, Settings, Ambulance } from 'lucide-react';
+import { ShieldCheck, Users, Settings, Ambulance, Waypoints, Loader2 } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/hooks/use-auth';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
+import { useToast } from '@/hooks/use-toast';
+
 
 export default function AdminPage() {
+  const { user, isLoading: authIsLoading } = useAuth();
+  const router = useRouter();
+  const { toast } = useToast();
+
+  useEffect(() => {
+    if (!authIsLoading && user && !['admin', 'centroCoordinador'].includes(user.role)) {
+      toast({
+        title: 'Acceso Denegado',
+        description: 'No tiene permisos para acceder al panel de administración.',
+        variant: 'destructive',
+      });
+      router.replace('/dashboard');
+    }
+  }, [user, authIsLoading, router, toast]);
+
+  if (authIsLoading || (!user || !['admin', 'centroCoordinador'].includes(user.role))) {
+    return (
+      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   return (
     <div>
       <h1 className="page-title mb-8">Panel de Administración</h1>
@@ -15,7 +43,7 @@ export default function AdminPage() {
             <ShieldCheck className="h-7 w-7 text-primary" />
             <CardTitle className="section-title">Administración del Sistema</CardTitle>
           </div>
-          <CardDescription>Gestionar usuarios, configuraciones del sistema, ambulancias y monitorear la salud de la aplicación.</CardDescription>
+          <CardDescription>Gestionar usuarios, configuraciones del sistema, ambulancias, lotes, rutas y monitorear la salud de la aplicación.</CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
           <Card className="card-stats border-secondary">
@@ -44,6 +72,19 @@ export default function AdminPage() {
               </Link>
             </CardContent>
           </Card>
+           <Card className="card-stats border-secondary">
+            <CardHeader>
+              <CardTitle className="text-lg flex items-center gap-2"><Waypoints className="text-secondary"/>Gestión de Lotes y Rutas</CardTitle>
+            </CardHeader>
+            <CardContent>
+              <p className="text-sm text-muted-foreground mb-4">
+                Crear y asignar lotes de servicios programados, y optimizar rutas.
+              </p>
+              <Link href="/admin/lotes" passHref>
+                 <Button variant="secondary">Gestionar Lotes</Button>
+              </Link>
+            </CardContent>
+          </Card>
           <Card className="card-stats border-secondary">
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2"><Settings className="text-secondary"/>Configuración del Sistema</CardTitle>
@@ -63,3 +104,4 @@ export default function AdminPage() {
   );
 }
 
+    
