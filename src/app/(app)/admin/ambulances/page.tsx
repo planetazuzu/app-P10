@@ -17,6 +17,16 @@ import { ALL_AMBULANCE_TYPES, ALL_AMBULANCE_STATUSES } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
 
 const getAmbulanceTypeLabel = (type: AmbulanceType): string => {
   switch (type) {
@@ -62,6 +72,10 @@ export default function ManageAmbulancesPage() {
   const { user, isLoading: authIsLoading } = useAuth();
   const router = useRouter();
 
+  const [isConfirmDeleteDialogOpen, setIsConfirmDeleteDialogOpen] = useState(false);
+  const [ambulanceToDeleteId, setAmbulanceToDeleteId] = useState<string | null>(null);
+  const [ambulanceToDeleteName, setAmbulanceToDeleteName] = useState<string | null>(null);
+
   useEffect(() => {
     if (!authIsLoading && user && !['admin', 'centroCoordinador'].includes(user.role)) {
       toast({
@@ -100,15 +114,26 @@ export default function ManageAmbulancesPage() {
        amb.baseLocation.toLowerCase().includes(searchTerm.toLowerCase()))
     );
 
-  const handleDelete = (id: string, name: string) => {
-    const index = mockAmbulances.findIndex(a => a.id === id);
+  const openDeleteConfirmDialog = (id: string, name: string) => {
+    setAmbulanceToDeleteId(id);
+    setAmbulanceToDeleteName(name);
+    setIsConfirmDeleteDialogOpen(true);
+  };
+
+  const handleDelete = () => {
+    if (!ambulanceToDeleteId || !ambulanceToDeleteName) return;
+
+    const index = mockAmbulances.findIndex(a => a.id === ambulanceToDeleteId);
     if (index !== -1) {
         mockAmbulances.splice(index, 1); 
-        setAmbulances(prev => prev.filter(amb => amb.id !== id)); 
-        toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${name}" (ID: ${id}) ha sido eliminada.`});
+        setAmbulances(prev => prev.filter(amb => amb.id !== ambulanceToDeleteId)); 
+        toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${ambulanceToDeleteName}" (ID: ${ambulanceToDeleteId}) ha sido eliminada.`});
     } else {
-        toast({ title: "Error al Eliminar", description: `No se encontró la ambulancia "${name}".`, variant: "destructive"});
+        toast({ title: "Error al Eliminar", description: `No se encontró la ambulancia "${ambulanceToDeleteName}".`, variant: "destructive"});
     }
+    setAmbulanceToDeleteId(null);
+    setAmbulanceToDeleteName(null);
+    setIsConfirmDeleteDialogOpen(false);
   };
   
   if (authIsLoading || (!user || !['admin', 'centroCoordinador'].includes(user.role))) {
@@ -258,7 +283,7 @@ export default function ManageAmbulancesPage() {
                             <Edit3 className="h-4 w-4" />
                           </Button>
                         </Link>
-                        <Button variant="ghost" size="icon" onClick={() => handleDelete(ambulance.id, ambulance.name)} className="hover:text-destructive">
+                        <Button variant="ghost" size="icon" onClick={() => openDeleteConfirmDialog(ambulance.id, ambulance.name)} className="hover:text-destructive">
                           <Trash2 className="h-4 w-4" />
                         </Button>
                       </TableCell>
@@ -270,8 +295,24 @@ export default function ManageAmbulancesPage() {
           )}
         </CardContent>
       </Card>
+
+      <AlertDialog open={isConfirmDeleteDialogOpen} onOpenChange={setIsConfirmDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Confirmar Eliminación</AlertDialogTitle>
+            <AlertDialogDescription>
+              ¿Está seguro de que desea eliminar la ambulancia "{ambulanceToDeleteName || ''}" (ID: {ambulanceToDeleteId || ''})? 
+              Esta acción no se puede deshacer.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => { setAmbulanceToDeleteId(null); setAmbulanceToDeleteName(null); }}>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
+              Eliminar Ambulancia
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }
-
-    
