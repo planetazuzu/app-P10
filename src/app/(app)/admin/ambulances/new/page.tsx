@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import { AmbulanceForm } from '@/components/ambulance/ambulance-form';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
@@ -9,10 +9,11 @@ import type { Ambulance } from '@/types';
 import { emptyAmbulance } from '@/components/ambulance/constants';
 import { useToast } from '@/hooks/use-toast';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft } from 'lucide-react';
+import { ArrowLeft, Loader2 } from 'lucide-react';
 import Link from 'next/link';
+import { useAuth } from '@/hooks/use-auth';
+import { mockAmbulances } from '@/lib/ambulance-data';
 
-// En un futuro, esto vendría de una API/DB
 const MOCK_SAVE_AMBULANCE_DELAY = 500;
 
 export default function NewAmbulancePage() {
@@ -20,19 +21,29 @@ export default function NewAmbulancePage() {
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const router = useRouter();
+  const { user, isLoading: authIsLoading } = useAuth();
+
+  useEffect(() => {
+    if (!authIsLoading && user && user.role !== 'admin') {
+      toast({
+        title: 'Acceso Denegado',
+        description: 'No tiene permisos para crear ambulancias.',
+        variant: 'destructive',
+      });
+      router.replace('/dashboard');
+    }
+  }, [user, authIsLoading, router, toast]);
+
 
   const handleFieldChange = useCallback((field: keyof Ambulance, value: any) => {
     setAmbulance(prev => ({ ...prev, [field]: value }));
 
-    // Si se cambia hasMedicalBed y se desmarca, poner stretcherSeats a 0
     if (field === 'hasMedicalBed' && !value) {
       setAmbulance(prev => ({ ...prev, stretcherSeats: 0 }));
     }
-    // Si se cambia hasWheelchair y se desmarca, poner wheelchairSeats a 0
     if (field === 'hasWheelchair' && !value) {
       setAmbulance(prev => ({ ...prev, wheelchairSeats: 0 }));
     }
-    // Si se cambia allowsWalking y se desmarca, poner walkingSeats a 0
     if (field === 'allowsWalking' && !value) {
       setAmbulance(prev => ({ ...prev, walkingSeats: 0 }));
     }
@@ -52,7 +63,6 @@ export default function NewAmbulancePage() {
     e.preventDefault();
     setIsSaving(true);
 
-    // Validaciones básicas (se podrían expandir o usar Zod)
     if (!ambulance.name || !ambulance.licensePlate || !ambulance.model || !ambulance.type || !ambulance.baseLocation || !ambulance.status) {
       toast({
         title: "Campos Requeridos Faltantes",
@@ -65,35 +75,38 @@ export default function NewAmbulancePage() {
     
     console.log("Guardando ambulancia:", ambulance);
 
-    // Simular guardado en DB
     await new Promise(resolve => setTimeout(resolve, MOCK_SAVE_AMBULANCE_DELAY));
     
-    // En una app real, aquí se haría la llamada a la API para crear la ambulancia
-    // y se generaría el ID en el backend.
     const newAmbulanceWithId: Ambulance = {
-        ...emptyAmbulance, // Asegura que todos los campos por defecto estén
-        ...ambulance, // Sobrescribe con los datos del formulario
-        id: `amb-${Date.now().toString().slice(-6)}`, // Mock ID generation
+        ...emptyAmbulance,
+        ...ambulance,
+        id: `amb-${Date.now().toString().slice(-6)}`, 
     } as Ambulance;
 
+    mockAmbulances.push(newAmbulanceWithId); // Add to global mock array
 
     toast({
       title: "Ambulancia Creada",
       description: `La ambulancia "${newAmbulanceWithId.name}" ha sido registrada con ID: ${newAmbulanceWithId.id}.`,
     });
     
-    // Idealmente, se redirigiría a la página de la ambulancia recién creada o a la lista
-    // router.push(`/admin/ambulances/${newAmbulanceWithId.id}`); 
-    router.push('/admin/ambulances'); // Por ahora, a una lista genérica que no existe.
-    // setAmbulance({ ...emptyAmbulance }); // Reset form
+    router.push('/admin/ambulances');
     setIsSaving(false);
   };
+
+  if (authIsLoading || (!user || user.role !== 'admin')) {
+    return (
+      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   return (
     <div className="rioja-container">
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
-          <Link href="/admin" passHref>
+          <Link href="/admin/ambulances" passHref> {/* Updated link to go back to the list */}
              <Button variant="outline" size="icon" className="h-9 w-9">
                 <ArrowLeft className="h-5 w-5" />
              </Button>

@@ -3,17 +3,19 @@
 
 import React, { useState, useEffect } from 'react';
 import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Edit3, Trash2, Search, Filter, ArrowLeft, Loader2, MapPin } from 'lucide-react';
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
-import { getAmbulances } from '@/lib/ambulance-data'; // Assuming this will be updated
+import { getAmbulances, mockAmbulances } from '@/lib/ambulance-data'; 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ALL_AMBULANCE_TYPES, ALL_AMBULANCE_STATUSES } from '@/types';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { Skeleton } from '@/components/ui/skeleton';
 
 // Helper to translate types for display
@@ -58,20 +60,36 @@ export default function ManageAmbulancesPage() {
   const [filterType, setFilterType] = useState<AmbulanceType | 'all'>('all');
   const [filterStatus, setFilterStatus] = useState<AmbulanceStatus | 'all'>('all');
   const { toast } = useToast();
+  const { user, isLoading: authIsLoading } = useAuth();
+  const router = useRouter();
 
   useEffect(() => {
-    async function loadAmbulances() {
-      setIsLoading(true);
-      try {
-        const data = await getAmbulances(); 
-        setAmbulances(data);
-      } catch (error) {
-        toast({ title: "Error", description: "No se pudieron cargar las ambulancias.", variant: "destructive" });
-      }
-      setIsLoading(false);
+    if (!authIsLoading && user && user.role !== 'admin') {
+      toast({
+        title: 'Acceso Denegado',
+        description: 'No tiene permisos para acceder a esta sección.',
+        variant: 'destructive',
+      });
+      router.replace('/dashboard');
     }
-    loadAmbulances();
-  }, [toast]);
+  }, [user, authIsLoading, router, toast]);
+  
+  useEffect(() => {
+    if (user && user.role === 'admin') {
+        async function loadAmbulances() {
+          setIsLoading(true);
+          try {
+            // Replace with your actual data fetching logic if not using mockAmbulances directly
+            const data = await getAmbulances(); 
+            setAmbulances(data);
+          } catch (error) {
+            toast({ title: "Error", description: "No se pudieron cargar las ambulancias.", variant: "destructive" });
+          }
+          setIsLoading(false);
+        }
+        loadAmbulances();
+    }
+  }, [user, toast]);
 
   const filteredAmbulances = ambulances
     .filter(amb => 
@@ -85,12 +103,26 @@ export default function ManageAmbulancesPage() {
     );
 
   const handleDelete = (id: string, name: string) => {
-    // Mock deletion: filter out the ambulance from the local state
-    setAmbulances(prev => prev.filter(amb => amb.id !== id));
-    toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${name}" (ID: ${id}) ha sido eliminada del listado.`});
-    // In a real app, you would call an API to delete the ambulance from the database.
+    // Mock deletion
+    const index = mockAmbulances.findIndex(a => a.id === id);
+    if (index !== -1) {
+        mockAmbulances.splice(index, 1); // Remove from global mock array
+        setAmbulances(prev => prev.filter(amb => amb.id !== id)); // Update local state
+        toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${name}" (ID: ${id}) ha sido eliminada.`});
+    } else {
+        toast({ title: "Error al Eliminar", description: `No se encontró la ambulancia "${name}".`, variant: "destructive"});
+    }
+    // In a real app, call API to delete.
   };
   
+  if (authIsLoading || (!user || user.role !== 'admin')) {
+    return (
+      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
+
   if (isLoading) {
     return (
         <div className="rioja-container">
@@ -209,7 +241,7 @@ export default function ManageAmbulancesPage() {
                       </TableCell>
                       <TableCell>{ambulance.model || 'N/A'}</TableCell>
                       <TableCell>{ambulance.baseLocation}</TableCell>
-                      <TableCell className="text-xs">
+                       <TableCell className="text-xs">
                         {ambulance.latitude && ambulance.longitude ? (
                           <div className="flex items-center gap-1">
                             <MapPin className="h-3 w-3 text-muted-foreground"/> 
@@ -245,5 +277,3 @@ export default function ManageAmbulancesPage() {
     </div>
   );
 }
-
-    

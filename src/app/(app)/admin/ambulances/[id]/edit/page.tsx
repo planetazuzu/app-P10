@@ -5,11 +5,12 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Ambulance } from '@/types';
-import { getAmbulanceById, mockAmbulances } from '@/lib/ambulance-data'; // Import mockAmbulances for mock update
+import { getAmbulanceById, mockAmbulances } from '@/lib/ambulance-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AmbulanceForm } from '@/components/ambulance/ambulance-form';
 import { useToast } from '@/hooks/use-toast';
+import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 
 const MOCK_UPDATE_AMBULANCE_DELAY = 500;
@@ -23,9 +24,20 @@ export default function EditAmbulancePage() {
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
+  const { user, isLoading: authIsLoading } = useAuth();
 
   useEffect(() => {
-    if (ambulanceId) {
+    if (!authIsLoading && user && user.role !== 'admin') {
+      toast({
+        title: 'Acceso Denegado',
+        description: 'No tiene permisos para editar ambulancias.',
+        variant: 'destructive',
+      });
+      router.replace('/dashboard');
+      return; // Important: stop further execution if not admin
+    }
+
+    if (user && user.role === 'admin' && ambulanceId) {
       setIsLoading(true);
       getAmbulanceById(ambulanceId)
         .then((data) => {
@@ -41,15 +53,19 @@ export default function EditAmbulancePage() {
           router.push('/admin/ambulances');
         })
         .finally(() => setIsLoading(false));
+    } else if (user && user.role === 'admin' && !ambulanceId) {
+        // Handle case where ID might be missing, though route should provide it
+        toast({ title: 'Error', description: 'ID de ambulancia no especificado.', variant: 'destructive' });
+        router.push('/admin/ambulances');
+        setIsLoading(false);
     }
-  }, [ambulanceId, router, toast]);
+  }, [ambulanceId, router, toast, user, authIsLoading]);
 
   const handleFieldChange = useCallback((field: keyof Ambulance, value: any) => {
     setAmbulance(prev => {
       if (!prev) return null;
       const updatedAmbulance = { ...prev, [field]: value };
 
-      // Logic from new/edit page for dependent fields
       if (field === 'hasMedicalBed' && !value) {
         updatedAmbulance.stretcherSeats = 0;
       }
@@ -79,7 +95,6 @@ export default function EditAmbulancePage() {
     if (!ambulance) return;
     setIsSaving(true);
 
-    // Validaciones básicas
     if (!ambulance.name || !ambulance.licensePlate || !ambulance.model || !ambulance.type || !ambulance.baseLocation || !ambulance.status) {
       toast({
         title: "Campos Requeridos Faltantes",
@@ -92,13 +107,11 @@ export default function EditAmbulancePage() {
     
     console.log("Actualizando ambulancia:", ambulance);
 
-    // Simular guardado en DB
     await new Promise(resolve => setTimeout(resolve, MOCK_UPDATE_AMBULANCE_DELAY));
     
-    // Mock update in the global array (for demo persistence during session)
     const index = mockAmbulances.findIndex(a => a.id === ambulance.id);
     if (index !== -1) {
-      mockAmbulances[index] = ambulance as Ambulance; // Assume all fields are present
+      mockAmbulances[index] = ambulance as Ambulance; 
     }
 
     toast({
@@ -109,6 +122,14 @@ export default function EditAmbulancePage() {
     router.push('/admin/ambulances');
     setIsSaving(false);
   };
+
+  if (authIsLoading || (!user || user.role !== 'admin')) {
+    return (
+      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
+        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      </div>
+    );
+  }
 
 
   if (isLoading) {
@@ -175,5 +196,3 @@ export default function EditAmbulancePage() {
     </div>
   );
 }
-
-    
