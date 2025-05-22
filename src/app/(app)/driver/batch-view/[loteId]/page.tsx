@@ -104,26 +104,31 @@ const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus:
 
 const DropdownMenuStatus: React.FC<{ parada: ParadaRuta; onStatusChange: (newStatus: ParadaRuta['estado']) => void }> = ({ parada, onStatusChange }) => {
   const nonSequentialStates: ParadaRuta['estado'][] = ['noPresentado', 'cancelado'];
+  const isFinalState = ['finalizado', 'cancelado', 'noPresentado'].includes(parada.estado);
+
   return (
-    <details className="relative group">
+    <details className="relative group" {...(isFinalState ? { open: false } : {})}>
         <summary className="list-none">
-            <Button variant="outline" size="sm">Otras Acciones <HelpCircle className="ml-1 w-4 h-4"/></Button>
+            <Button variant="outline" size="sm" disabled={isFinalState} aria-expanded={!isFinalState && undefined}>
+                Otras Acciones <HelpCircle className="ml-1 w-4 h-4"/>
+            </Button>
         </summary>
-        <div className="absolute z-10 mt-1 right-0 bg-card border rounded shadow-lg p-2 space-y-1 hidden group-open:block w-48">
-            {nonSequentialStates.map(status => (
-                <Button
-                    key={status}
-                    variant="ghost"
-                    size="sm"
-                    className="w-full justify-start text-xs"
-                    onClick={() => onStatusChange(status)}
-                    disabled={parada.estado === 'finalizado' || parada.estado === 'cancelado' || parada.estado === 'noPresentado'}
-                >
-                    {status === 'noPresentado' ? <UserX className="mr-2 h-3.5 w-3.5"/> : <Ban className="mr-2 h-3.5 w-3.5"/>}
-                    Marcar como {translateParadaStatus(status)}
-                </Button>
-            ))}
-        </div>
+        {!isFinalState && (
+            <div className="absolute z-10 mt-1 right-0 bg-card border rounded shadow-lg p-2 space-y-1 hidden group-open:block w-48">
+                {nonSequentialStates.map(status => (
+                    <Button
+                        key={status}
+                        variant="ghost"
+                        size="sm"
+                        className="w-full justify-start text-xs"
+                        onClick={() => onStatusChange(status)}
+                    >
+                        {status === 'noPresentado' ? <UserX className="mr-2 h-3.5 w-3.5"/> : <Ban className="mr-2 h-3.5 w-3.5"/>}
+                        Marcar como {translateParadaStatus(status)}
+                    </Button>
+                ))}
+            </div>
+        )}
     </details>
   );
 };
