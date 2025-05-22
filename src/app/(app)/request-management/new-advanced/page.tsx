@@ -5,6 +5,7 @@ import { AdvancedTransportForm } from '@/components/request/advanced-transport-f
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import React, { useEffect } from 'react';
+import { Loader2 } from 'lucide-react';
 
 export default function NewAdvancedTransportRequestPage() {
   const { user, isLoading } = useAuth();
@@ -12,9 +13,7 @@ export default function NewAdvancedTransportRequestPage() {
 
   useEffect(() => {
     if (!isLoading && user) {
-      // Define which roles can create advanced transport requests
-      // For now, assuming admin and hospital roles
-      const canCreate = user.role === 'admin' || user.role === 'hospital';
+      const canCreate = user.role === 'admin' || user.role === 'hospital' || user.role === 'centroCoordinador';
       if (!canCreate) {
         router.replace('/dashboard'); // Or an unauthorized page
       }
@@ -22,11 +21,20 @@ export default function NewAdvancedTransportRequestPage() {
   }, [user, isLoading, router]);
 
   if (isLoading) {
-    return <p className="rioja-container text-center">Cargando permisos de acceso...</p>;
+     return (
+        <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
+            <Loader2 className="h-12 w-12 animate-spin text-primary" />
+            <p className="ml-3 text-muted-foreground">Cargando permisos de acceso...</p>
+        </div>
+    );
   }
   
-  if (!user || !(user.role === 'admin' || user.role === 'hospital')) {
-    return <p className="rioja-container text-center text-red-500">No tiene permiso para crear este tipo de solicitud.</p>;
+  if (!user || !(user.role === 'admin' || user.role === 'hospital' || user.role === 'centroCoordinador')) {
+    return (
+         <div className="rioja-container text-center py-10">
+            <p className="text-red-500 text-lg">No tiene permiso para crear este tipo de solicitud.</p>
+        </div>
+    );
   }
 
   return (
