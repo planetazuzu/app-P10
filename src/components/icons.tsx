@@ -1,5 +1,5 @@
 
-import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapIcon, UserX, Waypoints, ListChecks, Unlink } from 'lucide-react';
+import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapIcon, UserX, Waypoints, ListChecks, Unlink, SendHorizonal, Hash } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 
 export const Icons = {
@@ -23,6 +23,8 @@ export const Icons = {
   Waypoints: (props: LucideProps) => <Waypoints {...props} />,
   ListChecks: (props: LucideProps) => <ListChecks {...props} />,
   Unlink: (props: LucideProps) => <Unlink {...props} />,
+  SendHorizonal: (props: LucideProps) => <SendHorizonal {...props} />, // Corregido de SendHorizontal
+  Hash: (props: LucideProps) => <Hash {...props} />,
 };
 
 export type IconName = keyof typeof Icons;

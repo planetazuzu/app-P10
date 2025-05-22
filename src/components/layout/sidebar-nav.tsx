@@ -46,7 +46,7 @@ const navItems: NavItem[] = [
         { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital', 'centroCoordinador'] },
     ]
   },
-  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'], disabled: true },
+  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] /*, disabled: true */ },
   {
     title: 'Mi Ruta de Hoy', 
     href: '/driver/batch-view/lote-demo-123', 
@@ -192,7 +192,7 @@ export function SidebarNav() {
       <SidebarMenuItem key={item.href} className={cn({"bg-sidebar-accent/50": effectiveIsActiveForButton && hasSubmenu && isMenuOpen && !isSubmenuItem })}>
         {hasSubmenu ? (
           <ButtonComponent
-            onClick={() => toggleMenu(item.href)}
+            onClick={item.disabled ? (e) => e.preventDefault() : () => toggleMenu(item.href)}
             isActive={effectiveIsActiveForButton && isMenuOpen}
             aria-expanded={isMenuOpen}
             className={cn(
@@ -227,4 +227,3 @@ export function SidebarNav() {
     </SidebarMenu>
   );
 }
-
