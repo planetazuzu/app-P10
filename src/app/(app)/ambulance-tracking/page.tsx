@@ -4,14 +4,25 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import type { Ambulance, AmbulanceType, AmbulanceStatus } from '@/types';
 import { getAmbulances } from '@/lib/ambulance-data';
-import { AmbulanceMap } from '@/components/ambulance/ambulance-map';
+// import { AmbulanceMap } from '@/components/ambulance/ambulance-map'; // Original import
 import { AmbulanceFilters } from '@/components/ambulance/ambulance-filters';
-import { AmbulanceCard as AmbulanceDetailCard } from '@/components/ambulance/ambulance-card'; // Renamed to avoid conflict if Card component itself is named AmbulanceCard
+import { AmbulanceCard as AmbulanceDetailCard } from '@/components/ambulance/ambulance-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
+import dynamic from 'next/dynamic';
 
 const AMBULANCE_TYPES: AmbulanceType[] = ["SVB", "SVA", "Convencional", "UVI_Movil", "A1", "Programado", "Otros"];
-const AMBULANCE_STATUSES: AmbulanceStatus[] = ['available', 'unavailable', 'on-mission'];
+const AMBULANCE_STATUSES_FILTER: AmbulanceStatus[] = ['available', 'busy', 'maintenance', 'unavailable']; // Renamed to avoid conflict with type
+
+// Dynamically import AmbulanceMap component
+const AmbulanceMap = dynamic(() => 
+  import('@/components/ambulance/ambulance-map').then(mod => mod.AmbulanceMap), 
+  { 
+    ssr: false,
+    loading: () => <Skeleton className="h-full w-full" /> 
+  }
+);
+
 
 export default function AmbulanceTrackingPage() {
   const [allAmbulances, setAllAmbulances] = useState<Ambulance[]>([]);
@@ -20,8 +31,10 @@ export default function AmbulanceTrackingPage() {
   const [selectedType, setSelectedType] = useState<AmbulanceType | 'all'>('all');
   const [selectedStatus, setSelectedStatus] = useState<AmbulanceStatus | 'all'>('available'); // Default to available
   const [isLoading, setIsLoading] = useState(true);
+  const [isMounted, setIsMounted] = useState(false); // To ensure map renders only client-side initially
 
   useEffect(() => {
+    setIsMounted(true); // Component has mounted
     async function fetchData() {
       setIsLoading(true);
       const data = await getAmbulances();
@@ -30,8 +43,7 @@ export default function AmbulanceTrackingPage() {
     }
     fetchData();
     
-    // Optional: Set up interval to refresh data for "real-time" feel
-    const intervalId = setInterval(fetchData, 30000); // Refresh every 30 seconds
+    const intervalId = setInterval(fetchData, 30000); 
     return () => clearInterval(intervalId);
   }, []);
 
@@ -44,7 +56,6 @@ export default function AmbulanceTrackingPage() {
       ambulances = ambulances.filter(amb => amb.status === selectedStatus);
     }
     setFilteredAmbulances(ambulances);
-    // Deselect ambulance if it's no longer in the filtered list
     if (selectedAmbulance && !ambulances.find(amb => amb.id === selectedAmbulance.id)) {
         setSelectedAmbulance(null);
     }
@@ -58,7 +69,7 @@ export default function AmbulanceTrackingPage() {
     setSelectedAmbulance(null);
   }
 
-  if (isLoading && allAmbulances.length === 0) {
+  if (!isMounted || (isLoading && allAmbulances.length === 0)) {
     return (
       <div>
         <h1 className="page-title mb-8">Seguimiento de Ambulancias</h1>
@@ -79,7 +90,7 @@ export default function AmbulanceTrackingPage() {
     <div>
       <h1 className="page-title mb-8">Seguimiento de Ambulancias</h1>
       <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
-        <div className="md:col-span-2 lg:col-span-3 h-[calc(100vh-12rem)] min-h-[500px]">
+        <div className="md:col-span-2 lg:col-span-3 h-[calc(100vh-12rem)] min-h-[500px] rounded-lg overflow-hidden shadow-md">
           <AmbulanceMap 
             ambulances={filteredAmbulances} 
             selectedAmbulance={selectedAmbulance}
@@ -89,11 +100,11 @@ export default function AmbulanceTrackingPage() {
         <div className="space-y-6 md:sticky md:top-20">
           <AmbulanceFilters
             types={AMBULANCE_TYPES}
-            statuses={AMBULANCE_STATUSES}
+            statuses={AMBULANCE_STATUSES_FILTER}
             selectedType={selectedType}
             selectedStatus={selectedStatus}
             onTypeChange={setSelectedType}
-            onStatusChange={setSelectedStatus}
+            onStatusChange={(value) => setSelectedStatus(value as AmbulanceStatus | 'all')}
           />
           {selectedAmbulance && (
             <AmbulanceDetailCard ambulance={selectedAmbulance} onClose={handleCloseDetailCard} />
@@ -104,7 +115,7 @@ export default function AmbulanceTrackingPage() {
                 <CardTitle className="text-base text-muted-foreground">Seleccione una ambulancia</CardTitle>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-muted-foreground">Haga clic en una ambulancia en el mapa o en la lista para ver sus detalles.</p>
+                <p className="text-sm text-muted-foreground">Haga clic en una ambulancia en el mapa para ver sus detalles.</p>
               </CardContent>
             </Card>
           )}

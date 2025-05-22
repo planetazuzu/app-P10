@@ -1,3 +1,4 @@
+
 'use client';
 
 import type { AmbulanceType, AmbulanceStatus } from '@/types';
@@ -7,7 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@
 
 interface AmbulanceFiltersProps {
   types: AmbulanceType[];
-  statuses: AmbulanceStatus[];
+  statuses: AmbulanceStatus[]; // This prop will now receive the renamed AMBULANCE_STATUSES_FILTER
   selectedType: AmbulanceType | 'all';
   selectedStatus: AmbulanceStatus | 'all';
   onTypeChange: (type: AmbulanceType | 'all') => void;
@@ -21,8 +22,10 @@ const translateFilterStatus = (status: AmbulanceStatus): string => {
       return 'Disponible';
     case 'unavailable':
       return 'No disponible';
-    case 'on-mission':
-      return 'En misión';
+    case 'busy': // Updated from 'on-mission' to match AmbulanceStatus type
+      return 'Ocupada / En misión';
+    case 'maintenance':
+      return 'Mantenimiento';
     default:
       return status.charAt(0).toUpperCase() + status.slice(1);
   }

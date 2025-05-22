@@ -38,6 +38,7 @@ export interface AmbulanceEquipment {
   monitor?: boolean;
 }
 
+// Default equipment configuration based on ambulance type
 export const defaultEquipmentByType: Record<AmbulanceType, AmbulanceEquipment> = {
   SVB:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 1, defibrillator: true, monitor: true },
   SVA:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 2, defibrillator: true, monitor: true },
@@ -59,7 +60,6 @@ export interface Ambulance {
   zone?: string;
   status: AmbulanceStatus;
   
-  // Campos de capacidad que coinciden con el formulario
   hasMedicalBed: boolean;
   stretcherSeats: number;
   hasWheelchair: boolean;
@@ -67,8 +67,8 @@ export interface Ambulance {
   allowsWalking: boolean;
   walkingSeats: number;
 
-  specialEquipment: string[]; // IDs de equipmentOptions (complementario a 'equipment' o para detalles adicionales)
-  equipment?: AmbulanceEquipment; // Estructura de equipamiento principal
+  specialEquipment: string[]; 
+  equipment?: AmbulanceEquipment; 
 
   latitude?: number;
   longitude?: number;
@@ -87,8 +87,8 @@ export interface AmbulanceRequest {
   location: { latitude: number; longitude: number; address: string };
   status: RequestStatus;
   assignedAmbulanceId?: string;
-  createdAt: string; // ISO Date string
-  updatedAt: string; // ISO Date string
+  createdAt: string; 
+  updatedAt: string; 
   notes?: string;
   priority: 'high' | 'medium' | 'low';
 }
@@ -128,7 +128,7 @@ export interface ProgrammedTransportRequest {
   origenDireccion?: string;
   destino: string;
   destinoId?: string;
-  fechaIda: string; // YYYY-MM-DD
+  fechaIda: string; 
   fechaServicio?: string;
   horaIda: string;
   horaConsultaMedica?: string;
@@ -285,5 +285,3 @@ export interface SolicitudModificacionHorario {
   fechaResolucion?: string;
   notasResolucion?: string;
 }
-
-    
