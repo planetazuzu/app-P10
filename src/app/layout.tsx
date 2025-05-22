@@ -5,7 +5,7 @@ import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Respuesta Médica Global',
+  title: 'Plataforma de Gestión de Transporte Sanitario',
   description: 'Plataforma de Gestión de Transporte Sanitario y Despacho de Ambulancias',
 };
 
