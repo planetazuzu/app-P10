@@ -148,30 +148,35 @@ export default function ManageAmbulancesPage() {
     return (
         <div className="rioja-container">
             <div className="flex items-center justify-between mb-6">
-                <Skeleton className="h-10 w-1/3" />
+                <div className="flex items-center gap-3">
+                    <Skeleton className="h-9 w-9" />
+                    <Skeleton className="h-10 w-64" />
+                </div>
                 <Skeleton className="h-10 w-36" />
             </div>
             <Card>
                 <CardHeader>
                     <Skeleton className="h-8 w-1/4 mb-2" />
-                    <Skeleton className="h-6 w-1/2" />
-                </CardHeader>
-                <CardContent>
-                    <div className="flex flex-col sm:flex-row gap-2 mb-4">
+                    <Skeleton className="h-6 w-1/2 mb-4" />
+                     <div className="mt-4 flex flex-col sm:flex-row gap-2">
                         <Skeleton className="h-10 flex-grow" />
                         <Skeleton className="h-10 w-full sm:w-[180px]" />
                         <Skeleton className="h-10 w-full sm:w-[180px]" />
                     </div>
+                </CardHeader>
+                <CardContent>
                     <div className="space-y-3">
                         {[...Array(5)].map((_, i) => (
-                            <div key={i} className="flex items-center space-x-4">
-                                <Skeleton className="h-8 w-1/6" />
-                                <Skeleton className="h-8 w-1/6" />
-                                <Skeleton className="h-8 w-1/6" />
-                                <Skeleton className="h-8 w-1/6" />
-                                <Skeleton className="h-8 w-1/6" />
-                                <Skeleton className="h-8 w-1/6" />
-                            </div>
+                             <TableRow key={i} className="flex items-center space-x-4 p-2">
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/12 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/12 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/12 p-0 text-right"><Skeleton className="h-8 w-full" /></TableCell>
+                            </TableRow>
                         ))}
                     </div>
                 </CardContent>
@@ -316,3 +321,4 @@ export default function ManageAmbulancesPage() {
     </div>
   );
 }
+
