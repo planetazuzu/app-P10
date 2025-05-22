@@ -1,11 +1,11 @@
 
 'use client';
 
-import type { Ambulance } from '@/types';
+import type { Ambulance, AmbulanceStatus } from '@/types';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 // Fix for default Leaflet icon path issue with Next.js/Webpack
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -21,23 +21,17 @@ interface AmbulanceMapProps {
   onAmbulanceSelect: (ambulance: Ambulance | null) => void;
 }
 
-// Helper to translate status for display
-const translateStatus = (status: Ambulance['status']): string => {
+// Helper to translate status for display in popup
+const translateStatusForPopup = (status: AmbulanceStatus): string => {
   switch (status) {
-    case 'available':
-      return 'Disponible';
-    case 'busy':
-      return 'Ocupada';
-    case 'maintenance':
-      return 'Mantenimiento';
-    case 'unavailable':
-      return 'No Disponible';
-    default:
-      return status;
+    case 'available': return 'Disponible';
+    case 'busy': return 'Ocupada';
+    case 'maintenance': return 'Mantenimiento';
+    case 'unavailable': return 'No Disponible';
+    default: return status;
   }
 };
 
-// Component to fly to selected ambulance
 const FlyToSelectedAmbulance: React.FC<{ ambulance: Ambulance | null }> = ({ ambulance }) => {
   const map = useMap();
   useEffect(() => {
@@ -50,21 +44,25 @@ const FlyToSelectedAmbulance: React.FC<{ ambulance: Ambulance | null }> = ({ amb
 
 export function AmbulanceMap({ ambulances, selectedAmbulance, onAmbulanceSelect }: AmbulanceMapProps) {
   const defaultPosition: L.LatLngExpression = [42.4659, -2.4487]; // Logroño, La Rioja
-  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+  const mapRef = useRef<L.Map | null>(null); // Use a ref to hold the map instance
 
   useEffect(() => {
-    // Cleanup function to remove the map instance when the component unmounts
-    // or if the mapInstance reference changes for some reason.
+    // This effect hook is primarily for cleanup.
+    // The cleanup function will be called when the AmbulanceMap component unmounts.
     return () => {
-      if (mapInstance) {
-        mapInstance.remove();
+      if (mapRef.current) {
+        // console.log("Cleaning up map instance in AmbulanceMap:", mapRef.current);
+        mapRef.current.remove();
+        mapRef.current = null; // Clear the ref after removing
       }
     };
-  }, [mapInstance]);
+  }, []); // Empty dependency array: effect runs once on mount, cleanup runs once on unmount.
 
   return (
     <MapContainer
-      whenCreated={setMapInstance} // Store the map instance using the state setter
+      // The `whenCreated` prop sets the map instance to our ref.
+      // This ensures mapRef.current is populated when the map is ready.
+      whenCreated={map => { mapRef.current = map; }}
       center={defaultPosition}
       zoom={10}
       style={{ height: '100%', width: '100%' }}
@@ -89,7 +87,7 @@ export function AmbulanceMap({ ambulances, selectedAmbulance, onAmbulanceSelect 
               <Popup>
                 <strong>{ambulance.name}</strong><br />
                 Tipo: {ambulance.type}<br />
-                Estado: {translateStatus(ambulance.status)}<br />
+                Estado: {translateStatusForPopup(ambulance.status)}<br />
                 <button
                   onClick={() => onAmbulanceSelect(ambulance)}
                   className="text-primary hover:underline text-sm mt-1"
