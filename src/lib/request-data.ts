@@ -38,10 +38,11 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
   const baseLocation = { lat: 42.4659, lng: -2.4487 }; // Logroño
   const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2); // Around La Rioja
   const createdAt = new Date(Date.now() - Math.floor(Math.random() * 24 * 60 * 60 * 1000)); 
-  const status = getRandomElement<RequestStatus>(['pending', 'dispatched', 'on-scene', 'transporting', 'completed', 'cancelled']);
+  const statusOptions: RequestStatus[] = ['pending', 'dispatched', 'on-scene', 'transporting', 'completed', 'cancelled'];
+  const status = getRandomElement<RequestStatus>(statusOptions);
   
   let assignedAmbulanceId: string | undefined = undefined;
-  if (status !== 'pending' && status !== 'cancelled' && mockAmbulances.length > 0) {
+  if (status !== 'pending' && status !== 'cancelled' && status !== 'batched' && mockAmbulances.length > 0) {
     const availableAmbulances = mockAmbulances.filter(a => a.status === 'busy' || a.status === 'available');
     if (availableAmbulances.length > 0) {
         assignedAmbulanceId = getRandomElement(availableAmbulances).id;
@@ -84,15 +85,17 @@ export function getRequests(userId: string, userRole: UserRole): Promise<Ambulan
         case 'individual':
           userRequests = mockRequests.filter(req => req.requesterId === userId);
           break;
-        case 'ambulance':
-          // Ambulance teams see requests assigned to their (conceptual) ambulance or active requests they might take
+        case 'equipoTraslado':
+          // Equipo de Traslado teams see requests assigned to their (conceptual) ambulance or active requests they might take
           userRequests = mockRequests.filter(req => 
             (req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId /* && a.crewId === userId */)) ||
             (['pending', 'dispatched', 'on-scene'].includes(req.status)) // Or broadly active ones for now
           );
           break;
         default:
-          console.warn(`Rol de usuario no manejado en getRequests: ${userRole}`);
+          // Exhaustive check for UserRole if new roles are added
+          const _exhaustiveCheck: never = userRole;
+          console.warn(`Rol de usuario no manejado en getRequests: ${_exhaustiveCheck}`);
           break;
       }
       resolve(userRequests.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
@@ -174,8 +177,18 @@ export function getProgrammedTransportRequests(userId: string, userRole: UserRol
         case 'individual':
           userRequests = mockProgrammedTransportRequests.filter(req => req.requesterId === userId);
           break;
+        case 'equipoTraslado':
+          // Equipo de Traslado no suele gestionar directamente la creación o listado global de estas solicitudes.
+          // Podrían ver las que tienen asignadas si se implementa un `assignedCrewId` o similar.
+          // Por ahora, devolvemos un array vacío para este rol.
+           userRequests = mockProgrammedTransportRequests.filter(req => 
+            (req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId)) || // Simulación si tienen ambulancia asignada
+            (req.loteId) // O si forman parte de un lote que se les asignará
+          );
+          break;
         default:
-          // Ambulance role typically wouldn't see these unless specifically assigned in a different way
+          const _exhaustiveCheck: never = userRole;
+          console.warn(`Rol de usuario no manejado en getProgrammedTransportRequests: ${_exhaustiveCheck}`);
           break;
       }
       resolve(userRequests.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));

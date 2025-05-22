@@ -31,22 +31,28 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'ambulance'] },
+  { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'equipoTraslado'] },
   { title: 'Seguimiento Ambulancias', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital'] },
   { title: 'Despacho Inteligente', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital'] },
   {
     title: 'Gestión Solicitudes',
     href: '/request-management',
     icon: 'RequestManagement',
-    roles: ['admin', 'hospital', 'individual', 'ambulance'],
+    roles: ['admin', 'hospital', 'individual', 'equipoTraslado'],
     submenu: [
-        { title: 'Ver Solicitudes', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'ambulance'], exactMatch: true },
+        { title: 'Ver Solicitudes', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'equipoTraslado'], exactMatch: true },
         { title: 'Nueva Solicitud (Urgente)', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
         { title: 'Nueva Solicitud (Programada)', href: '/request-management/new-programmed', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual'] },
         { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital'] },
     ]
   },
-  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'ambulance'], disabled: true },
+  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'equipoTraslado'], disabled: true },
+  {
+    title: 'Ruta del Día (Conductor)',
+    href: '/driver/batch-view/lote-demo-123', // Ruta de ejemplo
+    icon: 'Map', // O 'Route' si tuvieras ese icono
+    roles: ['equipoTraslado'],
+  },
   {
     title: 'Admin',
     href: '/admin',
@@ -54,7 +60,7 @@ const navItems: NavItem[] = [
     roles: ['admin'],
     submenu: [
         { title: 'Panel Admin', href: '/admin', icon: 'ShieldCheck', roles: ['admin'], exactMatch: true },
-        { title: 'Gestión Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin'], disabled: true },
+        { title: 'Gestión Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin'] },
         {
           title: 'Gestión Ambulancias',
           href: '/admin/ambulances',

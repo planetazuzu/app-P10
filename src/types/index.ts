@@ -1,7 +1,7 @@
 
 import { z } from 'zod';
 
-export type UserRole = 'admin' | 'hospital' | 'individual' | 'ambulance';
+export type UserRole = 'admin' | 'hospital' | 'individual' | 'equipoTraslado';
 
 export interface User {
   id: string;
@@ -34,17 +34,17 @@ export interface AmbulanceEquipment {
   stretcher: boolean;
   chairs: number;
   oxygenUnits: number;
-  defibrillator?: boolean;
-  monitor?: boolean;
+  defibrillator?: boolean; // Añadido para SVB/SVA/UVI
+  monitor?: boolean;       // Añadido para SVB/SVA/UVI
 }
 
 export const defaultEquipmentByType: Record<AmbulanceType, AmbulanceEquipment> = {
-  SVB:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 1, monitor: true, defibrillator: true }, // SVB can have DEA
-  SVA:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 2, monitor: true, defibrillator: true },
+  SVB:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 1, defibrillator: true, monitor: true },
+  SVA:         { seats: 3, wheelchairSlots: 0, stretcher: true,  chairs: 1, oxygenUnits: 2, defibrillator: true, monitor: true },
   Convencional:{ seats: 2, wheelchairSlots: 1, stretcher: false, chairs: 0, oxygenUnits: 0 },
-  UVI_Movil:   { seats: 4, wheelchairSlots: 0, stretcher: true,  chairs: 0, oxygenUnits: 3, monitor: true, defibrillator: true },
-  A1:          { seats: 2, wheelchairSlots: 1, stretcher: false, chairs: 1, oxygenUnits: 0 }, // Typically for individual non-urgent
-  Programado:  { seats: 8, wheelchairSlots: 2, stretcher: false, chairs: 0, oxygenUnits: 0 }, // Colectivo
+  UVI_Movil:   { seats: 4, wheelchairSlots: 0, stretcher: true,  chairs: 0, oxygenUnits: 3, defibrillator: true, monitor: true },
+  A1:          { seats: 2, wheelchairSlots: 1, stretcher: false, chairs: 1, oxygenUnits: 0 },
+  Programado:  { seats: 8, wheelchairSlots: 2, stretcher: false, chairs: 0, oxygenUnits: 0 },
   Otros:       { seats: 2, wheelchairSlots: 0, stretcher: false, chairs: 0, oxygenUnits: 0 },
 };
 
@@ -68,7 +68,6 @@ export interface Ambulance {
   walkingSeats: number; // Plazas si allowsWalking es true
 
   specialEquipment: string[]; // Array de IDs de equipmentOptions (src/components/ambulance/constants.ts)
-  // equipment: AmbulanceEquipment; // This was the previous structured equipment based on type. Now using flat fields + specialEquipment.
 
   latitude?: number;
   longitude?: number;
@@ -77,7 +76,7 @@ export interface Ambulance {
 }
 
 
-export type RequestStatus = 'pending' | 'dispatched' | 'on-scene' | 'transporting' | 'completed' | 'cancelled';
+export type RequestStatus = 'pending' | 'dispatched' | 'on-scene' | 'transporting' | 'completed' | 'cancelled' | 'batched';
 
 export interface AmbulanceRequest {
   id: string;
@@ -92,8 +91,8 @@ export interface AmbulanceRequest {
   priority: 'high' | 'medium' | 'low';
 }
 
-export type TipoServicioProgramado = 'consulta' | 'alta' | 'ingreso' | 'trasladoEntreCentros';
-export const ALL_TIPOS_SERVICIO_PROGRAMADO: TipoServicioProgramado[] = ['consulta', 'alta', 'ingreso', 'trasladoEntreCentros'];
+export type TipoServicioProgramado = 'consulta' | 'alta' | 'ingreso' | 'trasladoEntreCentros' | 'tratamientoContinuado' | 'rehabilitacion';
+export const ALL_TIPOS_SERVICIO_PROGRAMADO: TipoServicioProgramado[] = ['consulta', 'alta', 'ingreso', 'trasladoEntreCentros', 'tratamientoContinuado', 'rehabilitacion'];
 
 export type TipoTrasladoProgramado = 'soloIda' | 'idaYVuelta';
 export const ALL_TIPOS_TRASLADO_PROGRAMADO: TipoTrasladoProgramado[] = ['soloIda', 'idaYVuelta'];
@@ -119,13 +118,18 @@ export interface ProgrammedTransportRequest {
 
   nombrePaciente: string;
   dniNieSsPaciente: string;
+  patientId?: string; // Nuevo, para enlazar con Paciente
   servicioPersonaResponsable?: string;
   tipoServicio: TipoServicioProgramado;
   tipoTraslado: TipoTrasladoProgramado;
   centroOrigen: string;
+  origenDireccion?: string; // Nuevo
   destino: string;
-  fechaIda: string;
+  destinoId?: string; // Nuevo, para enlazar con Destino
+  fechaIda: string; // YYYY-MM-DD
+  fechaServicio?: string; // Nuevo, para consistencia
   horaIda: string;
+  horaConsultaMedica?: string; // Nuevo
   medioRequerido: MedioRequeridoProgramado;
   equipamientoEspecialRequerido?: EquipamientoEspecialProgramadoId[];
   barrerasArquitectonicas?: string;
@@ -134,6 +138,7 @@ export interface ProgrammedTransportRequest {
   autorizacionMedicaPdf?: string;
   assignedAmbulanceId?: string;
   priority: 'low' | 'medium';
+  loteId?: string; // Nuevo, para enlazar con LoteProgramado
 }
 
 // Zod Schemas for AdvancedTransportData Steps
@@ -183,8 +188,8 @@ export const AdvancedTransportConfigurationSchema = z.object({
 export interface AdvancedTransportData {
   // Step 1: Patient Info
   patientName?: string;
-  patientId?: string;
-  serviceType?: string;
+  patientId?: string; // ID del paciente (DNI, SS)
+  serviceType?: string; // Motivo del traslado (ej: Consulta, Rehabilitación)
   patientContact?: string;
   patientObservations?: string;
 
@@ -192,9 +197,9 @@ export interface AdvancedTransportData {
   recurrenceType?: 'specificDates' | 'daily' | 'weekly' | 'monthly';
   startDate?: string; // YYYY-MM-DD
   specificDatesNotes?: string; // For listing specific dates or complex patterns
-  pickupTime?: string; // HH:MM
-  returnTime?: string; // HH:MM
-  durationEstimate?: string;
+  pickupTime?: string; // HH:MM (Hora de recogida deseada o inicio de franja)
+  returnTime?: string; // HH:MM (Hora de retorno deseada, si aplica)
+  durationEstimate?: string; // Duración estimada de la cita/servicio
 
 
   // Step 3: Locations
@@ -211,4 +216,71 @@ export interface AdvancedTransportData {
   additionalNotes?: string;
 
   [key: string]: any; // Allow other fields for now
+}
+
+
+// Nuevos tipos para la funcionalidad de "lotes" del conductor
+export interface Paciente { // Simplificado, podría ser más complejo
+  id: string;
+  nombre: string;
+  direccionOrigen: string;
+  // Otros datos relevantes del paciente...
+}
+
+export interface Destino { // Hospital, clínica, etc.
+  id: string;
+  nombre: string;
+  direccion: string;
+  // Otros datos del destino...
+}
+
+export interface ParadaRuta {
+  servicioId: string; // ID de ProgrammedTransportRequest
+  paciente: Paciente; // O solo pacienteId y se obtiene el objeto Paciente
+  horaConsultaMedica: string; // HH:MM
+  horaRecogidaEstimada: string; // HH:MM
+  horaLlegadaDestinoEstimada: string; // HH:MM
+  tiempoTrasladoDesdeAnterior: number; // en minutos
+  orden: number;
+  // estadoParada: 'pendiente' | 'recogido' | 'noLocalizado' | 'enDestino';
+}
+
+export interface RutaCalculada {
+  id: string;
+  loteId: string;
+  paradas: ParadaRuta[];
+  horaSalidaBaseEstimada: string; // HH:MM
+  duracionTotalEstimada: number; // en minutos
+  distanciaTotalEstimada?: number; // en km
+  margenErrorTolerancia?: number; // en minutos
+  // Otros datos de la ruta calculada...
+}
+
+export interface LoteProgramado {
+  id: string;
+  fecha: string; // YYYY-MM-DD
+  destinoPrincipal: Destino; // O solo destinoId
+  serviciosIncluidos: ProgrammedTransportRequest[]; // O solo IDs de los servicios
+  estadoLote: 'pendienteCalculo' | 'calculado' | 'enCurso' | 'completado' | 'modificado';
+  conductorAsignadoId?: string; // ID del User con rol 'equipoTraslado'
+  ambulanciaAsignadaId?: string; // ID de la Ambulance
+  // Otros datos del lote...
+}
+
+export type MotivoModificacionHorario = 'trafico' | 'pacienteNoLocalizable' | 'retrasoPaciente' | 'incidenciaVehiculo' | 'otro';
+export const ALL_MOTIVOS_MODIFICACION_HORARIO: MotivoModificacionHorario[] = ['trafico', 'pacienteNoLocalizable', 'retrasoPaciente', 'incidenciaVehiculo', 'otro'];
+
+export interface SolicitudModificacionHorario {
+  id: string;
+  loteId: string;
+  servicioIdAfectado: string; // El servicio específico dentro del lote
+  conductorId: string;
+  fechaSolicitud: string; // ISO Date
+  minutosRetrasoEstimado: number;
+  motivo: MotivoModificacionHorario;
+  descripcionMotivo?: string; // Si motivo es 'otro'
+  estadoSolicitud: 'pendiente' | 'aprobada' | 'rechazada';
+  fechaResolucion?: string; // ISO Date
+  notasResolucion?: string;
+  // Otros datos...
 }

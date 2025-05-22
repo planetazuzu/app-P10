@@ -36,6 +36,7 @@ const STATUS_COLORS: Record<RequestStatus, string> = {
   transporting: 'bg-purple-500 hover:bg-purple-600',
   completed: 'bg-green-500 hover:bg-green-600',
   cancelled: 'bg-gray-500 hover:bg-gray-600',
+  batched: 'bg-cyan-500 hover:bg-cyan-600',
 };
 
 const PRIORITY_STYLES: Record<'high' | 'medium' | 'low', string> = {
@@ -53,6 +54,7 @@ const translateRequestStatus = (status: RequestStatus): string => {
     case 'transporting': return 'Transportando';
     case 'completed': return 'Completada';
     case 'cancelled': return 'Cancelada';
+    case 'batched': return 'En Lote';
     default: return status;
   }
 };
@@ -113,7 +115,7 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
     }
   };
 
-  const canManageStatus = userRole === 'admin' || userRole === 'hospital' || userRole === 'ambulance';
+  const canManageStatus = userRole === 'admin' || userRole === 'hospital' || userRole === 'equipoTraslado';
 
   return (
     <Card>
@@ -202,7 +204,7 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Actualizar Estado</DropdownMenuLabel>
-                          {Object.keys(STATUS_COLORS).filter(s => s !== request.status).map(newStatus => (
+                          {Object.keys(STATUS_COLORS).filter(s => s !== request.status && s !== 'batched').map(newStatus => ( // Exclude 'batched' from manual updates here
                             <DropdownMenuItem key={newStatus} onClick={() => onUpdateRequestStatus(request.id, newStatus as RequestStatus)}>
                               Marcar como {translateRequestStatus(newStatus as RequestStatus)}
                             </DropdownMenuItem>

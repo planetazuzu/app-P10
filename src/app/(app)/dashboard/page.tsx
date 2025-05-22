@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -45,7 +46,7 @@ export default function DashboardPage() {
 
   const canViewAmbulanceTracking = user.role === 'admin' || user.role === 'hospital';
   const canViewSmartDispatch = user.role === 'admin' || user.role === 'hospital';
-  const canViewRequestManagement = ['admin', 'hospital', 'individual', 'ambulance'].includes(user.role);
+  const canViewRequestManagement = ['admin', 'hospital', 'individual', 'equipoTraslado'].includes(user.role);
 
   return (
     <div>

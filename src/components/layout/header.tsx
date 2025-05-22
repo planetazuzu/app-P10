@@ -1,3 +1,4 @@
+
 'use client';
 
 import { useAuth } from '@/hooks/use-auth';
@@ -14,9 +15,10 @@ import {
 import { Icons } from '@/components/icons';
 import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'; // Import useSidebar
 import { cn } from '@/lib/utils';
+import type { UserRole } from '@/types';
 
 // Helper para traducir el rol del usuario
-const translateUserRole = (role: 'admin' | 'hospital' | 'individual' | 'ambulance'): string => {
+const translateUserRole = (role: UserRole): string => {
   switch (role) {
     case 'admin':
       return 'Administrador';
@@ -24,8 +26,8 @@ const translateUserRole = (role: 'admin' | 'hospital' | 'individual' | 'ambulanc
       return 'Personal Hospitalario';
     case 'individual':
       return 'Usuario Individual';
-    case 'ambulance':
-      return 'Equipo Ambulancia';
+    case 'equipoTraslado':
+      return 'Equipo de Traslado';
     default:
       return role;
   }

@@ -1,10 +1,11 @@
+
 import type { User, UserRole } from '@/types';
 
 export const MOCK_USERS: Record<string, User> = {
   'admin@gmr.com': { id: 'user-admin', email: 'admin@gmr.com', name: 'Usuario Admin', role: 'admin' },
   'hospital@gmr.com': { id: 'user-hospital', email: 'hospital@gmr.com', name: 'Personal Hospital', role: 'hospital' },
   'individual@gmr.com': { id: 'user-individual', email: 'individual@gmr.com', name: 'Usuario Individual', role: 'individual' },
-  'ambulance@gmr.com': { id: 'user-ambulance', email: 'ambulance@gmr.com', name: 'Equipo Ambulancia', role: 'ambulance' },
+  'equipo.traslado@gmr.com': { id: 'user-equipo-traslado', email: 'equipo.traslado@gmr.com', name: 'Equipo de Traslado 01', role: 'equipoTraslado' },
 };
 
 const AUTH_TOKEN_KEY = 'gmrAuthToken';
@@ -20,6 +21,16 @@ export async function login(email: string): Promise<User | null> {
       localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
     }
     return user;
+  }
+  // Fallback for the old email key if it was used before name change
+  if (email === 'ambulance@gmr.com' && MOCK_USERS['equipo.traslado@gmr.com']) {
+     const oldUser = MOCK_USERS['equipo.traslado@gmr.com'];
+     const mockToken = `mock-token-for-${oldUser.id}`;
+    if (typeof window !== 'undefined') {
+      localStorage.setItem(AUTH_TOKEN_KEY, mockToken);
+      localStorage.setItem(USER_INFO_KEY, JSON.stringify(oldUser));
+    }
+    return oldUser;
   }
   return null;
 }

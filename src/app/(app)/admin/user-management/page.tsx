@@ -18,7 +18,7 @@ const translateUserRole = (role: UserRole): string => {
     case 'admin': return 'Administrador';
     case 'hospital': return 'Personal Hospitalario';
     case 'individual': return 'Usuario Individual';
-    case 'ambulance': return 'Equipo Ambulancia';
+    case 'equipoTraslado': return 'Equipo de Traslado';
     default: return role.charAt(0).toUpperCase() + role.slice(1);
   }
 };
