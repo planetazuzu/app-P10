@@ -15,7 +15,7 @@ import {
   SidebarMenuSubItem,
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 
 
 interface NavItem {
@@ -60,7 +60,16 @@ const navItems: NavItem[] = [
     roles: ['admin', 'centroCoordinador'],
     submenu: [
         { title: 'Panel Admin', href: '/admin', icon: 'ShieldCheck', roles: ['admin', 'centroCoordinador'], exactMatch: true },
-        { title: 'Gestión Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin', 'centroCoordinador'] },
+        { 
+          title: 'Gestión Usuarios', 
+          href: '/admin/user-management', 
+          icon: 'Users', 
+          roles: ['admin', 'centroCoordinador'],
+          submenu: [
+            { title: 'Listar Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin', 'centroCoordinador'], exactMatch: true },
+            { title: 'Añadir Usuario', href: '/admin/user-management/new', icon: 'Users', roles: ['admin', 'centroCoordinador'] },
+          ]
+        },
         {
           title: 'Gestión Ambulancias',
           href: '/admin/ambulances',
@@ -85,34 +94,26 @@ const navItems: NavItem[] = [
 export function SidebarNav() {
   const pathname = usePathname();
   const { user } = useAuth();
-  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>(() => {
+  
+  const [openMenus, setOpenMenus] = useState<Record<string, boolean>>({});
+
+  useEffect(() => {
     const initialOpen: Record<string, boolean> = {};
-    navItems.forEach(item => {
-      if (item.submenu && item.submenu.some(subItem => pathname.startsWith(subItem.href) || (subItem.submenu && subItem.submenu.some(s => pathname.startsWith(s.href))))) {
-        initialOpen[item.href] = true;
-        if (item.submenu.find(subItem => subItem.submenu && subItem.submenu.some(s => pathname.startsWith(s.href)))) {
-            const parentSubMenu = item.submenu.find(subItem => subItem.submenu && subItem.submenu.some(s => pathname.startsWith(s.href)));
-            if(parentSubMenu) initialOpen[parentSubMenu.href] = true;
-        }
-      }
-    });
-     navItems.forEach(item => {
+    const checkAndSetOpen = (items: NavItem[], parentPath = '') => {
+      items.forEach(item => {
+        const currentItemPath = item.href;
         if (item.submenu) {
-            item.submenu.forEach(subItem => {
-                if ((subItem.exactMatch ? subItem.href === pathname : pathname.startsWith(subItem.href)) || 
-                    (subItem.submenu && subItem.submenu.some(s => s.exactMatch ? s.href === pathname : pathname.startsWith(s.href)))) {
-                    initialOpen[item.href] = true; 
-                    if (subItem.submenu && subItem.submenu.some(s => s.exactMatch ? s.href === pathname : pathname.startsWith(s.href))) {
-                         initialOpen[subItem.href] = true; 
-                    }
-                }
-            });
-        } else if (item.exactMatch ? item.href === pathname : pathname.startsWith(item.href)) {
-           // For top-level items that are active, no need to explicitly open, but handled for consistency if needed
+          if (item.submenu.some(subItem => pathname.startsWith(subItem.href) || (subItem.submenu && subItem.submenu.some(s => pathname.startsWith(s.href))))) {
+            initialOpen[currentItemPath] = true;
+            checkAndSetOpen(item.submenu, currentItemPath);
+          }
         }
-    });
-    return initialOpen;
-  });
+      });
+    };
+    checkAndSetOpen(navItems);
+    setOpenMenus(initialOpen);
+  }, [pathname]);
+
 
   if (!user) return null;
 
@@ -128,9 +129,17 @@ export function SidebarNav() {
     const Icon = Icons[item.icon];
     
     let isActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
-    if (item.submenu && !isActive) { 
-        isActive = item.submenu.some(sub => (sub.exactMatch ? pathname === sub.href : pathname.startsWith(sub.href))) ||
-                   item.submenu.some(sub => sub.submenu && sub.submenu.some(s => (s.exactMatch ? pathname === s.href : pathname.startsWith(s.href))));
+     // If it's a parent menu, it's active if any of its children are active
+    if (item.submenu && item.submenu.length > 0 && !isActive) {
+      const isChildActive = (childItems: NavItem[]): boolean => {
+        return childItems.some(child => {
+          const childIsActive = child.exactMatch ? pathname === child.href : pathname.startsWith(child.href);
+          if (childIsActive) return true;
+          if (child.submenu && child.submenu.length > 0) return isChildActive(child.submenu);
+          return false;
+        });
+      };
+      isActive = isChildActive(item.submenu);
     }
     
     const hasSubmenu = item.submenu && item.submenu.length > 0 && item.submenu.some(sub => userHasRole(sub.roles));
@@ -159,8 +168,9 @@ export function SidebarNav() {
             isActive={effectiveIsActiveForButton && isMenuOpen}
             aria-expanded={isMenuOpen}
             className={cn(
-                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem },
-                {"hover:bg-sidebar-accent/80": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem}
+                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem && level === 0 },
+                {"hover:bg-sidebar-accent/80": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem && level === 0},
+                {"text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && level > 0}
             )}
           >
             {buttonContent}
@@ -199,5 +209,3 @@ export function SidebarNav() {
     </SidebarMenu>
   );
 }
-
-    

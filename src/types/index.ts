@@ -2,12 +2,14 @@
 import { z } from 'zod';
 
 export type UserRole = 'admin' | 'hospital' | 'individual' | 'centroCoordinador' | 'equipoMovil';
+export const ALL_USER_ROLES: UserRole[] = ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'];
 
 export interface User {
   id: string;
   email: string;
   name: string;
   role: UserRole;
+  password?: string; // Added for form, though not used by mock login
 }
 
 export type AmbulanceType =
@@ -285,3 +287,17 @@ export interface SolicitudModificacionHorario {
   fechaResolucion?: string;
   notasResolucion?: string;
 }
+
+// Zod schema for user creation/editing
+export const UserFormSchema = z.object({
+  name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
+  email: z.string().email({ message: "Correo electrónico inválido." }),
+  role: z.enum(ALL_USER_ROLES, { required_error: "El rol es obligatorio." }),
+  password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }),
+  confirmPassword: z.string().min(6, { message: "La confirmación de contraseña debe tener al menos 6 caracteres." }),
+}).refine((data) => data.password === data.confirmPassword, {
+  message: "Las contraseñas no coinciden.",
+  path: ["confirmPassword"], // path of error
+});
+
+export type UserFormValues = z.infer<typeof UserFormSchema>;

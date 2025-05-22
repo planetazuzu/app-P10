@@ -2,11 +2,11 @@
 import type { User, UserRole } from '@/types';
 
 export const MOCK_USERS: Record<string, User> = {
-  'admin@gmr.com': { id: 'user-admin', email: 'admin@gmr.com', name: 'Usuario Admin', role: 'admin' },
-  'hospital@gmr.com': { id: 'user-hospital', email: 'hospital@gmr.com', name: 'Personal Hospital', role: 'hospital' },
-  'individual@gmr.com': { id: 'user-individual', email: 'individual@gmr.com', name: 'Usuario Individual', role: 'individual' },
-  'coordinador@gmr.com': { id: 'user-centro-coordinador-01', email: 'coordinador@gmr.com', name: 'Centro Coordinador 01', role: 'centroCoordinador' },
-  'vehiculo.AMB101@gmr.com': { id: 'user-vehiculo-AMB101', email: 'vehiculo.AMB101@gmr.com', name: 'Vehículo AMB101 (Móvil)', role: 'equipoMovil'},
+  'admin@gmr.com': { id: 'user-admin', email: 'admin@gmr.com', name: 'Administrador Principal', role: 'admin' },
+  'hospital@gmr.com': { id: 'user-hospital', email: 'hospital@gmr.com', name: 'Personal Hospitalario General', role: 'hospital' },
+  'individual@gmr.com': { id: 'user-individual', email: 'individual@gmr.com', name: 'Paciente Individual', role: 'individual' },
+  'coordinador@gmr.com': { id: 'user-centro-coordinador-01', email: 'coordinador@gmr.com', name: 'Coordinador de Flota', role: 'centroCoordinador' },
+  'vehiculo.AMB101@gmr.com': { id: 'user-vehiculo-AMB101', email: 'vehiculo.AMB101@gmr.com', name: 'Equipo Móvil (AMB101)', role: 'equipoMovil'},
 };
 
 const AUTH_TOKEN_KEY = 'gmrAuthToken';
@@ -47,4 +47,10 @@ export function getStoredUser(): User | null {
   return null;
 }
 
-    
+// Simulates adding a user to MOCK_USERS for the current session
+export function mockAddUser(userData: Omit<User, 'id'>): User {
+  const newId = `user-${Date.now().toString().slice(-6)}`;
+  const newUser: User = { ...userData, id: newId };
+  MOCK_USERS[newUser.email] = newUser; // Add to the in-memory mock
+  return newUser;
+}
