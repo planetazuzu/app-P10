@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { PlusCircle, Edit3, Trash2, Search, Filter, ArrowLeft, Loader2 } from 'lucide-react';
+import { PlusCircle, Edit3, Trash2, Search, Filter, ArrowLeft, Loader2, MapPin } from 'lucide-react';
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
 import { getAmbulances } from '@/lib/ambulance-data'; // Assuming this will be updated
 import { Input } from '@/components/ui/input';
@@ -194,6 +194,7 @@ export default function ManageAmbulancesPage() {
                     <TableHead>Tipo</TableHead>
                     <TableHead>Modelo</TableHead>
                     <TableHead>Base</TableHead>
+                    <TableHead>Ubicación (Lat, Lon)</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -208,6 +209,16 @@ export default function ManageAmbulancesPage() {
                       </TableCell>
                       <TableCell>{ambulance.model || 'N/A'}</TableCell>
                       <TableCell>{ambulance.baseLocation}</TableCell>
+                      <TableCell className="text-xs">
+                        {ambulance.latitude && ambulance.longitude ? (
+                          <div className="flex items-center gap-1">
+                            <MapPin className="h-3 w-3 text-muted-foreground"/> 
+                            {`${ambulance.latitude.toFixed(3)}, ${ambulance.longitude.toFixed(3)}`}
+                          </div>
+                        ) : (
+                          'N/A'
+                        )}
+                      </TableCell>
                       <TableCell>
                         <Badge className={`${getStatusBadgeVariantClass(ambulance.status)} text-white text-xs`}>
                           {getAmbulanceStatusLabel(ambulance.status)}
