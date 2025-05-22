@@ -5,7 +5,8 @@ export const MOCK_USERS: Record<string, User> = {
   'admin@gmr.com': { id: 'user-admin', email: 'admin@gmr.com', name: 'Usuario Admin', role: 'admin' },
   'hospital@gmr.com': { id: 'user-hospital', email: 'hospital@gmr.com', name: 'Personal Hospital', role: 'hospital' },
   'individual@gmr.com': { id: 'user-individual', email: 'individual@gmr.com', name: 'Usuario Individual', role: 'individual' },
-  'equipo.traslado@gmr.com': { id: 'user-equipo-traslado', email: 'equipo.traslado@gmr.com', name: 'Equipo de Traslado 01', role: 'equipoTraslado' },
+  'equipo.traslado@gmr.com': { id: 'user-equipo-traslado-01', email: 'equipo.traslado@gmr.com', name: 'Equipo de Traslado 01', role: 'equipoTraslado' },
+  'vehiculo.AMB101@gmr.com': { id: 'user-vehiculo-AMB101', email: 'vehiculo.AMB101@gmr.com', name: 'Vehículo AMB101 (Móvil)', role: 'equipoMovil'},
 };
 
 const AUTH_TOKEN_KEY = 'gmrAuthToken';
@@ -14,23 +15,12 @@ const USER_INFO_KEY = 'gmrUserInfo';
 export async function login(email: string): Promise<User | null> {
   const user = MOCK_USERS[email];
   if (user) {
-    // In a real app, you'd get a token from the server
     const mockToken = `mock-token-for-${user.id}`;
     if (typeof window !== 'undefined') {
       localStorage.setItem(AUTH_TOKEN_KEY, mockToken);
       localStorage.setItem(USER_INFO_KEY, JSON.stringify(user));
     }
     return user;
-  }
-  // Fallback for the old email key if it was used before name change
-  if (email === 'ambulance@gmr.com' && MOCK_USERS['equipo.traslado@gmr.com']) {
-     const oldUser = MOCK_USERS['equipo.traslado@gmr.com'];
-     const mockToken = `mock-token-for-${oldUser.id}`;
-    if (typeof window !== 'undefined') {
-      localStorage.setItem(AUTH_TOKEN_KEY, mockToken);
-      localStorage.setItem(USER_INFO_KEY, JSON.stringify(oldUser));
-    }
-    return oldUser;
   }
   return null;
 }
@@ -56,3 +46,5 @@ export function getStoredUser(): User | null {
   }
   return null;
 }
+
+    

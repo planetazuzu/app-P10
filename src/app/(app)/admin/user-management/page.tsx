@@ -19,6 +19,7 @@ const translateUserRole = (role: UserRole): string => {
     case 'hospital': return 'Personal Hospitalario';
     case 'individual': return 'Usuario Individual';
     case 'equipoTraslado': return 'Equipo de Traslado';
+    case 'equipoMovil': return 'Equipo Móvil (Vehículo)';
     default: return role.charAt(0).toUpperCase() + role.slice(1);
   }
 };
@@ -119,3 +120,5 @@ export default function UserManagementPage() {
     </div>
   );
 }
+
+    

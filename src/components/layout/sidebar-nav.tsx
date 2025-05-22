@@ -27,11 +27,11 @@ interface NavItem {
   external?: boolean;
   label?: string;
   submenu?: NavItem[];
-  exactMatch?: boolean; // Para que solo se active si la ruta es exacta
+  exactMatch?: boolean;
 }
 
 const navItems: NavItem[] = [
-  { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'equipoTraslado'] },
+  { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'equipoTraslado', 'equipoMovil'] },
   { title: 'Seguimiento Ambulancias', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital'] },
   { title: 'Despacho Inteligente', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital'] },
   {
@@ -46,12 +46,12 @@ const navItems: NavItem[] = [
         { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital'] },
     ]
   },
-  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'equipoTraslado'], disabled: true },
+  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'equipoTraslado', 'equipoMovil'], disabled: true },
   {
-    title: 'Ruta del Día (Conductor)',
-    href: '/driver/batch-view/lote-demo-123', // Ruta de ejemplo
-    icon: 'Map', // O 'Route' si tuvieras ese icono
-    roles: ['equipoTraslado'],
+    title: 'Mi Ruta de Hoy', // For Equipo Móvil (Vehicles)
+    href: '/driver/batch-view/lote-demo-123', // Example route with a demo batch ID
+    icon: 'Map', // Or a 'Route' icon if available
+    roles: ['equipoMovil'],
   },
   {
     title: 'Admin',
@@ -67,7 +67,7 @@ const navItems: NavItem[] = [
           icon: 'Ambulance',
           roles: ['admin'],
           submenu: [
-            { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin'] },
+            { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin'], exactMatch: true },
             { title: 'Añadir Ambulancia', href: '/admin/ambulances/new', icon: 'Ambulance', roles: ['admin'] },
           ]
         },
@@ -90,17 +90,19 @@ export function SidebarNav() {
         }
       }
     });
-    // Ensure parent of active item is open
      navItems.forEach(item => {
         if (item.submenu) {
             item.submenu.forEach(subItem => {
-                if (subItem.href === pathname || (subItem.submenu && subItem.submenu.some(s => s.href === pathname))) {
-                    initialOpen[item.href] = true; // Open parent
-                    if (subItem.submenu && subItem.submenu.some(s => s.href === pathname)) {
-                         initialOpen[subItem.href] = true; // Open sub-parent
+                if ((subItem.exactMatch ? subItem.href === pathname : pathname.startsWith(subItem.href)) || 
+                    (subItem.submenu && subItem.submenu.some(s => s.exactMatch ? s.href === pathname : pathname.startsWith(s.href)))) {
+                    initialOpen[item.href] = true; 
+                    if (subItem.submenu && subItem.submenu.some(s => s.exactMatch ? s.href === pathname : pathname.startsWith(s.href))) {
+                         initialOpen[subItem.href] = true; 
                     }
                 }
             });
+        } else if (item.exactMatch ? item.href === pathname : pathname.startsWith(item.href)) {
+           // For top-level items that are active, no need to explicitly open, but handled for consistency if needed
         }
     });
     return initialOpen;
@@ -118,11 +120,11 @@ export function SidebarNav() {
     if (!userHasRole(item.roles)) return null;
 
     const Icon = Icons[item.icon];
-    // For parent menu items with submenus, isActive should also consider if a child is active
+    
     let isActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
-    if (item.submenu && !isActive) { // if current item is not active, check children
-        isActive = item.submenu.some(sub => sub.exactMatch ? pathname === sub.href : pathname.startsWith(sub.href)) ||
-                   item.submenu.some(sub => sub.submenu && sub.submenu.some(s => s.exactMatch ? pathname === s.href : pathname.startsWith(s.href)));
+    if (item.submenu && !isActive) { 
+        isActive = item.submenu.some(sub => (sub.exactMatch ? pathname === sub.href : pathname.startsWith(sub.href))) ||
+                   item.submenu.some(sub => sub.submenu && sub.submenu.some(s => (s.exactMatch ? pathname === s.href : pathname.startsWith(s.href))));
     }
     
     const hasSubmenu = item.submenu && item.submenu.length > 0 && item.submenu.some(sub => userHasRole(sub.roles));
@@ -132,7 +134,7 @@ export function SidebarNav() {
     
     const buttonContent = (
         <>
-            <Icon className={cn("h-5 w-5", isActive && !hasSubmenu && !isSubmenuItem ? "text-sidebar-primary-foreground" : (isActive && isSubmenuItem ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"))} />
+            <Icon className={cn("h-5 w-5", isActive && !hasSubmenu && !isSubmenuItem ? "text-sidebar-primary-foreground" : (isActive && (isSubmenuItem || (hasSubmenu && isMenuOpen)) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"))} />
             <span className={cn({"pl-1" : level > 0 && isSubmenuItem})}>{item.title}</span>
             {item.label && <span className="ml-auto text-xs">{item.label}</span>}
             {hasSubmenu && (
@@ -141,19 +143,18 @@ export function SidebarNav() {
         </>
     );
     
-    // An open menu with an active child should also highlight the parent button.
-    const effectiveIsActiveForButton = (isActive && !hasSubmenu) || (hasSubmenu && isMenuOpen && isActive);
+    const effectiveIsActiveForButton = isActive;
     
     return (
-      <SidebarMenuItem key={item.href} className={cn({"bg-sidebar-accent/50": effectiveIsActiveForButton && hasSubmenu && isMenuOpen })}>
+      <SidebarMenuItem key={item.href} className={cn({"bg-sidebar-accent/50": effectiveIsActiveForButton && hasSubmenu && isMenuOpen && !isSubmenuItem })}>
         {hasSubmenu ? (
           <ButtonComponent
             onClick={() => toggleMenu(item.href)}
-            isActive={effectiveIsActiveForButton}
+            isActive={effectiveIsActiveForButton && isMenuOpen}
             aria-expanded={isMenuOpen}
             className={cn(
-                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen },
-                {"hover:bg-sidebar-accent/80": effectiveIsActiveForButton && isMenuOpen}
+                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem },
+                {"hover:bg-sidebar-accent/80": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem}
             )}
           >
             {buttonContent}
@@ -167,9 +168,7 @@ export function SidebarNav() {
               isActive={isActive}
               disabled={item.disabled}
               className={cn(
-                // For non-submenu items OR final submenu items
-                {"bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90": isActive && !hasSubmenu },
-                // For submenu items themselves that are active
+                {"bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90": isActive && !hasSubmenu && !isSubmenuItem },
                 {"bg-sidebar-accent text-sidebar-accent-foreground": isActive && isSubmenuItem},
                 {"hover:bg-sidebar-accent hover:text-sidebar-accent-foreground": !isActive }
                 )}
@@ -180,7 +179,7 @@ export function SidebarNav() {
           </Link>
         )}
         {hasSubmenu && isMenuOpen && (
-          <SidebarMenuSub className={cn({"pl-2": level > 0})}>
+          <SidebarMenuSub className={cn({"pl-2": level > 0 && isSubmenuItem, "pl-0": level===0 && isSubmenuItem })}>
             {item.submenu?.map(subItem => renderNavItem(subItem, true, level + 1))}
           </SidebarMenuSub>
         )}
@@ -194,3 +193,5 @@ export function SidebarNav() {
     </SidebarMenu>
   );
 }
+
+    

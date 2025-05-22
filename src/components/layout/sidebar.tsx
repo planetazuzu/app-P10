@@ -27,6 +27,8 @@ const translateUserRole = (role: UserRole): string => {
       return 'Individual';
     case 'equipoTraslado':
       return 'Equipo Traslado';
+    case 'equipoMovil':
+      return 'Equipo Móvil';
     default:
       return role;
   }
@@ -85,3 +87,5 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
+    

@@ -31,7 +31,8 @@ function getRandomCoords(baseLat: number, baseLng: number, range: number) {
   };
 }
 
-const mockRequesterIds = Object.values(MOCK_USERS).map(user => user.id);
+const mockUserValues = Object.values(MOCK_USERS);
+const mockRequesterIds = mockUserValues.map(user => user.id);
 
 
 export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
@@ -49,15 +50,16 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
     }
   }
   
-  const requesterId = getRandomElement(mockRequesterIds);
-  // Ensure the 'individual@gmr.com' user has some requests
-  const individualUserId = MOCK_USERS['individual@gmr.com']?.id;
-  const effectiveRequesterId = (i < 3 && individualUserId) ? individualUserId : requesterId;
+  let requesterId = getRandomElement(mockRequesterIds);
+  const individualUser = mockUserValues.find(u => u.role === 'individual');
+  if (i < 3 && individualUser) { // Ensure the first few requests are for the individual user for testing
+    requesterId = individualUser.id;
+  }
 
 
   return {
     id: `req-${i + 101}`,
-    requesterId: effectiveRequesterId,
+    requesterId: requesterId,
     patientDetails: getRandomElement(patientDetailsSamples),
     location: { 
         latitude: coords.latitude, 
@@ -80,20 +82,21 @@ export function getRequests(userId: string, userRole: UserRole): Promise<Ambulan
       switch (userRole) {
         case 'admin':
         case 'hospital':
-          userRequests = [...mockRequests]; // Admins and hospitals see all simple requests
+          userRequests = [...mockRequests]; 
           break;
         case 'individual':
           userRequests = mockRequests.filter(req => req.requesterId === userId);
           break;
         case 'equipoTraslado':
-          // Equipo de Traslado teams see requests assigned to their (conceptual) ambulance or active requests they might take
           userRequests = mockRequests.filter(req => 
-            (req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId /* && a.crewId === userId */)) ||
-            (['pending', 'dispatched', 'on-scene'].includes(req.status)) // Or broadly active ones for now
+            (req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId)) ||
+            (['pending', 'dispatched', 'on-scene'].includes(req.status)) 
           );
           break;
+        case 'equipoMovil': // Equipo Móvil no ve estas solicitudes de emergencia directamente
+             userRequests = [];
+             break;
         default:
-          // Exhaustive check for UserRole if new roles are added
           const _exhaustiveCheck: never = userRole;
           console.warn(`Rol de usuario no manejado en getRequests: ${_exhaustiveCheck}`);
           break;
@@ -178,14 +181,16 @@ export function getProgrammedTransportRequests(userId: string, userRole: UserRol
           userRequests = mockProgrammedTransportRequests.filter(req => req.requesterId === userId);
           break;
         case 'equipoTraslado':
-          // Equipo de Traslado no suele gestionar directamente la creación o listado global de estas solicitudes.
-          // Podrían ver las que tienen asignadas si se implementa un `assignedCrewId` o similar.
-          // Por ahora, devolvemos un array vacío para este rol.
            userRequests = mockProgrammedTransportRequests.filter(req => 
-            (req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId)) || // Simulación si tienen ambulancia asignada
-            (req.loteId) // O si forman parte de un lote que se les asignará
+            (req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId)) || 
+            (req.loteId && req.status !== 'completed' && req.status !== 'cancelled') 
           );
           break;
+        case 'equipoMovil':
+            // Equipo Móvil obtiene sus servicios a través de Lotes, no directamente de aquí.
+            userRequests = []; // Or, if they *can* see individual assigned ones:
+            // userRequests = mockProgrammedTransportRequests.filter(req => req.assignedAmbulanceId && mockAmbulances.some(a => a.id === req.assignedAmbulanceId && a.equipoMovilUserId === userId));
+            break;
         default:
           const _exhaustiveCheck: never = userRole;
           console.warn(`Rol de usuario no manejado en getProgrammedTransportRequests: ${_exhaustiveCheck}`);
@@ -195,3 +200,5 @@ export function getProgrammedTransportRequests(userId: string, userRole: UserRol
     }, 500);
   });
 }
+
+     

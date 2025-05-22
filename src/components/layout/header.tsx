@@ -28,6 +28,8 @@ const translateUserRole = (role: UserRole): string => {
       return 'Usuario Individual';
     case 'equipoTraslado':
       return 'Equipo de Traslado';
+    case 'equipoMovil':
+      return 'Equipo Móvil (Vehículo)';
     default:
       return role;
   }
@@ -95,3 +97,5 @@ export function Header() {
     </header>
   );
 }
+
+    
