@@ -5,7 +5,7 @@ import type { Ambulance } from '@/types';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import React, { useEffect } from 'react';
+import React, { useEffect, useState } from 'react';
 
 // Fix for default Leaflet icon path issue with Next.js/Webpack
 delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -50,9 +50,21 @@ const FlyToSelectedAmbulance: React.FC<{ ambulance: Ambulance | null }> = ({ amb
 
 export function AmbulanceMap({ ambulances, selectedAmbulance, onAmbulanceSelect }: AmbulanceMapProps) {
   const defaultPosition: L.LatLngExpression = [42.4659, -2.4487]; // Logroño, La Rioja
+  const [mapInstance, setMapInstance] = useState<L.Map | null>(null);
+
+  useEffect(() => {
+    // Cleanup function to remove the map instance when the component unmounts
+    // or if the mapInstance reference changes for some reason.
+    return () => {
+      if (mapInstance) {
+        mapInstance.remove();
+      }
+    };
+  }, [mapInstance]);
 
   return (
     <MapContainer
+      whenCreated={setMapInstance} // Store the map instance using the state setter
       center={defaultPosition}
       zoom={10}
       style={{ height: '100%', width: '100%' }}
