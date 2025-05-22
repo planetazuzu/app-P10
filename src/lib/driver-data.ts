@@ -30,7 +30,7 @@ if (mockProgrammedTransportRequests.length === 0) {
     
     const createMockRequest = (pId: string, loteId: string, index: number, destinoKey: keyof typeof mockDestinos, horaCita: string, observaciones?: string): ProgrammedTransportRequest => ({
         id: `prog-req-${loteId}-${pId.split('-')[1]}`, // Use patient number for consistency
-        requesterId: 'user-hospital', // Example requester
+        requesterId: 'user-centro-coordinador-01', // Example requester (coordinador)
         status: 'batched', // Initially batched
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
@@ -85,31 +85,53 @@ const mockRutas: RutaCalculada[] = [
       { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-006")!.id, paciente: mockPacientes["pac-006"], horaConsultaMedica: "15:00", horaRecogidaEstimada: "14:15", horaLlegadaDestinoEstimada: "14:50", tiempoTrasladoDesdeAnteriorMin: 35, orden: 9, estado: 'pendiente', notasParada: "Post-operatorio. Camilla. Destino CARPA." },
       { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-009")!.id, paciente: mockPacientes["pac-009"], horaConsultaMedica: "16:00", horaRecogidaEstimada: "15:05", horaLlegadaDestinoEstimada: "15:50", tiempoTrasladoDesdeAnteriorMin: 35, orden: 10, estado: 'pendiente', notasParada: "Desde Alberite. Camilla. Requiere 2 técnicos. Destino HSP." },
     ]
+  },
+  {
+    id: "ruta-lote-secondary-456",
+    loteId: "lote-secondary-456",
+    horaSalidaBaseEstimada: "09:00",
+    duracionTotalEstimadaMin: 180,
+    distanciaTotalEstimadaKm: 60,
+    optimizadaEn: new Date(Date.now() - 3600000 * 5).toISOString(), 
+    paradas: [
+        { servicioId: "prog-req-lote-secondary-456-001", paciente: {id: "pac-temp-001", nombre: "Paciente Temporal 1", direccionOrigen: "Calle Rio Oja 1, Logroño", medioRequerido: "andando"}, horaConsultaMedica: "10:00", horaRecogidaEstimada: "09:15", horaLlegadaDestinoEstimada: "09:45", tiempoTrasladoDesdeAnteriorMin: 15, orden: 1, estado: 'pendiente'},
+        { servicioId: "prog-req-lote-secondary-456-002", paciente: {id: "pac-temp-002", nombre: "Paciente Temporal 2", direccionOrigen: "Calle Chile 30, Logroño", medioRequerido: "sillaDeRuedas"}, horaConsultaMedica: "11:00", horaRecogidaEstimada: "10:00", horaLlegadaDestinoEstimada: "10:45", tiempoTrasladoDesdeAnteriorMin: 20, orden: 2, estado: 'pendiente'},
+    ]
   }
 ];
 
-const mockLotes: LoteProgramado[] = [
+export const mockLotes: LoteProgramado[] = [
   {
     id: "lote-demo-123",
     fechaServicio: new Date().toISOString().split('T')[0], // Today
-    destinoPrincipal: mockDestinos["dest-hsp"], // Sigue siendo HSP como principal, aunque hay varios destinos
+    destinoPrincipal: mockDestinos["dest-hsp"], 
     serviciosIds: mockProgrammedTransportRequests.filter(r => r.loteId === "lote-demo-123").map(r => r.id),
     estadoLote: 'asignado',
-    equipoMovilUserIdAsignado: 'user-vehiculo-AMB101', // Matches the mock Equipo Móvil user
-    ambulanciaIdAsignada: mockAmbulances.find(a => a.name.includes("Águila Sanitaria"))?.id || "amb-1001", 
+    equipoMovilUserIdAsignado: 'user-vehiculo-AMB101', 
+    ambulanciaIdAsignada: mockAmbulances.find(a => a.name.includes("Águila Sanitaria") && a.status === 'available')?.id || mockAmbulances.find(a=> a.status === 'available')?.id || "amb-1001", 
     rutaCalculadaId: "ruta-lote-demo-123",
     createdAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
     updatedAt: new Date().toISOString(),
     notasLote: "Ruta optimizada para múltiples consultas en Hospital San Pedro y CARPA a lo largo del día."
+  },
+  {
+    id: "lote-secondary-456",
+    fechaServicio: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
+    destinoPrincipal: mockDestinos["dest-carpa"],
+    serviciosIds: ["prog-req-lote-secondary-456-001", "prog-req-lote-secondary-456-002"],
+    estadoLote: 'pendienteCalculo',
+    createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
+    updatedAt: new Date(Date.now() - 86400000).toISOString(),
+    notasLote: "Lote para mañana, pendiente de asignación y optimización de ruta."
   }
 ];
 
 
 // Mock API functions
-export const getLoteByIdMock = (loteId: string, equipoMovilUserId: string): Promise<LoteProgramado | null> => {
+export const getLoteByIdMock = (loteId: string): Promise<LoteProgramado | null> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const lote = mockLotes.find(l => l.id === loteId && l.equipoMovilUserIdAsignado === equipoMovilUserId);
+      const lote = mockLotes.find(l => l.id === loteId);
       resolve(lote || null);
     }, 300);
   });

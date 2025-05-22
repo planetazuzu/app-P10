@@ -13,7 +13,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Waypoints, AlertTriangle, Ambulance as AmbulanceIcon, User, Clock, MapPin, Edit } from 'lucide-react';
+import { ArrowLeft, Loader2, Waypoints, AlertTriangle, Ambulance as AmbulanceIcon, User, Clock, MapPin, Edit, Unlink } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -87,7 +87,7 @@ export default function LoteDetailPage() {
         setError(null);
         try {
           // In a real app, the second arg for getLoteByIdMock might not be needed or would be different for admin
-          const fetchedLote = await getLoteByIdMock(loteId, user.id); 
+          const fetchedLote = await getLoteByIdMock(loteId); 
           if (!fetchedLote) {
             setError("No se encontró el lote o no tiene permisos para verlo.");
             setLote(null); setRuta(null); setAssignedAmbulance(null);
@@ -107,6 +107,8 @@ export default function LoteDetailPage() {
           if (fetchedLote.ambulanciaIdAsignada) {
             const ambData = await getAmbulanceById(fetchedLote.ambulanciaIdAsignada);
             setAssignedAmbulance(ambData || null);
+          } else {
+            setAssignedAmbulance(null);
           }
 
         } catch (e) {
@@ -125,17 +127,43 @@ export default function LoteDetailPage() {
     // Simulate route update
     if (ruta) {
         setRuta(prev => prev ? {...prev, optimizadaEn: new Date().toISOString(), duracionTotalEstimadaMin: prev.duracionTotalEstimadaMin - 10 } : null);
+        setLote(prev => prev ? {...prev, estadoLote: 'calculado'} : null); // Update lote status after optimization
     }
   };
 
-  const handleAsignarAmbulancia = () => {
-    if (lote && selectedAmbulanceToAssign) {
-        // Simulate assignment
-        setLote(prev => prev ? {...prev, ambulanciaIdAsignada: selectedAmbulanceToAssign, estadoLote: 'asignado' } : null);
-        getAmbulanceById(selectedAmbulanceToAssign).then(setAssignedAmbulance);
-        toast({ title: "Ambulancia Asignada (Simulado)", description: `Ambulancia ${selectedAmbulanceToAssign} asignada al lote ${lote.id}.` });
+  const handleGestionAmbulancia = async () => {
+    if (!lote) return;
+
+    if (selectedAmbulanceToAssign === "unassign") {
+      // Desasignar ambulancia
+      setLote(prev => prev ? {
+        ...prev, 
+        ambulanciaIdAsignada: undefined, 
+        estadoLote: 'calculado' // o 'pendienteCalculo' si la ruta debe recalcularse
+      } : null);
+      setAssignedAmbulance(null);
+      setSelectedAmbulanceToAssign(undefined); // Reset select
+      toast({ title: "Ambulancia Desasignada (Simulado)", description: `La ambulancia ha sido desasignada del lote ${lote.id}.` });
+    } else if (selectedAmbulanceToAssign) {
+      // Asignar nueva ambulancia
+      try {
+        const ambData = await getAmbulanceById(selectedAmbulanceToAssign);
+        if (ambData) {
+          setLote(prev => prev ? {
+            ...prev, 
+            ambulanciaIdAsignada: selectedAmbulanceToAssign, 
+            estadoLote: 'asignado' 
+          } : null);
+          setAssignedAmbulance(ambData);
+          toast({ title: "Ambulancia Asignada (Simulado)", description: `Ambulancia ${ambData.name} asignada al lote ${lote.id}.` });
+        } else {
+           toast({ title: "Error", description: "Ambulancia seleccionada no encontrada.", variant: "destructive"});
+        }
+      } catch (error) {
+        toast({ title: "Error", description: "No se pudo cargar la información de la ambulancia.", variant: "destructive"});
+      }
     } else {
-        toast({ title: "Error de Asignación", description: "Seleccione una ambulancia para asignar.", variant: "destructive"});
+      toast({ title: "Selección Requerida", description: "Por favor, seleccione una ambulancia para asignar o elija desasignar.", variant: "destructive"});
     }
   };
 
@@ -182,6 +210,8 @@ export default function LoteDetailPage() {
       </div>
     );
   }
+  
+  const availableAmbulancesForAssignment = mockAmbulances.filter(a => a.status === 'available' || a.id === lote.ambulanciaIdAsignada);
 
   return (
     <div className="rioja-container">
@@ -206,7 +236,7 @@ export default function LoteDetailPage() {
               <p><strong>ID Lote:</strong> {lote.id}</p>
               <p><strong>Fecha Servicio:</strong> {format(parseISO(lote.fechaServicio + 'T00:00:00'), "PPP", { locale: es })}</p>
               <p><strong>Destino Principal:</strong> {lote.destinoPrincipal.nombre}</p>
-              <p><strong>Estado:</strong> <Badge variant="secondary">{getLoteStatusLabel(lote.estadoLote)}</Badge></p>
+              <p><strong>Estado:</strong> <Badge variant="secondary" className="capitalize">{getLoteStatusLabel(lote.estadoLote)}</Badge></p>
               <p><strong>Servicios en Lote:</strong> {lote.serviciosIds.length}</p>
               {lote.notasLote && <p><strong>Notas:</strong> {lote.notasLote}</p>}
             </CardContent>
@@ -218,29 +248,37 @@ export default function LoteDetailPage() {
             </CardHeader>
             <CardContent className="space-y-3">
               {assignedAmbulance ? (
-                <div>
-                  <p className="font-semibold text-primary">{assignedAmbulance.name} ({assignedAmbulance.licensePlate})</p>
-                  <p className="text-xs text-muted-foreground">Tipo: {assignedAmbulance.type} | Estado: {assignedAmbulance.status}</p>
+                <div className="p-3 bg-primary/10 rounded-md border border-primary/30">
+                  <p className="font-semibold text-primary flex items-center gap-2"><AmbulanceIcon className="h-5 w-5"/>{assignedAmbulance.name} ({assignedAmbulance.licensePlate})</p>
+                  <p className="text-xs text-muted-foreground ml-7">Tipo: {assignedAmbulance.type} | Estado: {assignedAmbulance.status}</p>
                 </div>
               ) : (
-                <p className="text-sm text-muted-foreground">Ninguna ambulancia asignada.</p>
+                <p className="text-sm text-muted-foreground p-3 bg-muted rounded-md text-center">Ninguna ambulancia asignada.</p>
               )}
-              <Select value={selectedAmbulanceToAssign} onValueChange={setSelectedAmbulanceToAssign}>
+              <Select 
+                value={selectedAmbulanceToAssign || (lote.ambulanciaIdAsignada ? lote.ambulanciaIdAsignada : '')} 
+                onValueChange={setSelectedAmbulanceToAssign}
+              >
                 <SelectTrigger>
-                  <SelectValue placeholder="Seleccionar ambulancia para asignar" />
+                  <SelectValue placeholder="Seleccionar ambulancia..." />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="unassign">Desasignar Ambulancia</SelectItem>
-                  {mockAmbulances.filter(a => a.status === 'available').map(amb => (
-                    <SelectItem key={amb.id} value={amb.id}>
-                      {amb.name} ({amb.licensePlate}) - {amb.type}
+                  {assignedAmbulance && <SelectItem value="unassign"><Unlink className="inline-block mr-2 h-4 w-4 text-destructive"/>Desasignar Ambulancia Actual</SelectItem>}
+                  {!assignedAmbulance && <SelectItem value="" disabled>Seleccionar ambulancia...</SelectItem>}
+                  {availableAmbulancesForAssignment.map(amb => (
+                    <SelectItem key={amb.id} value={amb.id} disabled={amb.status !== 'available' && amb.id !== lote.ambulanciaIdAsignada}>
+                      {amb.name} ({amb.licensePlate}) - {amb.type} {amb.status !== 'available' && amb.id !== lote.ambulanciaIdAsignada ? '(No disponible)' : ''}
                     </SelectItem>
                   ))}
                 </SelectContent>
               </Select>
-              <Button onClick={handleAsignarAmbulancia} className="w-full btn-secondary" disabled={!selectedAmbulanceToAssign}>
-                <AmbulanceIcon className="mr-2 h-4 w-4" />
-                {selectedAmbulanceToAssign === "unassign" ? "Desasignar Ambulancia" : "Asignar Ambulancia Seleccionada"}
+              <Button 
+                onClick={handleGestionAmbulancia} 
+                className="w-full btn-secondary" 
+                disabled={!selectedAmbulanceToAssign || (selectedAmbulanceToAssign === lote.ambulanciaIdAsignada && selectedAmbulanceToAssign !== "unassign")}
+              >
+                {selectedAmbulanceToAssign === "unassign" ? <Unlink className="mr-2 h-4 w-4" /> : <AmbulanceIcon className="mr-2 h-4 w-4" />}
+                {selectedAmbulanceToAssign === "unassign" ? "Confirmar Desasignación" : "Confirmar Asignación / Cambio"}
               </Button>
             </CardContent>
           </Card>
@@ -255,6 +293,11 @@ export default function LoteDetailPage() {
                   <Waypoints className="mr-2 h-4 w-4" /> Optimizar Ruta (Simulado)
                 </Button>
               </div>
+               {ruta && ruta.optimizadaEn && (
+                 <CardDescription className="text-xs mt-1">
+                    Optimizada el: {format(parseISO(ruta.optimizadaEn), "Pp", { locale: es })}
+                 </CardDescription>
+                )}
             </CardHeader>
             <CardContent>
               {ruta ? (
@@ -263,7 +306,6 @@ export default function LoteDetailPage() {
                       <p><strong>Salida Base:</strong> {ruta.horaSalidaBaseEstimada}</p>
                       <p><strong>Duración Total:</strong> {ruta.duracionTotalEstimadaMin} min</p>
                       <p><strong>Distancia:</strong> {ruta.distanciaTotalEstimadaKm || 'N/A'} km</p>
-                      <p className="col-span-full"><strong>Optimizada:</strong> {ruta.optimizadaEn ? format(parseISO(ruta.optimizadaEn), "Pp", {locale: es}) : 'No optimizada aún'}</p>
                   </div>
                   
                   <h3 className="font-semibold text-lg text-secondary mt-4 mb-2">Paradas de la Ruta ({ruta.paradas.length})</h3>
@@ -311,5 +353,3 @@ export default function LoteDetailPage() {
     </div>
   );
 }
-
-    
