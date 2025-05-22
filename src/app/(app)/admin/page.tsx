@@ -24,10 +24,10 @@ export default function AdminPage() {
             </CardHeader>
             <CardContent>
               <p className="text-sm text-muted-foreground mb-4">
-                Ver, agregar o modificar cuentas de usuario y roles. (Funcionalidad en desarrollo)
+                Ver, agregar o modificar cuentas de usuario y roles.
               </p>
               <Link href="/admin/user-management" passHref>
-                <Button variant="secondary" disabled>Gestionar Usuarios</Button>
+                <Button variant="secondary">Gestionar Usuarios</Button>
               </Link>
             </CardContent>
           </Card>
@@ -62,3 +62,4 @@ export default function AdminPage() {
     </div>
   );
 }
+
