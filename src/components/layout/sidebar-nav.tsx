@@ -12,7 +12,7 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuSub,
-  SidebarMenuSubItem,
+  // SidebarMenuSubItem, // Not used directly, sub-items are SidebarMenuItem
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import React, { useState, useEffect } from 'react';
@@ -40,7 +40,7 @@ const navItems: NavItem[] = [
     icon: 'RequestManagement',
     roles: ['admin', 'hospital', 'individual', 'centroCoordinador'],
     submenu: [
-        { title: 'Ver Solicitudes', href: '/request-management', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'], exactMatch: true },
+        { title: 'Ver Solicitudes', href: '/request-management', icon: 'ListChecks', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'], exactMatch: true },
         { title: 'Nueva Solicitud (Urgente)', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
         { title: 'Nueva Solicitud (Programada)', href: '/request-management/new-programmed', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
         { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital', 'centroCoordinador'] },
@@ -103,9 +103,10 @@ export function SidebarNav() {
       items.forEach(item => {
         const currentItemPath = item.href;
         if (item.submenu) {
-          if (item.submenu.some(subItem => pathname.startsWith(subItem.href) || (subItem.submenu && subItem.submenu.some(s => pathname.startsWith(s.href))))) {
+          // An item is active if its path starts with the current pathname OR any of its children are active
+          if (pathname.startsWith(currentItemPath) || item.submenu.some(subItem => pathname.startsWith(subItem.href) || (subItem.submenu && subItem.submenu.some(s => pathname.startsWith(s.href))))) {
             initialOpen[currentItemPath] = true;
-            checkAndSetOpen(item.submenu, currentItemPath);
+            checkAndSetOpen(item.submenu, currentItemPath); // Recursively check children
           }
         }
       });
@@ -123,13 +124,12 @@ export function SidebarNav() {
     setOpenMenus(prev => ({ ...prev, [href]: !prev[href] }));
   };
 
-  const renderNavItem = (item: NavItem, isSubmenuItem = false, level = 0) => {
+  const renderNavItem = (item: NavItem, isSubmenuItem = false, level = 0): JSX.Element | null => {
     if (!userHasRole(item.roles)) return null;
 
     const Icon = Icons[item.icon];
     
     let isActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
-     // If it's a parent menu, it's active if any of its children are active
     if (item.submenu && item.submenu.length > 0 && !isActive) {
       const isChildActive = (childItems: NavItem[]): boolean => {
         return childItems.some(child => {
@@ -149,7 +149,7 @@ export function SidebarNav() {
     
     const buttonContent = (
         <>
-            <Icon className={cn("h-5 w-5", isActive && !hasSubmenu && !isSubmenuItem ? "text-sidebar-primary-foreground" : (isActive && (isSubmenuItem || (hasSubmenu && isMenuOpen)) ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"))} />
+            <Icon className={cn("h-5 w-5", isActive && !hasSubmenu && !isSubmenuItem && !item.disabled ? "text-sidebar-primary-foreground" : (isActive && (isSubmenuItem || (hasSubmenu && isMenuOpen)) && !item.disabled ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"))} />
             <span className={cn({"pl-1" : level > 0 && isSubmenuItem})}>{item.title}</span>
             {item.label && <span className="ml-auto text-xs">{item.label}</span>}
             {hasSubmenu && (
@@ -158,8 +158,36 @@ export function SidebarNav() {
         </>
     );
     
-    const effectiveIsActiveForButton = isActive;
+    const effectiveIsActiveForButton = isActive && !item.disabled; // An item isn't "active" if it's disabled
     
+    // Button Element for both Link and direct render
+    const buttonElement = (
+        <ButtonComponent
+            // @ts-ignore - asChild and href are managed conditionally
+            asChild={!isSubmenuItem && !item.disabled}
+            href={isSubmenuItem && !item.disabled ? item.href : undefined}
+            isActive={effectiveIsActiveForButton}
+            disabled={item.disabled}
+            className={cn(
+                {"bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90": effectiveIsActiveForButton && !hasSubmenu && !isSubmenuItem },
+                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isSubmenuItem},
+                {"hover:bg-sidebar-accent hover:text-sidebar-accent-foreground": !effectiveIsActiveForButton && !item.disabled },
+                // Explicit disabled styles if not handled by ButtonComponent variants sufficiently
+                item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-sidebar-foreground" 
+            )}
+            tooltip={item.title}
+            // Prevent click if disabled, especially for top-level items not wrapped in Link
+            onClick={item.disabled ? (e) => e.preventDefault() : undefined}
+        >
+            {/* Render as 'a' tag only if it's part of a non-disabled Link */}
+            {(!isSubmenuItem && !item.disabled) ? (
+                <a className="flex w-full items-center gap-2">{buttonContent}</a>
+            ) : (
+                buttonContent
+            )}
+        </ButtonComponent>
+    );
+
     return (
       <SidebarMenuItem key={item.href} className={cn({"bg-sidebar-accent/50": effectiveIsActiveForButton && hasSubmenu && isMenuOpen && !isSubmenuItem })}>
         {hasSubmenu ? (
@@ -170,28 +198,18 @@ export function SidebarNav() {
             className={cn(
                 {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem && level === 0 },
                 {"hover:bg-sidebar-accent/80": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem && level === 0},
-                {"text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && level > 0}
+                {"text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && level > 0},
+                item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-sidebar-foreground" 
             )}
+            disabled={item.disabled}
           >
             {buttonContent}
           </ButtonComponent>
+        ) : item.disabled ? (
+             buttonElement // Render the styled, non-linked button directly
         ) : (
           <Link href={item.href} passHref legacyBehavior>
-            <ButtonComponent
-              asChild={!isSubmenuItem}
-              // @ts-ignore
-              href={isSubmenuItem ? item.href : undefined}
-              isActive={isActive}
-              disabled={item.disabled}
-              className={cn(
-                {"bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90": isActive && !hasSubmenu && !isSubmenuItem },
-                {"bg-sidebar-accent text-sidebar-accent-foreground": isActive && isSubmenuItem},
-                {"hover:bg-sidebar-accent hover:text-sidebar-accent-foreground": !isActive }
-                )}
-              tooltip={item.title}
-            >
-              {isSubmenuItem ? <>{buttonContent}</> : <a className="flex w-full items-center gap-2">{buttonContent}</a>}
-            </ButtonComponent>
+            {buttonElement}
           </Link>
         )}
         {hasSubmenu && isMenuOpen && (
@@ -209,3 +227,4 @@ export function SidebarNav() {
     </SidebarMenu>
   );
 }
+
