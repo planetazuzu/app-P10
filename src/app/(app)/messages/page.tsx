@@ -6,7 +6,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
-import { SendHorizonal, Users, Hash } from 'lucide-react';
+import { SendHorizonal, Users, Hash, MessageSquare } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { useAuth } from '@/hooks/use-auth';
 
@@ -88,7 +88,7 @@ const ChatMessage: React.FC<{ message: Message; currentUserEmail: string | undef
             'rounded-lg p-3 text-sm shadow-md',
             isCurrentUser
               ? 'bg-primary text-primary-foreground rounded-br-none'
-              : 'bg-card text-card-foreground rounded-bl-none' // Changed from bg-muted
+              : 'bg-card text-card-foreground rounded-bl-none'
           )}
         >
           {message.text}
@@ -112,27 +112,46 @@ export default function MessagesPage() {
   const [selectedConversationId, setSelectedConversationId] = useState<string | null>(mockConversations[0]?.id || null);
   const [newMessage, setNewMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
+  const previousConversationIdRef = useRef<string | null | undefined>(null);
+  const lastMessageIdRef = useRef<string | null>(null);
 
-  const selectedConversation = conversations.find(c => c.id === selectedConversationId);
 
   useEffect(() => {
-    if (scrollAreaRef.current) {
-      scrollAreaRef.current.scrollTo({ top: scrollAreaRef.current.scrollHeight, behavior: 'auto' }); // Changed to auto for initial load
+    // Scroll to bottom when messages or conversation changes
+    const viewport = scrollAreaRef.current;
+    if (viewport) {
+      const timer = setTimeout(() => {
+        const { scrollHeight, clientHeight, scrollTop } = viewport;
+        const isUserNearBottom = scrollHeight - clientHeight <= scrollTop + 50; // 50px threshold
+        const lastMessage = selectedConversation?.messages[selectedConversation.messages.length - 1];
+        const conversationJustChanged = selectedConversationId !== previousConversationIdRef.current;
+        // Check if it's a new message from the user that we haven't scrolled for yet
+        const isNewMessageFromUser = lastMessage?.sender === 'user' && lastMessage.id !== lastMessageIdRef.current;
+
+        if (isNewMessageFromUser || conversationJustChanged || (isUserNearBottom && lastMessage)) {
+          viewport.scrollTo({ top: scrollHeight, behavior: conversationJustChanged ? 'auto' : 'smooth' });
+          if(lastMessage) {
+            lastMessageIdRef.current = lastMessage.id; // Track last scrolled message
+          }
+        }
+        
+        if (selectedConversationId !== previousConversationIdRef.current) {
+            previousConversationIdRef.current = selectedConversationId;
+             // Reset last message id when conversation changes to ensure scroll for first message if any
+            if (selectedConversation?.messages.length === 0) {
+                 lastMessageIdRef.current = null;
+            } else if (selectedConversation?.messages.length > 0) {
+                 // If switching to a convo with messages, and user was at bottom, scroll to bottom.
+                 // Otherwise, user might want to stay at current scroll position if they switch back and forth.
+                 // For simplicity now, always scroll to bottom on convo change.
+                 lastMessageIdRef.current = selectedConversation.messages[selectedConversation.messages.length -1].id;
+            }
+        }
+
+      }, 0); // Small delay to ensure DOM is updated
+      return () => clearTimeout(timer);
     }
-  }, [selectedConversationId]);
-  
-  useEffect(() => {
-    if (scrollAreaRef.current) {
-      const { scrollHeight, clientHeight } = scrollAreaRef.current;
-      // Only scroll if near the bottom or if it's a new message from the current user
-      // This simple logic might need refinement for a better UX
-      const isScrolledToBottom = scrollHeight - clientHeight <= scrollAreaRef.current.scrollTop + 30; // 30px threshold
-      
-      if (isScrolledToBottom || selectedConversation?.messages[selectedConversation.messages.length -1]?.sender === 'user') {
-        scrollAreaRef.current.scrollTo({ top: scrollHeight, behavior: 'smooth' });
-      }
-    }
-  }, [selectedConversation?.messages]);
+  }, [selectedConversation?.messages, selectedConversationId]);
 
   const handleSelectConversation = (id: string) => {
     setSelectedConversationId(id);
@@ -185,7 +204,7 @@ export default function MessagesPage() {
   };
   
   const getInitials = (name: string = '') => {
-    const parts = name.split(/[.\s()]+/); // Split by space, dot, or parenthesis
+    const parts = name.split(/[.\s()]+/); 
     let initials = parts.map(n => n[0]).join('');
     if (initials.length > 2) {
         initials = initials.substring(0,2);
