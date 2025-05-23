@@ -41,6 +41,9 @@ export default function RequestManagementPage() {
         setRequests(prevRequests => 
           prevRequests.map(req => req.id === requestId ? updatedRequest : req)
         );
+        if(selectedRequest && selectedRequest.id === requestId) {
+            setSelectedRequest(updatedRequest); // Update modal if it's the same request
+        }
         toast({ title: "Estado Actualizado", description: `Solicitud ${requestId.substring(0,8)} marcada como ${status}.` });
       }
     } catch (error) {
@@ -50,13 +53,15 @@ export default function RequestManagementPage() {
   };
 
   const handleViewDetails = async (requestId: string) => {
-    const requestData = await getRequestById(requestId); // Fetch full request details
+    setIsLoading(true); // Show loading for modal content as well
+    const requestData = await getRequestById(requestId); 
     if (requestData) {
       setSelectedRequest(requestData);
       setIsModalOpen(true);
     } else {
       toast({ title: "Error", description: "No se pudieron cargar los detalles de la solicitud.", variant: "destructive"});
     }
+    setIsLoading(false);
   };
 
   const handleCloseModal = () => {
@@ -66,7 +71,7 @@ export default function RequestManagementPage() {
 
   const canCreateRequest = user?.role === 'admin' || user?.role === 'hospital' || user?.role === 'individual' || user?.role === 'centroCoordinador';
 
-  if (isLoading && !user) {
+  if (isLoading && !user) { // Initial loading before user context is ready
     return (
         <div className="rioja-container">
             <div className="flex justify-between items-center mb-8">
@@ -98,7 +103,7 @@ export default function RequestManagementPage() {
         </div>
       </div>
 
-      {isLoading ? (
+      {isLoading && requests.length === 0 ? ( // Loading requests data
          <div className="flex items-center justify-center min-h-[calc(100vh-20rem)]">
             <Loader2 className="h-10 w-10 animate-spin text-primary" />
             <p className="ml-3 text-muted-foreground">Cargando solicitudes...</p>
@@ -107,6 +112,7 @@ export default function RequestManagementPage() {
         <RequestList
             requests={requests}
             userRole={user!.role}
+            currentUserId={user!.id}
             onUpdateRequestStatus={handleUpdateRequestStatus}
             onViewDetails={handleViewDetails}
         />

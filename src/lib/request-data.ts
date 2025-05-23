@@ -38,7 +38,7 @@ const adminUser = mockUserValues.find(u => u.role === 'admin');
 const centroCoordinadorUser = mockUserValues.find(u => u.role === 'centroCoordinador');
 
 
-export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
+export let mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
   const baseLocation = { lat: 42.4659, lng: -2.4487 }; // Logroño
   const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2); // Around La Rioja
   const createdAt = new Date(Date.now() - Math.floor(Math.random() * 24 * 3 * 60 * 60 * 1000)); // Up to 3 days ago
@@ -53,15 +53,11 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
     }
   }
   
-  let requesterUser = getRandomElement(mockUserValues); // Default to random
-  // Assign specific requesters for demo purposes
-  if (i < 3 && individualUser) { 
-    requesterUser = individualUser;
-  } else if (i >= 3 && i < 6 && hospitalUser) { 
-    requesterUser = hospitalUser;
-  } else if (i >= 6 && i < 9 && centroCoordinadorUser) { 
-    requesterUser = centroCoordinadorUser;
-  }
+  let requesterUser = getRandomElement(mockUserValues); 
+  if (i < 2 && individualUser) requesterUser = individualUser; // Asegura algunas para el usuario individual
+  else if (i >= 2 && i < 4 && hospitalUser) requesterUser = hospitalUser;
+  else if (i >= 4 && i < 6 && centroCoordinadorUser) requesterUser = centroCoordinadorUser;
+  else if (i >= 6 && i < 8 && adminUser) requesterUser = adminUser;
  
   return {
     id: `req-${101 + i}-${Math.random().toString(36).substring(2, 7)}`, 
@@ -99,6 +95,7 @@ export function getRequests(userId: string, userRole: UserRole): Promise<Ambulan
              userRequests = []; 
              break;
         default:
+          // This ensures that all cases are handled, or TypeScript will complain.
           const _exhaustiveCheck: never = userRole; 
           console.warn(`Rol de usuario no manejado en getRequests: ${_exhaustiveCheck}`);
           break;
@@ -127,6 +124,30 @@ export function createRequest(requestData: Omit<AmbulanceRequest, 'id' | 'create
       };
       mockRequests.unshift(newRequest);
       resolve(newRequest);
+    }, 300);
+  });
+}
+
+export function updateSimpleRequest(
+  id: string, 
+  dataToUpdate: Partial<Omit<AmbulanceRequest, 'id' | 'createdAt' | 'requesterId' | 'status' | 'assignedAmbulanceId'>> // More specific type
+): Promise<AmbulanceRequest | undefined> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const requestIndex = mockRequests.findIndex(req => req.id === id);
+      if (requestIndex > -1) {
+        // Merge existing data with updates, ensuring location is handled correctly
+        const existingRequest = mockRequests[requestIndex];
+        mockRequests[requestIndex] = {
+          ...existingRequest,
+          ...dataToUpdate,
+          location: dataToUpdate.location ? { ...existingRequest.location, ...dataToUpdate.location } : existingRequest.location,
+          updatedAt: new Date().toISOString(),
+        };
+        resolve(mockRequests[requestIndex]);
+      } else {
+        resolve(undefined);
+      }
     }, 300);
   });
 }
@@ -165,7 +186,7 @@ if (mockProgrammedTransportRequests.length === 0) {
     mockProgrammedTransportRequests.push(
         { id: 'prog-req-001', requesterId: 'user-hospital', status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Elena Navarro', dniNieSsPaciente: '12345678A', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Domicilio: Calle Falsa 123, Logroño', destino: 'Hospital San Pedro', fechaIda: createDate(1), horaIda: '10:00', horaConsultaMedica: '10:30', medioRequerido: 'sillaDeRuedas', priority: 'low' },
         { id: 'prog-req-002', requesterId: 'user-hospital', status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Roberto Sanz', dniNieSsPaciente: '87654321B', tipoServicio: 'rehabilitacion', tipoTraslado: 'soloIda', centroOrigen: 'Centro de Día Sol', destino: 'Domicilio: Avenida de la Paz 50, Calahorra', fechaIda: createDate(1), horaIda: '14:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Necesita ayuda para bajar escalón.' },
-        { id: 'prog-req-003', requesterId: 'user-individual', status: 'batched', loteId: 'lote-demo-123', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Ana Pérez García', dniNieSsPaciente: '11223344C', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Plaza del Ayuntamiento 1, Haro', destino: 'CARPA', fechaIda: createDate(2), horaIda: '09:00', horaConsultaMedica: '09:30', medioRequerido: 'camilla', priority: 'low' },
+        { id: 'prog-req-003', requesterId: 'user-individual', status: 'batched', loteId: 'lote-demo-123', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Ana Pérez García', dniNieSsPaciente: '11223344C', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Plaza del Ayuntamiento 1, Haro', destino: 'CARPA', fechaIda: createDate(0), horaIda: '09:00', horaConsultaMedica: '09:30', medioRequerido: 'camilla', priority: 'low' },
         { id: 'prog-req-004', requesterId: 'user-hospital', status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Carlos Gómez Ruiz', dniNieSsPaciente: '55667788D', tipoServicio: 'tratamientoContinuado', tipoTraslado: 'idaYVuelta', centroOrigen: 'Hospital de Calahorra', destino: 'Hospital San Pedro - Oncología', fechaIda: createDate(2), horaIda: '11:00', horaConsultaMedica: '11:45', medioRequerido: 'sillaDeRuedas', priority: 'low', equipamientoEspecialRequerido: ['oxigeno'] },
         { id: 'prog-req-005', requesterId: 'user-centroCoordinador', status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Laura Martínez Soler', dniNieSsPaciente: '99001122E', tipoServicio: 'alta', tipoTraslado: 'soloIda', centroOrigen: 'Hospital San Pedro - Planta 3', destino: 'Residencia Los Tulipanes', fechaIda: createDate(3), horaIda: '13:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Entregar informe de alta.' }
     );

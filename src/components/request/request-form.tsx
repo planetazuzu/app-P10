@@ -11,28 +11,29 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as UiCardDescription } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
-import { createRequest } from '@/lib/request-data';
-import type { AmbulanceRequest } from '@/types'; // Actualizado a AmbulanceRequest
+import { createRequest, updateSimpleRequest } from '@/lib/request-data';
+import type { AmbulanceRequest } from '@/types';
 import { useToast } from "@/hooks/use-toast";
 import { useRouter } from 'next/navigation';
+import { useEffect } from 'react';
 
 const requestFormSchema = z.object({
   patientDetails: z.string().min(10, { message: 'Los detalles del paciente deben tener al menos 10 caracteres.' }),
   address: z.string().min(5, { message: 'La dirección debe tener al menos 5 caracteres.' }),
-  // For simplicity, latitude and longitude will be auto-generated or fixed in mock
   priority: z.enum(['low', 'medium', 'high'], { required_error: 'La prioridad es obligatoria.' }),
   notes: z.string().optional(),
 });
 
-type RequestFormValues = z.infer<typeof requestFormSchema>;
+export type RequestFormValues = z.infer<typeof requestFormSchema>;
 
 interface RequestFormProps {
-  onFormSubmit?: () => void; // Callback after successful submission
+  onFormSubmit?: () => void;
   mode?: 'create' | 'edit';
-  initialData?: Partial<AmbulanceRequest>; // Actualizado a AmbulanceRequest
+  initialData?: AmbulanceRequest;
+  requestId?: string;
 }
 
-export function RequestForm({ onFormSubmit, mode = 'create', initialData }: RequestFormProps) {
+export function RequestForm({ onFormSubmit, mode = 'create', initialData, requestId }: RequestFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
@@ -40,54 +41,79 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
   const form = useForm<RequestFormValues>({
     resolver: zodResolver(requestFormSchema),
     defaultValues: {
-      patientDetails: initialData?.patientDetails || '',
-      address: initialData?.location?.address || '',
-      priority: initialData?.priority || 'medium',
-      notes: initialData?.notes || '',
+      patientDetails: '',
+      address: '',
+      priority: 'medium',
+      notes: '',
     },
   });
 
+  useEffect(() => {
+    if (mode === 'edit' && initialData) {
+      form.reset({
+        patientDetails: initialData.patientDetails || '',
+        address: initialData.location?.address || '',
+        priority: initialData.priority || 'medium',
+        notes: initialData.notes || '',
+      });
+    }
+  }, [mode, initialData, form]);
+
   async function onSubmit(values: RequestFormValues) {
     if (!user) {
-      toast({ title: "Error de Autenticación", description: "Debe iniciar sesión para crear una solicitud.", variant: "destructive"});
+      toast({ title: "Error de Autenticación", description: "Debe iniciar sesión para continuar.", variant: "destructive"});
       return;
     }
 
-    // Mock latitude and longitude
-    const mockLocation = {
-      latitude: 34.0522 + (Math.random() - 0.5) * 0.1,
-      longitude: -118.2437 + (Math.random() - 0.5) * 0.1,
-      address: values.address,
-    };
-
-    const requestData: Omit<AmbulanceRequest, 'id' | 'createdAt' | 'updatedAt'> = { // Actualizado a AmbulanceRequest
-      requesterId: user.id,
+    const dataPayload = {
       patientDetails: values.patientDetails,
-      location: mockLocation,
-      status: 'pending',
+      location: { 
+        // For edit, we might want to preserve existing coords if address doesn't change significantly
+        // For simplicity, we'll use new mock coords on edit too if address changes, or keep old if not.
+        latitude: initialData?.location.latitude || (34.0522 + (Math.random() - 0.5) * 0.1),
+        longitude: initialData?.location.longitude || (-118.2437 + (Math.random() - 0.5) * 0.1),
+        address: values.address,
+      },
       priority: values.priority,
       notes: values.notes,
     };
     
     try {
-      await createRequest(requestData);
-      toast({ title: "Solicitud Enviada", description: "Su solicitud de ambulancia ha sido enviada exitosamente."});
+      if (mode === 'create') {
+        const requestData: Omit<AmbulanceRequest, 'id' | 'createdAt' | 'updatedAt'> = {
+          ...dataPayload,
+          requesterId: user.id,
+          status: 'pending',
+        };
+        await createRequest(requestData);
+        toast({ title: "Solicitud Enviada", description: "Su solicitud de ambulancia ha sido enviada exitosamente."});
+      } else if (mode === 'edit' && requestId) {
+        // Ensure that the location object has all required fields if it's being updated.
+        // For this simulation, we're passing the whole dataPayload which includes location.
+        await updateSimpleRequest(requestId, dataPayload);
+        toast({ title: "Solicitud Actualizada", description: "La solicitud de ambulancia ha sido actualizada."});
+      }
+      
       form.reset();
       if (onFormSubmit) {
         onFormSubmit();
       } else {
-        router.push('/request-management'); // Default redirect
+        router.push('/request-management');
       }
     } catch (error) {
-      console.error('Error al enviar la solicitud:', error);
-      toast({ title: "Envío Fallido", description: "No se pudo enviar su solicitud. Por favor, inténtelo de nuevo.", variant: "destructive"});
+      console.error(`Error al ${mode === 'create' ? 'enviar' : 'actualizar'} la solicitud:`, error);
+      toast({ title: "Operación Fallida", description: `No se pudo ${mode === 'create' ? 'enviar' : 'actualizar'} su solicitud. Por favor, inténtelo de nuevo.`, variant: "destructive"});
     }
   }
+
+  const cardTitle = mode === 'create' ? 'Enviar Nueva Solicitud de Ambulancia' : `Editar Solicitud: ${requestId?.substring(0,8) || ''}...`;
+  const buttonText = mode === 'create' ? 'Enviar Solicitud' : 'Guardar Cambios';
+  const submittingButtonText = mode === 'create' ? 'Enviando...' : 'Guardando...';
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="section-title">{mode === 'create' ? 'Enviar Nueva Solicitud de Ambulancia' : 'Editar Solicitud de Ambulancia'}</CardTitle>
+        <CardTitle className="section-title">{cardTitle}</CardTitle>
         <UiCardDescription>Complete los detalles a continuación. Todos los campos marcados con * son obligatorios.</UiCardDescription>
       </CardHeader>
       <CardContent>
@@ -126,7 +152,7 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Prioridad *</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select onValueChange={field.onChange} value={field.value}>
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Seleccione el nivel de prioridad" />
@@ -155,9 +181,14 @@ export function RequestForm({ onFormSubmit, mode = 'create', initialData }: Requ
                 </FormItem>
               )}
             />
-            <Button type="submit" className="w-full sm:w-auto" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? (mode === 'create' ? 'Enviando...' : 'Actualizando...') : (mode === 'create' ? 'Enviar Solicitud' : 'Guardar Cambios')}
-            </Button>
+            <div className="flex justify-end gap-3 pt-4">
+                 <Button type="button" variant="outline" onClick={() => router.push('/request-management')}>
+                    Cancelar
+                </Button>
+                <Button type="submit" className="btn-primary" disabled={form.formState.isSubmitting}>
+                    {form.formState.isSubmitting ? submittingButtonText : buttonText}
+                </Button>
+            </div>
           </form>
         </Form>
       </CardContent>

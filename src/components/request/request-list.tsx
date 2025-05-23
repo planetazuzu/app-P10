@@ -6,7 +6,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { ArrowUpDown, MessageSquare, MoreHorizontal, Eye, FileText } from 'lucide-react';
+import { ArrowUpDown, MessageSquare, MoreHorizontal, Eye, FileText, Edit3 } from 'lucide-react';
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -20,11 +20,13 @@ import { Input } from '@/components/ui/input';
 import React, { useState, useMemo } from 'react';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import Link from 'next/link';
 
 
 interface RequestListProps {
   requests: AmbulanceRequest[]; 
   userRole: UserRole;
+  currentUserId?: string; // Pass current user ID for edit authorization
   onUpdateRequestStatus: (requestId: string, status: RequestStatus) => void;
   onViewDetails: (requestId: string) => void; 
 }
@@ -67,7 +69,7 @@ const translatePriority = (priority: 'high' | 'medium' | 'low'): string => {
     }
 }
 
-export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewDetails }: RequestListProps) {
+export function RequestList({ requests, userRole, currentUserId, onUpdateRequestStatus, onViewDetails }: RequestListProps) {
   const [filterStatus, setFilterStatus] = useState<RequestStatus | 'all'>('all');
   const [searchTerm, setSearchTerm] = useState('');
   const [sortColumn, setSortColumn] = useState<'createdAt' | 'priority' | 'status'>('createdAt');
@@ -114,6 +116,13 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
   };
 
   const canManageStatus = userRole === 'admin' || userRole === 'hospital' || userRole === 'centroCoordinador';
+  
+  const canEditRequest = (request: AmbulanceRequest): boolean => {
+    if (userRole === 'admin' || userRole === 'centroCoordinador') return true;
+    if ((userRole === 'hospital' || userRole === 'individual') && request.requesterId === currentUserId) return true;
+    return false;
+  };
+
 
   return (
     <Card>
@@ -195,15 +204,22 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
                     </DropdownMenuTrigger>
                     <DropdownMenuContent align="end">
                       <DropdownMenuLabel>Acciones</DropdownMenuLabel>
-                      <DropdownMenuItem onClick={() => onViewDetails(request.id)}>
+                      <DropdownMenuItem onClick={() => onViewDetails(request.id)} className="cursor-pointer">
                         <Eye className="mr-2 h-4 w-4" /> Ver Detalles
                       </DropdownMenuItem>
+                      {canEditRequest(request) && request.status !== 'completed' && request.status !== 'cancelled' && ( // Only allow editing non-finalized requests
+                        <DropdownMenuItem asChild className="cursor-pointer">
+                           <Link href={`/request-management/${request.id}/edit`}>
+                              <Edit3 className="mr-2 h-4 w-4" /> Editar
+                           </Link>
+                        </DropdownMenuItem>
+                      )}
                       {canManageStatus && request.status !== 'completed' && request.status !== 'cancelled' && (
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Actualizar Estado</DropdownMenuLabel>
                           {Object.keys(STATUS_COLORS).filter(s => s !== request.status && s !== 'batched').map(newStatus => ( 
-                            <DropdownMenuItem key={newStatus} onClick={() => onUpdateRequestStatus(request.id, newStatus as RequestStatus)}>
+                            <DropdownMenuItem key={newStatus} onClick={() => onUpdateRequestStatus(request.id, newStatus as RequestStatus)} className="cursor-pointer">
                               Marcar como {translateRequestStatus(newStatus as RequestStatus)}
                             </DropdownMenuItem>
                           ))}
@@ -225,5 +241,3 @@ export function RequestList({ requests, userRole, onUpdateRequestStatus, onViewD
     </Card>
   );
 }
-
-    
