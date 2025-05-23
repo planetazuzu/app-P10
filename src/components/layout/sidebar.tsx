@@ -54,7 +54,7 @@ export function AppSidebar() {
       <SidebarHeader className="items-center justify-between p-4">
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
           <Icons.Logo className="h-7 w-7 text-primary" />
-          <h1 className="font-bold text-lg text-secondary">RMG</h1> {/* RMG por Respuesta Médica Global */}
+          <h1 className="font-bold text-lg text-secondary">GUF</h1> {/* GUF por Gestión de Usuarios y Flota */}
         </div>
         <SidebarTrigger className="group-data-[collapsible=icon]:hidden md:flex" />
       </SidebarHeader>
@@ -87,5 +87,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
-    

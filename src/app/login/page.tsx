@@ -63,7 +63,7 @@ export default function LoginPage() {
           <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-full bg-primary/10 text-primary">
             <Globe className="h-8 w-8" />
           </div>
-          <CardTitle className="text-3xl font-bold text-secondary">Respuesta Médica Global</CardTitle>
+          <CardTitle className="text-3xl font-bold text-secondary">Gestión de Usuarios y Flota</CardTitle>
           <CardDescription>Inicia sesión para acceder a la plataforma</CardDescription>
         </CardHeader>
         <CardContent>
@@ -107,4 +107,3 @@ export default function LoginPage() {
     </div>
   );
 }
-

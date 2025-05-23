@@ -5,8 +5,8 @@ import { AuthProvider } from '@/context/auth-context';
 import { Toaster } from "@/components/ui/toaster";
 
 export const metadata: Metadata = {
-  title: 'Plataforma de Gestión de Transporte Sanitario',
-  description: 'Plataforma de Gestión de Transporte Sanitario y Despacho de Ambulancias',
+  title: 'Gestión de Usuarios y Flota',
+  description: 'Plataforma para la Gestión de Usuarios y Flotas de Transporte',
 };
 
 export default function RootLayout({

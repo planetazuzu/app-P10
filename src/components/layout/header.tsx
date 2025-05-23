@@ -55,7 +55,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             <Icons.Logo className="h-7 w-7 text-primary" />
             <span className="hidden font-bold text-secondary sm:inline-block text-lg">
-              Respuesta Médica Global
+              Gestión de Usuarios y Flota
             </span>
           </div>
         </div>
@@ -97,5 +97,3 @@ export function Header() {
     </header>
   );
 }
-
-    
