@@ -55,18 +55,16 @@ export const mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i
   
   let requesterUser = getRandomElement(mockUserValues); // Default to random
   // Assign specific requesters for demo purposes
-  if (i < 3 && individualUser) { // First 3 requests for individual user
+  if (i < 3 && individualUser) { 
     requesterUser = individualUser;
-  } else if (i >= 3 && i < 6 && hospitalUser) { // Next 3 for hospital user
+  } else if (i >= 3 && i < 6 && hospitalUser) { 
     requesterUser = hospitalUser;
-  } else if (i >= 6 && i < 9 && centroCoordinadorUser) { // Next 3 for centroCoordinador user
+  } else if (i >= 6 && i < 9 && centroCoordinadorUser) { 
     requesterUser = centroCoordinadorUser;
   }
-  // Remaining requests will have a random requesterId or admin
-
-
+ 
   return {
-    id: `req-${101 + i}-${Math.random().toString(36).substring(2, 7)}`, // More unique ID
+    id: `req-${101 + i}-${Math.random().toString(36).substring(2, 7)}`, 
     requesterId: requesterUser.id,
     patientDetails: getRandomElement(patientDetailsSamples),
     location: { 
@@ -92,16 +90,15 @@ export function getRequests(userId: string, userRole: UserRole): Promise<Ambulan
         case 'admin':
         case 'hospital':
         case 'centroCoordinador': 
-          userRequests = [...mockRequests]; // Admin, Hospital, and Centro Coordinador see all requests
+          userRequests = [...mockRequests]; 
           break;
         case 'individual':
-          userRequests = mockRequests.filter(req => req.requesterId === userId); // Individual users only see their own requests
+          userRequests = mockRequests.filter(req => req.requesterId === userId); 
           break;
         case 'equipoMovil': 
-             userRequests = []; // Equipo Móvil does not see these requests directly, but through batches.
+             userRequests = []; 
              break;
         default:
-          // This ensures that if a new role is added, we're reminded to handle it.
           const _exhaustiveCheck: never = userRole; 
           console.warn(`Rol de usuario no manejado en getRequests: ${_exhaustiveCheck}`);
           break;
@@ -154,7 +151,26 @@ export function updateRequestStatus(id: string, status: RequestStatus, ambulance
 
 
 // --- Programmed Transport Requests ---
-export const mockProgrammedTransportRequests: ProgrammedTransportRequest[] = [];
+export let mockProgrammedTransportRequests: ProgrammedTransportRequest[] = [];
+
+// Initialize mockProgrammedTransportRequests with some data if it's empty, ensuring some are not batched
+if (mockProgrammedTransportRequests.length === 0) {
+    const today = new Date();
+    const createDate = (daysOffset: number) => {
+        const date = new Date(today);
+        date.setDate(today.getDate() + daysOffset);
+        return date.toISOString().split('T')[0];
+    };
+
+    mockProgrammedTransportRequests.push(
+        { id: 'prog-req-001', requesterId: 'user-hospital', status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Elena Navarro', dniNieSsPaciente: '12345678A', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Domicilio: Calle Falsa 123, Logroño', destino: 'Hospital San Pedro', fechaIda: createDate(1), horaIda: '10:00', horaConsultaMedica: '10:30', medioRequerido: 'sillaDeRuedas', priority: 'low' },
+        { id: 'prog-req-002', requesterId: 'user-hospital', status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Roberto Sanz', dniNieSsPaciente: '87654321B', tipoServicio: 'rehabilitacion', tipoTraslado: 'soloIda', centroOrigen: 'Centro de Día Sol', destino: 'Domicilio: Avenida de la Paz 50, Calahorra', fechaIda: createDate(1), horaIda: '14:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Necesita ayuda para bajar escalón.' },
+        { id: 'prog-req-003', requesterId: 'user-individual', status: 'batched', loteId: 'lote-demo-123', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Ana Pérez García', dniNieSsPaciente: '11223344C', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Plaza del Ayuntamiento 1, Haro', destino: 'CARPA', fechaIda: createDate(2), horaIda: '09:00', horaConsultaMedica: '09:30', medioRequerido: 'camilla', priority: 'low' },
+        { id: 'prog-req-004', requesterId: 'user-hospital', status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Carlos Gómez Ruiz', dniNieSsPaciente: '55667788D', tipoServicio: 'tratamientoContinuado', tipoTraslado: 'idaYVuelta', centroOrigen: 'Hospital de Calahorra', destino: 'Hospital San Pedro - Oncología', fechaIda: createDate(2), horaIda: '11:00', horaConsultaMedica: '11:45', medioRequerido: 'sillaDeRuedas', priority: 'low', equipamientoEspecialRequerido: ['oxigeno'] },
+        { id: 'prog-req-005', requesterId: 'user-centroCoordinador', status: 'pending', createdAt: new Date().toISOString(), updatedAt: new Date().toISOString(), nombrePaciente: 'Laura Martínez Soler', dniNieSsPaciente: '99001122E', tipoServicio: 'alta', tipoTraslado: 'soloIda', centroOrigen: 'Hospital San Pedro - Planta 3', destino: 'Residencia Los Tulipanes', fechaIda: createDate(3), horaIda: '13:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Entregar informe de alta.' }
+    );
+}
+
 
 export function createProgrammedTransportRequest(
   requestData: Omit<ProgrammedTransportRequest, 'id'>
@@ -166,8 +182,6 @@ export function createProgrammedTransportRequest(
         id: `prog-req-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
       };
       mockProgrammedTransportRequests.unshift(newProgrammedRequest);
-      console.log('Created programmed request:', newProgrammedRequest);
-      console.log('All programmed requests:', mockProgrammedTransportRequests);
       resolve(newProgrammedRequest);
     }, 300);
   });
@@ -199,4 +213,28 @@ export function getProgrammedTransportRequests(userId: string, userRole: UserRol
   });
 }
 
+export function getProgrammedTransportRequestsForPlanning(): Promise<ProgrammedTransportRequest[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const plannableRequests = mockProgrammedTransportRequests.filter(
+        req => (!req.loteId && req.status === 'pending') || req.status === 'cancelled' // Allow re-planning of cancelled
+      );
+      resolve(plannableRequests.sort((a,b) => new Date(a.fechaIda + 'T' + (a.horaConsultaMedica || a.horaIda)).getTime() - new Date(b.fechaIda + 'T' + (b.horaConsultaMedica || b.horaIda)).getTime()));
+    }, 300);
+  });
+}
+
+export function assignLoteToProgrammedRequests(serviceIds: string[], loteId: string): Promise<void> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      mockProgrammedTransportRequests = mockProgrammedTransportRequests.map(req => {
+        if (serviceIds.includes(req.id)) {
+          return { ...req, loteId: loteId, status: 'batched' };
+        }
+        return req;
+      });
+      resolve();
+    }, 100);
+  });
+}
     
