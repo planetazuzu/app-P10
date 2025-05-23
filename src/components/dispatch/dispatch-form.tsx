@@ -1,3 +1,4 @@
+
 'use client';
 
 import { zodResolver } from '@hookform/resolvers/zod';
@@ -8,12 +9,12 @@ import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, For
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { suggestOptimalDispatch, SuggestOptimalDispatchInput, SuggestOptimalDispatchOutput } from '@/ai/flows/suggest-optimal-dispatch';
+import { planDispatchForBatch, PlanDispatchForBatchInput, PlanDispatchForBatchOutput } from '@/ai/flows/plan-dispatch-for-batch';
 import { getAmbulanceLocationsForAI, getVehicleAvailabilityForAI } from '@/lib/ambulance-data';
 import { useToast } from "@/hooks/use-toast";
 
 const formSchema = z.object({
-  patientNeeds: z.string().min(10, { message: 'Las necesidades del paciente deben tener al menos 10 caracteres.' }),
+  servicesDescription: z.string().min(20, { message: 'La descripción del lote de servicios debe tener al menos 20 caracteres.' }),
   trafficConditions: z.string().min(5, { message: 'Las condiciones del tráfico deben tener al menos 5 caracteres.' }),
   weatherConditions: z.string().min(5, { message: 'Las condiciones climáticas deben tener al menos 5 caracteres.' }),
 });
@@ -21,7 +22,7 @@ const formSchema = z.object({
 type DispatchFormValues = z.infer<typeof formSchema>;
 
 interface DispatchFormProps {
-  onSuggestion: (suggestion: SuggestOptimalDispatchOutput | null) => void;
+  onSuggestion: (suggestion: PlanDispatchForBatchOutput | null) => void;
   setIsLoading: (isLoading: boolean) => void;
 }
 
@@ -30,7 +31,7 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
   const form = useForm<DispatchFormValues>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      patientNeeds: '',
+      servicesDescription: '',
       trafficConditions: 'Normal',
       weatherConditions: 'Despejado',
     },
@@ -40,18 +41,18 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
     setIsLoading(true);
     onSuggestion(null); 
     try {
-      const aiInput: SuggestOptimalDispatchInput = {
+      const aiInput: PlanDispatchForBatchInput = {
         ...values,
         ambulanceLocations: getAmbulanceLocationsForAI(),
         vehicleAvailability: getVehicleAvailabilityForAI(),
       };
-      const result = await suggestOptimalDispatch(aiInput);
+      const result = await planDispatchForBatch(aiInput);
       onSuggestion(result);
-      toast({ title: "Sugerencia de Despacho Lista", description: "La IA ha proporcionado un despacho óptimo." });
+      toast({ title: "Plan de Despacho IA Listo", description: "La IA ha proporcionado una planificación para el lote de servicios." });
     } catch (error) {
-      console.error('Error al obtener sugerencia de despacho:', error);
+      console.error('Error al obtener el plan de despacho:', error);
       onSuggestion(null);
-      toast({ title: "Error", description: "No se pudo obtener la sugerencia de despacho.", variant: "destructive" });
+      toast({ title: "Error", description: "No se pudo obtener la planificación de despacho.", variant: "destructive" });
     } finally {
       setIsLoading(false);
     }
@@ -60,21 +61,21 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="section-title">Entrada de Despacho</CardTitle>
+        <CardTitle className="section-title">Entrada para Planificación de Lote</CardTitle>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
             <FormField
               control={form.control}
-              name="patientNeeds"
+              name="servicesDescription"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Necesidades y Condición del Paciente</FormLabel>
+                  <FormLabel>Descripción del Lote de Servicios</FormLabel>
                   <FormControl>
-                    <Textarea placeholder="Ej: Hombre mayor, sospecha de paro cardíaco, inconsciente..." {...field} rows={3} />
+                    <Textarea placeholder="Ej: 5 traslados para rehabilitación al Hospital San Pedro (mañana), 2 altas desde UVI a domicilio (zona centro), 1 consulta urgente en Calahorra (paciente mayor, dificultad respiratoria)..." {...field} rows={5} />
                   </FormControl>
-                  <FormDescription>Describa la situación y los requisitos del paciente.</FormDescription>
+                  <FormDescription>Describa el conjunto de servicios que necesita planificar.</FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
@@ -105,8 +106,8 @@ export function DispatchForm({ onSuggestion, setIsLoading }: DispatchFormProps) 
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={form.formState.isSubmitting}>
-              {form.formState.isSubmitting ? 'Analizando...' : 'Obtener Sugerencia de Despacho'}
+            <Button type="submit" disabled={form.formState.isSubmitting} className="btn-primary">
+              {form.formState.isSubmitting ? 'Analizando Lote...' : 'Obtener Plan de Despacho IA'}
             </Button>
           </form>
         </Form>
