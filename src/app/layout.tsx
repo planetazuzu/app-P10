@@ -19,6 +19,7 @@ export default function RootLayout({
     <html lang="es" suppressHydrationWarning>
       <head>
         <meta name="theme-color" content="#0066A1" />
+        <link rel="manifest" href="/manifest.json" />
         <link rel="icon" href="/images/app-icon.png" />
       </head>
       <body className="antialiased">

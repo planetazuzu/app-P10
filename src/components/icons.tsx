@@ -8,11 +8,11 @@ export const Icons = {
     <Image
       src="/images/logo.png"
       alt="Gestión de Usuarios y Flota Logo"
-      width={props.width || 28} // Default width, similar to h-7 w-7
-      height={props.height || 28} // Default height
+      width={props.width || 28}
+      height={props.height || 28}
       className={props.className}
       style={props.style}
-      priority // Optional: if the logo is critical for LCP
+      priority
     />
   ),
   Ambulance: (props: LucideProps) => <Ambulance {...props} />,
@@ -24,7 +24,7 @@ export const Icons = {
   LayoutDashboard: (props: LucideProps) => <LayoutDashboard {...props} />,
   Dashboard: (props: LucideProps) => <LayoutDashboard {...props} />,
   Map: (props: LucideProps) => <Map {...props} />,
-  MapPin: (props: LucideProps) => <MapPinIcon {...props} />, // Renamed to avoid conflict with Map component
+  MapPin: (props: LucideProps) => <MapPinIcon {...props} />,
   SmartDispatch: (props: LucideProps) => <Zap {...props} />,
   RequestManagement: (props: LucideProps) => <FileText {...props} />,
   Messages: (props: LucideProps) => <MessageSquare {...props} />,

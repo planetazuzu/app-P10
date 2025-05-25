@@ -1,6 +1,7 @@
+
 {
   "name": "Gestión de Usuarios y Flota",
-  "short_name": "GUF App",
+  "short_name": "GUF",
   "description": "Plataforma para la Gestión de Usuarios y Flotas de Transporte",
   "start_url": "/",
   "display": "standalone",
@@ -15,15 +16,15 @@
     },
     {
       "src": "/images/app-icon.png",
-      "sizes": "192x192",
-      "type": "image/png",
-      "purpose": "maskable"
-    },
-    {
-      "src": "/images/app-icon.png",
       "sizes": "512x512",
       "type": "image/png",
       "purpose": "any"
+    },
+    {
+      "src": "/images/app-icon.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
     },
     {
       "src": "/images/app-icon.png",
