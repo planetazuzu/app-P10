@@ -1,9 +1,20 @@
 
-import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapIcon, UserX, Waypoints, ListChecks, Unlink, SendHorizonal, Hash, ClipboardList, ListFilter, Edit3, PlusCircle, RefreshCw, Loader2, Eye, AlertTriangle, Info, CalendarDays, ArrowLeft } from 'lucide-react';
+import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapPin as MapPinIcon, UserX, Waypoints, ListChecks, Unlink, SendHorizonal, Hash, ClipboardList, ListFilter, Edit3, PlusCircle, RefreshCw, Loader2, Eye, AlertTriangle, Info, CalendarDays, ArrowLeft } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
+import Image from 'next/image';
 
 export const Icons = {
-  Logo: (props: LucideProps) => <Globe {...props} />,
+  Logo: (props: Omit<React.ComponentProps<typeof Image>, 'src' | 'alt' | 'width' | 'height'> & { width?: number, height?: number }) => (
+    <Image
+      src="/images/logo.png"
+      alt="Gestión de Usuarios y Flota Logo"
+      width={props.width || 28} // Default width, similar to h-7 w-7
+      height={props.height || 28} // Default height
+      className={props.className}
+      style={props.style}
+      priority // Optional: if the logo is critical for LCP
+    />
+  ),
   Ambulance: (props: LucideProps) => <Ambulance {...props} />,
   ShieldCheck: (props: LucideProps) => <ShieldCheck {...props} />,
   UserCircle: (props: LucideProps) => <UserCircle {...props} />,
@@ -12,9 +23,9 @@ export const Icons = {
   Settings: (props: LucideProps) => <Settings {...props} />,
   LayoutDashboard: (props: LucideProps) => <LayoutDashboard {...props} />,
   Dashboard: (props: LucideProps) => <LayoutDashboard {...props} />,
-  Map: (props: LucideProps) => <Map {...props} />, 
-  MapIcon: (props: LucideProps) => <MapIcon {...props} />, 
-  SmartDispatch: (props: LucideProps) => <Zap {...props} />, 
+  Map: (props: LucideProps) => <Map {...props} />,
+  MapPin: (props: LucideProps) => <MapPinIcon {...props} />, // Renamed to avoid conflict with Map component
+  SmartDispatch: (props: LucideProps) => <Zap {...props} />,
   RequestManagement: (props: LucideProps) => <FileText {...props} />,
   Messages: (props: LucideProps) => <MessageSquare {...props} />,
   Logout: (props: LucideProps) => <LogOut {...props} />,
@@ -28,8 +39,8 @@ export const Icons = {
   Hash: (props: LucideProps) => <Hash {...props} />,
   ClipboardList: (props: LucideProps) => <ClipboardList {...props} />,
   ListFilter: (props: LucideProps) => <ListFilter {...props} />,
-  Edit3: (props: LucideProps) => <Edit3 {...props} />, // Ensure Edit3 is here
-  Edit: (props: LucideProps) => <Edit3 {...props} />, // Alias for convenience
+  Edit3: (props: LucideProps) => <Edit3 {...props} />,
+  Edit: (props: LucideProps) => <Edit3 {...props} />,
   PlusCircle: (props: LucideProps) => <PlusCircle {...props} />,
   RefreshCw: (props: LucideProps) => <RefreshCw {...props} />,
   Loader2: (props: LucideProps) => <Loader2 {...props} />,
@@ -41,5 +52,3 @@ export const Icons = {
 };
 
 export type IconName = keyof typeof Icons;
-
-    
