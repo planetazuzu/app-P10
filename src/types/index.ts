@@ -9,7 +9,7 @@ export interface User {
   email: string;
   name: string;
   role: UserRole;
-  password?: string; 
+  password?: string;
 }
 
 export type AmbulanceType =
@@ -61,7 +61,7 @@ export interface Ambulance {
   baseLocation: string;
   zone?: string;
   status: AmbulanceStatus;
-  
+
   hasMedicalBed: boolean;
   stretcherSeats: number;
   hasWheelchair: boolean;
@@ -69,14 +69,14 @@ export interface Ambulance {
   allowsWalking: boolean;
   walkingSeats: number;
 
-  specialEquipment: string[]; 
-  equipment?: AmbulanceEquipment; 
+  specialEquipment: string[];
+  equipment?: AmbulanceEquipment;
 
   latitude?: number;
   longitude?: number;
   currentPatients?: number;
   notes?: string;
-  equipoMovilUserId?: string; 
+  equipoMovilUserId?: string;
 }
 
 
@@ -89,8 +89,8 @@ export interface AmbulanceRequest {
   location: { latitude: number; longitude: number; address: string };
   status: RequestStatus;
   assignedAmbulanceId?: string;
-  createdAt: string; 
-  updatedAt: string; 
+  createdAt: string;
+  updatedAt: string;
   notes?: string;
   priority: 'high' | 'medium' | 'low';
 }
@@ -116,7 +116,7 @@ export type EquipamientoEspecialProgramadoId = typeof EQUIPAMIENTO_ESPECIAL_PROG
 export interface ProgrammedTransportRequest {
   id: string;
   requesterId: string;
-  status: RequestStatus; 
+  status: RequestStatus;
   createdAt: string;
   updatedAt: string;
 
@@ -130,19 +130,19 @@ export interface ProgrammedTransportRequest {
   origenDireccion?: string;
   destino: string;
   destinoId?: string;
-  fechaIda: string; 
-  fechaServicio?: string;
-  horaIda: string;
-  horaConsultaMedica?: string;
+  fechaIda: string;
+  fechaServicio?: string; // Potentially redundant with fechaIda, review if needed
+  horaIda: string; // HH:MM format
+  horaConsultaMedica?: string; // HH:MM format
   medioRequerido: MedioRequeridoProgramado;
   equipamientoEspecialRequerido?: EquipamientoEspecialProgramadoId[];
   barrerasArquitectonicas?: string;
   necesidadesEspeciales?: string;
   observacionesMedicasAdicionales?: string;
-  autorizacionMedicaPdf?: string;
-  assignedAmbulanceId?: string; 
-  priority: 'low' | 'medium'; 
-  loteId?: string; 
+  autorizacionMedicaPdf?: string; // Could be a URL or filename
+  assignedAmbulanceId?: string;
+  priority: 'low' | 'medium'; // Typically low for programmed
+  loteId?: string; // ID of the LoteProgramado it belongs to
 }
 
 // Zod Schemas for AdvancedTransportData Steps
@@ -225,20 +225,20 @@ export interface PacienteLote {
 
 export interface DestinoLote {
   id: string;
-  nombre: string; 
+  nombre: string;
   direccion: string;
-  detalles?: string; 
+  detalles?: string;
 }
 
 export type ParadaEstado = 'pendiente' | 'enRutaRecogida' | 'pacienteRecogido' | 'enDestino' | 'finalizado' | 'cancelado' | 'noPresentado';
 
 export interface ParadaRuta {
-  servicioId: string; 
+  servicioId: string;
   paciente: PacienteLote;
-  horaConsultaMedica: string; 
-  horaRecogidaEstimada: string; 
-  horaLlegadaDestinoEstimada: string; 
-  tiempoTrasladoDesdeAnteriorMin: number; 
+  horaConsultaMedica: string;
+  horaRecogidaEstimada: string;
+  horaLlegadaDestinoEstimada: string;
+  tiempoTrasladoDesdeAnteriorMin: number;
   orden: number;
   estado: ParadaEstado;
   horaRealLlegadaRecogida?: string;
@@ -251,21 +251,21 @@ export interface RutaCalculada {
   id: string;
   loteId: string;
   paradas: ParadaRuta[];
-  horaSalidaBaseEstimada: string; 
-  duracionTotalEstimadaMin: number; 
-  distanciaTotalEstimadaKm?: number; 
-  optimizadaEn?: string; 
+  horaSalidaBaseEstimada: string;
+  duracionTotalEstimadaMin: number;
+  distanciaTotalEstimadaKm?: number;
+  optimizadaEn?: string;
 }
 
 export interface LoteProgramado {
-  id: string; 
-  fechaServicio: string; 
-  destinoPrincipal: DestinoLote; 
-  serviciosIds: string[]; 
+  id: string;
+  fechaServicio: string;
+  destinoPrincipal: DestinoLote;
+  serviciosIds: string[];
   estadoLote: 'pendienteCalculo' | 'calculado' | 'asignado' | 'enCurso' | 'completado' | 'modificado' | 'cancelado';
-  equipoMovilUserIdAsignado?: string; 
-  ambulanciaIdAsignada?: string; 
-  rutaCalculadaId?: string; 
+  equipoMovilUserIdAsignado?: string;
+  ambulanciaIdAsignada?: string;
+  rutaCalculadaId?: string;
   notasLote?: string;
   createdAt: string;
   updatedAt: string;
@@ -279,7 +279,7 @@ export interface SolicitudModificacionHorario {
   loteId: string;
   servicioIdAfectado: string;
   equipoMovilIdSolicitante: string;
-  fechaSolicitud: string; 
+  fechaSolicitud: string;
   minutosRetrasoEstimado: number;
   motivo: MotivoModificacionHorario;
   descripcionMotivo?: string;
@@ -297,7 +297,7 @@ export const UserCreateFormSchema = z.object({
   confirmPassword: z.string().min(6, { message: "La confirmación de contraseña debe tener al menos 6 caracteres." }),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "Las contraseñas no coinciden.",
-  path: ["confirmPassword"], 
+  path: ["confirmPassword"],
 });
 export type UserCreateFormValues = z.infer<typeof UserCreateFormSchema>;
 
@@ -333,3 +333,24 @@ export const equipmentOptions = [
   { id: "incubator", label: "Incubadora neonatal" },
   { id: "gps-navigation", label: "Navegación GPS avanzada" },
 ];
+
+// System Configuration Types
+export interface SystemConfig {
+  id?: string; // NocoDB might assign an ID if it's a record
+  organizationName: string;
+  defaultTimezone: string;
+  emailNotificationsEnabled: boolean;
+  requestHistoryDays: number;
+  // Add more configuration fields as needed
+}
+
+export const SystemConfigSchema = z.object({
+  organizationName: z.string().min(3, "El nombre de la organización es obligatorio (mín. 3 caracteres)."),
+  defaultTimezone: z.string().min(1, "La zona horaria es obligatoria."),
+  emailNotificationsEnabled: z.boolean(),
+  requestHistoryDays: z.number().int().min(0, "Los días deben ser un número positivo.").max(3650, "Máximo 10 años (3650 días)."),
+});
+
+export type SystemConfigFormValues = z.infer<typeof SystemConfigSchema>;
+
+    
