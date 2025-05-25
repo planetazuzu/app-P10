@@ -2,7 +2,7 @@
 'use client';
 
 import React, { useState, useEffect } from 'react';
-import { MOCK_USERS, mockGetUserById } from '@/lib/auth'; // mockGetUserById might not be needed here if we pass full user object
+import { MOCK_USERS } from '@/lib/auth'; 
 import type { User, UserRole } from '@/types';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,6 +23,7 @@ import { useToast } from '@/hooks/use-toast';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
+import { Skeleton } from '@/components/ui/skeleton';
 
 // Helper para traducir roles de usuario
 const translateUserRole = (role: UserRole): string => {
@@ -58,9 +59,15 @@ export default function UserManagementPage() {
 
   useEffect(() => {
     if (currentUser && ['admin', 'centroCoordinador'].includes(currentUser.role)) {
-      setUsers(Object.values(MOCK_USERS).sort((a, b) => a.name.localeCompare(b.name)));
+      // Simular carga de datos para ver el skeleton
+      // En una app real, aquí iría la llamada para obtener los usuarios
+      // y se establecería un estado de carga específico.
+      // Por ahora, usamos authIsLoading para simularlo.
+      if (!authIsLoading) {
+        setUsers(Object.values(MOCK_USERS).sort((a, b) => a.name.localeCompare(b.name)));
+      }
     }
-  }, [currentUser]); 
+  }, [currentUser, authIsLoading]); 
 
   const openDeleteConfirmDialog = (user: User) => {
     if (currentUser?.id === user.id) {
@@ -89,8 +96,33 @@ export default function UserManagementPage() {
 
   if (authIsLoading || (!currentUser || !['admin', 'centroCoordinador'].includes(currentUser.role))) {
     return (
-      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
+      <div className="rioja-container">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-10 w-64" />
+          </div>
+          <Skeleton className="h-10 w-48" />
+        </div>
+        <Card>
+          <CardHeader>
+            <Skeleton className="h-8 w-1/3 mb-2" />
+            <Skeleton className="h-6 w-2/3" />
+          </CardHeader>
+          <CardContent>
+            <div className="space-y-3">
+              {[...Array(5)].map((_, i) => (
+                <TableRow key={i} className="flex items-center space-x-4 p-2">
+                  <TableCell className="w-1/4 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                  <TableCell className="w-1/4 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                  <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                  <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                  <TableCell className="w-1/12 p-0 text-right"><Skeleton className="h-8 w-full" /></TableCell>
+                </TableRow>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
       </div>
     );
   }
@@ -121,7 +153,7 @@ export default function UserManagementPage() {
           </CardDescription>
         </CardHeader>
         <CardContent>
-          {users.length === 0 ? (
+          {users.length === 0 && !authIsLoading ? ( // Asegura no mostrar "no hay usuarios" mientras aún podría estar cargando
             <p className="text-center text-muted-foreground py-8">No hay usuarios para mostrar.</p>
           ) : (
             <div className="overflow-x-auto">
