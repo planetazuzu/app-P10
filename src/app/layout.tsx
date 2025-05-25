@@ -8,6 +8,10 @@ export const metadata: Metadata = {
   title: 'Gestión de Usuarios y Flota',
   description: 'Plataforma para la Gestión de Usuarios y Flotas de Transporte',
   manifest: '/manifest.json',
+  themeColor: '#0066A1',
+  icons: {
+    icon: '/images/favicon.png', // Actualizado para usar favicon.png desde metadata
+  },
 };
 
 export default function RootLayout({
@@ -17,11 +21,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="es" suppressHydrationWarning>
-      <head>
-        <meta name="theme-color" content="#0066A1" />
-        <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/images/favicon.png" /> {/* Actualizado para usar favicon.png */}
-      </head>
+      {/* El <head> manual ha sido eliminado. Next.js lo generará a partir de metadata. */}
       <body className="antialiased">
         <AuthProvider>
           {children}
