@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
@@ -10,7 +10,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Edit3, Trash2, Search, ArrowLeft, Loader2, MapPin } from 'lucide-react';
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
-import { getAmbulances, mockAmbulances } from '@/lib/ambulance-data'; 
+import { getAmbulances, deleteAmbulanceAPI } from '@/lib/ambulance-data'; 
 import { Input } from '@/components/ui/input';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { ALL_AMBULANCE_TYPES, ALL_AMBULANCE_STATUSES } from '@/types';
@@ -61,7 +61,6 @@ const getStatusBadgeVariantClass = (status: AmbulanceStatus) => {
     }
 }
 
-
 export default function ManageAmbulancesPage() {
   const [ambulances, setAmbulances] = useState<Ambulance[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -87,21 +86,24 @@ export default function ManageAmbulancesPage() {
     }
   }, [user, authIsLoading, router, toast]);
   
-  useEffect(() => {
+  const fetchAmbulances = useCallback(async () => {
     if (user && ['admin', 'centroCoordinador'].includes(user.role)) {
-        async function loadAmbulances() {
-          setIsLoading(true);
-          try {
-            const data = await getAmbulances(); 
-            setAmbulances(data);
-          } catch (error) {
-            toast({ title: "Error", description: "No se pudieron cargar las ambulancias.", variant: "destructive" });
-          }
-          setIsLoading(false);
-        }
-        loadAmbulances();
+      setIsLoading(true);
+      try {
+        const data = await getAmbulances(); 
+        setAmbulances(data);
+      } catch (error) {
+        console.error("Error al cargar ambulancias:", error);
+        toast({ title: "Error de Carga", description: "No se pudieron cargar las ambulancias desde la API.", variant: "destructive" });
+        setAmbulances([]); // En caso de error, mostrar lista vacía
+      }
+      setIsLoading(false);
     }
   }, [user, toast]);
+
+  useEffect(() => {
+    fetchAmbulances();
+  }, [fetchAmbulances]);
 
   const filteredAmbulances = ambulances
     .filter(amb => 
@@ -120,16 +122,15 @@ export default function ManageAmbulancesPage() {
     setIsConfirmDeleteDialogOpen(true);
   };
 
-  const handleDelete = () => {
+  const handleDelete = async () => {
     if (!ambulanceToDeleteId || !ambulanceToDeleteName) return;
 
-    const index = mockAmbulances.findIndex(a => a.id === ambulanceToDeleteId);
-    if (index !== -1) {
-        mockAmbulances.splice(index, 1); 
+    const success = await deleteAmbulanceAPI(ambulanceToDeleteId);
+    if (success) {
         setAmbulances(prev => prev.filter(amb => amb.id !== ambulanceToDeleteId)); 
         toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${ambulanceToDeleteName}" (ID: ${ambulanceToDeleteId}) ha sido eliminada.`});
     } else {
-        toast({ title: "Error al Eliminar", description: `No se encontró la ambulancia "${ambulanceToDeleteName}".`, variant: "destructive"});
+        toast({ title: "Error al Eliminar", description: `No se pudo eliminar la ambulancia "${ambulanceToDeleteName}". Verifique la consola para más detalles.`, variant: "destructive"});
     }
     setAmbulanceToDeleteId(null);
     setAmbulanceToDeleteName(null);
@@ -184,7 +185,6 @@ export default function ManageAmbulancesPage() {
         </div>
     )
   }
-
 
   return (
     <div className="rioja-container">
@@ -241,7 +241,7 @@ export default function ManageAmbulancesPage() {
         </CardHeader>
         <CardContent>
           {filteredAmbulances.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No se encontraron ambulancias con los filtros actuales.</p>
+            <p className="text-center text-muted-foreground py-8">No se encontraron ambulancias con los filtros actuales. Verifique la configuración de la API o los filtros aplicados.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -307,7 +307,7 @@ export default function ManageAmbulancesPage() {
             <AlertDialogTitle>Confirmar Eliminación</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Está seguro de que desea eliminar la ambulancia "{ambulanceToDeleteName || ''}" (ID: {ambulanceToDeleteId || ''})? 
-              Esta acción no se puede deshacer.
+              Esta acción no se puede deshacer y se comunicará con la base de datos.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>
@@ -321,4 +321,3 @@ export default function ManageAmbulancesPage() {
     </div>
   );
 }
-

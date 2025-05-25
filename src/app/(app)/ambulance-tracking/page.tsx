@@ -1,20 +1,19 @@
 
 'use client';
 
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useCallback } from 'react';
 import type { Ambulance, AmbulanceType, AmbulanceStatus } from '@/types';
 import { getAmbulances } from '@/lib/ambulance-data';
-// import { AmbulanceMap } from '@/components/ambulance/ambulance-map'; // Original import
 import { AmbulanceFilters } from '@/components/ambulance/ambulance-filters';
 import { AmbulanceCard as AmbulanceDetailCard } from '@/components/ambulance/ambulance-card';
 import { Skeleton } from '@/components/ui/skeleton';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import dynamic from 'next/dynamic';
+import { useToast } from '@/hooks/use-toast';
 
 const AMBULANCE_TYPES: AmbulanceType[] = ["SVB", "SVA", "Convencional", "UVI_Movil", "A1", "Programado", "Otros"];
-const AMBULANCE_STATUSES_FILTER: AmbulanceStatus[] = ['available', 'busy', 'maintenance', 'unavailable']; // Renamed to avoid conflict with type
+const AMBULANCE_STATUSES_FILTER: AmbulanceStatus[] = ['available', 'busy', 'maintenance', 'unavailable'];
 
-// Dynamically import AmbulanceMap component
 const AmbulanceMap = dynamic(() => 
   import('@/components/ambulance/ambulance-map').then(mod => mod.AmbulanceMap), 
   { 
@@ -23,29 +22,36 @@ const AmbulanceMap = dynamic(() =>
   }
 );
 
-
 export default function AmbulanceTrackingPage() {
   const [allAmbulances, setAllAmbulances] = useState<Ambulance[]>([]);
   const [filteredAmbulances, setFilteredAmbulances] = useState<Ambulance[]>([]);
   const [selectedAmbulance, setSelectedAmbulance] = useState<Ambulance | null>(null);
   const [selectedType, setSelectedType] = useState<AmbulanceType | 'all'>('all');
-  const [selectedStatus, setSelectedStatus] = useState<AmbulanceStatus | 'all'>('available'); // Default to available
+  const [selectedStatus, setSelectedStatus] = useState<AmbulanceStatus | 'all'>('available');
   const [isLoading, setIsLoading] = useState(true);
-  const [isMounted, setIsMounted] = useState(false); // To ensure map renders only client-side initially
+  const [isMounted, setIsMounted] = useState(false);
+  const { toast } = useToast();
 
-  useEffect(() => {
-    setIsMounted(true); // Component has mounted
-    async function fetchData() {
-      setIsLoading(true);
+  const fetchData = useCallback(async () => {
+    setIsLoading(true);
+    try {
       const data = await getAmbulances();
       setAllAmbulances(data);
-      setIsLoading(false);
+    } catch (error) {
+      console.error("Error al cargar ambulancias para seguimiento:", error);
+      toast({ title: "Error de Carga", description: "No se pudieron cargar las ambulancias desde la API.", variant: "destructive" });
+      setAllAmbulances([]);
     }
+    setIsLoading(false);
+  }, [toast]);
+
+  useEffect(() => {
+    setIsMounted(true);
     fetchData();
     
     const intervalId = setInterval(fetchData, 30000); 
     return () => clearInterval(intervalId);
-  }, []);
+  }, [fetchData]);
 
   useEffect(() => {
     let ambulances = allAmbulances;
@@ -119,6 +125,16 @@ export default function AmbulanceTrackingPage() {
               </CardContent>
             </Card>
           )}
+           {!selectedAmbulance && filteredAmbulances.length === 0 && !isLoading && (
+             <Card className="hidden md:block">
+              <CardHeader>
+                <CardTitle className="text-base text-muted-foreground">Sin Ambulancias</CardTitle>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">No hay ambulancias para mostrar con los filtros actuales o la API no devolvió datos.</p>
+              </CardContent>
+            </Card>
+           )}
         </div>
       </div>
     </div>

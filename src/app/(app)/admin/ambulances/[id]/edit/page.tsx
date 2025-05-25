@@ -5,7 +5,7 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import type { Ambulance } from '@/types';
-import { getAmbulanceById, mockAmbulances } from '@/lib/ambulance-data';
+import { getAmbulanceById, updateAmbulanceAPI } from '@/lib/ambulance-data'; // API functions
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { AmbulanceForm } from '@/components/ambulance/ambulance-form';
@@ -13,8 +13,6 @@ import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { ArrowLeft, Loader2 } from 'lucide-react';
 import { defaultEquipmentByType } from '@/types';
-
-const MOCK_UPDATE_AMBULANCE_DELAY = 500;
 
 export default function EditAmbulancePage() {
   const router = useRouter();
@@ -49,8 +47,9 @@ export default function EditAmbulancePage() {
             router.push('/admin/ambulances');
           }
         })
-        .catch(() => {
-          toast({ title: 'Error', description: 'No se pudo cargar la ambulancia.', variant: 'destructive' });
+        .catch((error) => {
+          console.error("Error al cargar la ambulancia para editar:", error);
+          toast({ title: 'Error de Carga', description: 'No se pudo cargar la ambulancia desde la API.', variant: 'destructive' });
           router.push('/admin/ambulances');
         })
         .finally(() => setIsLoading(false));
@@ -75,16 +74,16 @@ export default function EditAmbulancePage() {
       if (field === 'allowsWalking' && !value) {
         updatedAmbulance.walkingSeats = 0;
       }
-      if (field === 'type' && value) { // If type changes, update default equipment
-        updatedAmbulance.equipment = defaultEquipmentByType[value as Ambulance['type']];
-      }
+      // if (field === 'type' && value) { 
+      //   // Lógica para actualizar equipment si es necesario, similar a la creación
+      // }
       return updatedAmbulance;
     });
   }, []);
 
   const handleSpecialEquipmentToggle = useCallback((equipmentId: string) => {
     setAmbulance(prev => {
-      if (!prev) return null;
+      if (!prev || !prev.specialEquipment) return prev;
       const currentEquipment = prev.specialEquipment || [];
       const newEquipment = currentEquipment.includes(equipmentId)
         ? currentEquipment.filter(id => id !== equipmentId)
@@ -95,7 +94,7 @@ export default function EditAmbulancePage() {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!ambulance) return;
+    if (!ambulance || !ambulance.id) return; // ambulance.id debe existir para editar
     setIsSaving(true);
 
     if (!ambulance.name || !ambulance.licensePlate || !ambulance.model || !ambulance.type || !ambulance.baseLocation || !ambulance.status) {
@@ -108,21 +107,24 @@ export default function EditAmbulancePage() {
       return;
     }
     
-    console.log("Actualizando ambulancia:", ambulance);
+    // Construir el payload para la API. No enviar 'id' en el cuerpo.
+    const { id, ...dataToUpdate } = ambulance;
+    const updatedAmbulance = await updateAmbulanceAPI(ambulance.id, dataToUpdate as Omit<Ambulance, 'id'>);
 
-    await new Promise(resolve => setTimeout(resolve, MOCK_UPDATE_AMBULANCE_DELAY));
-    
-    const index = mockAmbulances.findIndex(a => a.id === ambulance.id);
-    if (index !== -1) {
-      mockAmbulances[index] = ambulance as Ambulance; 
+    if (updatedAmbulance) {
+        toast({
+        title: "Ambulancia Actualizada",
+        description: `La ambulancia "${updatedAmbulance.name}" ha sido actualizada.`,
+        });
+        router.push('/admin/ambulances');
+    } else {
+        toast({
+        title: "Error al Actualizar",
+        description: "No se pudo actualizar la ambulancia. Verifique la consola para más detalles.",
+        variant: "destructive",
+        });
     }
-
-    toast({
-      title: "Ambulancia Actualizada",
-      description: `La ambulancia "${ambulance.name}" ha sido actualizada.`,
-    });
     
-    router.push('/admin/ambulances');
     setIsSaving(false);
   };
 
@@ -133,7 +135,6 @@ export default function EditAmbulancePage() {
       </div>
     );
   }
-
 
   if (isLoading) {
     return (
@@ -199,5 +200,3 @@ export default function EditAmbulancePage() {
     </div>
   );
 }
-
-    
