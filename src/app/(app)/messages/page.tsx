@@ -113,41 +113,46 @@ export default function MessagesPage() {
   const [newMessage, setNewMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
   const inputRef = useRef<HTMLInputElement>(null);
-  const lastScrolledMessageIdRef = useRef<string | null>(null);
+
   const previousConversationIdRef = useRef<string | null>(null);
+  const lastScrolledMessageIdRef = useRef<string | null>(null);
 
 
   const selectedConversation = conversations.find(conv => conv.id === selectedConversationId);
 
   useEffect(() => {
     const viewport = scrollAreaRef.current;
-    if (viewport && selectedConversation) {
-      const { scrollHeight, clientHeight, scrollTop } = viewport;
-      const lastMessage = selectedConversation.messages[selectedConversation.messages.length - 1];
-      
-      // Determine if user is near the bottom or if it's a new message they sent
-      const isUserNearBottom = scrollHeight - clientHeight <= scrollTop + 100; // 100px threshold
-      const conversationChanged = selectedConversationId !== previousConversationIdRef.current;
-      const isNewMessageFromUser = lastMessage?.sender === 'user' && lastMessage?.id !== lastScrolledMessageIdRef.current;
+    if (!viewport || !selectedConversation) return;
 
-      if (lastMessage && (conversationChanged || isNewMessageFromUser || isUserNearBottom)) {
-        // Use setTimeout to ensure DOM has updated before scrolling
+    const { scrollHeight, clientHeight, scrollTop } = viewport;
+    const lastMessage = selectedConversation.messages[selectedConversation.messages.length - 1];
+
+    if (!lastMessage) return; // No messages to scroll to
+
+    const conversationJustChanged = selectedConversationId !== previousConversationIdRef.current;
+
+    if (conversationJustChanged) {
+      // Conversation changed: always scroll to bottom, instantly
+      setTimeout(() => {
+        viewport.scrollTo({ top: scrollHeight, behavior: 'auto' });
+        lastScrolledMessageIdRef.current = lastMessage.id;
+      }, 0);
+      previousConversationIdRef.current = selectedConversationId;
+    } else {
+      // Conversation is the same, check for new messages
+      const isNewMessageToScrollTo = lastMessage.id !== lastScrolledMessageIdRef.current;
+      const isUserNearBottom = scrollHeight - clientHeight <= scrollTop + 100; // 100px threshold
+
+      if (isNewMessageToScrollTo && isUserNearBottom) {
+        // New message in current conversation, and user is near bottom: scroll smoothly
         setTimeout(() => {
-            viewport.scrollTo({ top: scrollHeight, behavior: conversationChanged ? 'auto' : 'smooth' });
-            lastScrolledMessageIdRef.current = lastMessage.id;
+          viewport.scrollTo({ top: scrollHeight, behavior: 'smooth' });
+          lastScrolledMessageIdRef.current = lastMessage.id;
         }, 0);
       }
     }
-    if (selectedConversationId !== previousConversationIdRef.current) {
-        previousConversationIdRef.current = selectedConversationId;
-        // When conversation changes, reset last scrolled message to ensure scroll if messages exist
-        if (selectedConversation && selectedConversation.messages.length > 0) {
-            lastScrolledMessageIdRef.current = selectedConversation.messages[selectedConversation.messages.length -1].id;
-        } else {
-            lastScrolledMessageIdRef.current = null;
-        }
-    }
-  }, [selectedConversation?.messages, selectedConversationId, selectedConversation]);
+  }, [selectedConversation?.messages, selectedConversationId]);
+
 
   const handleSelectConversation = (id: string) => {
     setSelectedConversationId(id);
@@ -317,4 +322,3 @@ export default function MessagesPage() {
     </div>
   );
 }
-
