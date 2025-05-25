@@ -1,7 +1,7 @@
 
 'use client';
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { DispatchForm } from '@/components/dispatch/dispatch-form';
 import { DispatchSuggestion } from '@/components/dispatch/dispatch-suggestion';
 import type { PlanDispatchForBatchOutput } from '@/ai/flows/plan-dispatch-for-batch';
@@ -24,8 +24,8 @@ export default function SmartDispatchPage() {
     async function fetchServices() {
       setIsLoadingServices(true);
       try {
-        const services = await getProgrammedTransportRequestsForPlanning();
-        setPlannableServices(services);
+        const servicesData = await getProgrammedTransportRequestsForPlanning();
+        setPlannableServices(servicesData);
       } catch (error) {
         console.error("Error fetching plannable services:", error);
         toast({ title: "Error", description: "No se pudieron cargar los servicios para planificar.", variant: "destructive"});
@@ -36,9 +36,9 @@ export default function SmartDispatchPage() {
     fetchServices();
   }, [toast]);
 
-  const handleSelectedServicesChange = (newSelectedServices: ProgrammedTransportRequest[]) => {
+  const handleSelectedServicesChange = useCallback((newSelectedServices: ProgrammedTransportRequest[]) => {
     setSelectedServices(newSelectedServices);
-  };
+  }, []); // setSelectedServices is stable, so dependency array can be empty
 
   return (
     <div>
