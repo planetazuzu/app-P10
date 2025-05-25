@@ -20,7 +20,7 @@ export default function RootLayout({
       <head>
         <meta name="theme-color" content="#0066A1" />
         <link rel="manifest" href="/manifest.json" />
-        <link rel="icon" href="/images/favicon.ico" /> {/* Asegura que el favicon apunte a public/images/favicon.ico */}
+        <link rel="icon" href="/images/favicon.png" /> {/* Actualizado para usar favicon.png */}
       </head>
       <body className="antialiased">
         <AuthProvider>

@@ -6,7 +6,7 @@ import Image from 'next/image';
 export const Icons = {
   Logo: (props: Omit<React.ComponentProps<typeof Image>, 'src' | 'alt' | 'width' | 'height'> & { width?: number, height?: number }) => (
     <Image
-      src="/images/logo.png" // Esto espera public/images/logo.png para el logo dentro de la app
+      src="/images/logo.png" // Apunta a la imagen principal de la app
       alt="Gestión de Usuarios y Flota Logo"
       width={props.width || 28}
       height={props.height || 28}
@@ -26,6 +26,7 @@ export const Icons = {
   Dashboard: (props: LucideProps) => <LayoutDashboard {...props} />,
   Map: (props: LucideProps) => <Map {...props} />,
   MapPin: (props: LucideProps) => <MapPinIcon {...props} />,
+  MapIcon: (props: LucideProps) => <MapPinIcon {...props} />, // Alias si se usa en otro sitio
   SmartDispatch: (props: LucideProps) => <Zap {...props} />,
   RequestManagement: (props: LucideProps) => <FileText {...props} />,
   Messages: (props: LucideProps) => <MessageSquare {...props} />,
