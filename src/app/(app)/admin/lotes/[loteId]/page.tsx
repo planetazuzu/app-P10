@@ -5,18 +5,20 @@ import React, { useEffect, useState, useCallback } from 'react';
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useAuth } from '@/hooks/use-auth';
-import type { LoteProgramado, RutaCalculada, ParadaRuta, Ambulance } from '@/types';
-import { getLoteByIdMock, getRutaCalculadaByLoteIdMock } from '@/lib/driver-data';
-import { getAmbulanceById, getAmbulances } from '@/lib/ambulance-data'; // Usar getAmbulances para el selector
+import type { LoteProgramado, RutaCalculada, ParadaRuta, Ambulance, ProgrammedTransportRequest } from '@/types';
+import { getLoteByIdMock, getRutaCalculadaByLoteIdMock, updateLoteServiciosMock } from '@/lib/driver-data';
+import { getAmbulanceById, getAmbulances } from '@/lib/ambulance-data'; 
+import { getProgrammedRequestsByLoteId, getProgrammedTransportRequestsForPlanning, updateProgrammedRequestLoteAssignment } from '@/lib/request-data';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Waypoints, AlertTriangle, Ambulance as AmbulanceIcon, User, Clock, MapPin, Edit, Unlink } from 'lucide-react';
+import { ArrowLeft, Loader2, Waypoints, AlertTriangle, Ambulance as AmbulanceIcon, User, Clock, MapPin, Edit2, Unlink, ListPlus } from 'lucide-react'; // Changed Edit to Edit2
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { ManageLotServicesModal } from '@/components/lote/manage-lot-services-modal';
 
 const translateParadaStatus = (status: ParadaRuta['estado']): string => {
   switch (status) {
@@ -63,11 +65,66 @@ export default function LoteDetailPage() {
   const [lote, setLote] = useState<LoteProgramado | null>(null);
   const [ruta, setRuta] = useState<RutaCalculada | null>(null);
   const [assignedAmbulance, setAssignedAmbulance] = useState<Ambulance | null>(null);
-  const [allAmbulances, setAllAmbulances] = useState<Ambulance[]>([]); // Para el selector
+  const [allAmbulances, setAllAmbulances] = useState<Ambulance[]>([]); 
   const [isLoading, setIsLoading] = useState(true);
   const [isSubmittingAmbulance, setIsSubmittingAmbulance] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAmbulanceToAssign, setSelectedAmbulanceToAssign] = useState<string | undefined>(undefined);
+
+  const [isManageServicesModalOpen, setIsManageServicesModalOpen] = useState(false);
+  const [availableServicesForModal, setAvailableServicesForModal] = useState<ProgrammedTransportRequest[]>([]);
+  const [assignedServicesForModal, setAssignedServicesForModal] = useState<ProgrammedTransportRequest[]>([]);
+
+
+  const fetchData = useCallback(async () => {
+    if (!user || !['admin', 'centroCoordinador'].includes(user.role) || !loteId) {
+      setIsLoading(false);
+      return;
+    }
+    setIsLoading(true);
+    setError(null);
+    try {
+      const fetchedLote = await getLoteByIdMock(loteId);
+      if (!fetchedLote) {
+        setError("No se encontró el lote o no tiene permisos para verlo.");
+        setLote(null); setRuta(null); setAssignedAmbulance(null);
+        setIsLoading(false);
+        return;
+      }
+      setLote(fetchedLote);
+      setSelectedAmbulanceToAssign(fetchedLote.ambulanciaIdAsignada);
+
+      if (fetchedLote.rutaCalculadaId) {
+        const fetchedRuta = await getRutaCalculadaByLoteIdMock(loteId, fetchedLote.rutaCalculadaId);
+        setRuta(fetchedRuta || null);
+      } else {
+        setRuta(null);
+      }
+      
+      if (fetchedLote.ambulanciaIdAsignada) {
+        const ambData = await getAmbulanceById(fetchedLote.ambulanciaIdAsignada);
+        setAssignedAmbulance(ambData || null);
+      } else {
+        setAssignedAmbulance(null);
+      }
+
+      // Fetch services for modal
+      const [unassigned, assignedToThisLote] = await Promise.all([
+        getProgrammedTransportRequestsForPlanning(), // Gets services not in *any* lot
+        getProgrammedRequestsByLoteId(loteId)    // Gets services specifically for *this* lot
+      ]);
+      // For "available", we filter by the lot's date AND ensure they are not already in THIS lot.
+      setAvailableServicesForModal(unassigned.filter(s => s.fechaIda === fetchedLote.fechaServicio && !assignedToThisLote.find(as => as.id === s.id) ));
+      setAssignedServicesForModal(assignedToThisLote);
+
+    } catch (e) {
+      console.error("Error fetching lote details:", e);
+      setError("Error al cargar los datos del lote.");
+    } finally {
+      setIsLoading(false);
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [loteId, user]); 
 
   useEffect(() => {
     if (!authIsLoading && user && !['admin', 'centroCoordinador'].includes(user.role)) {
@@ -77,78 +134,42 @@ export default function LoteDetailPage() {
         variant: 'destructive',
       });
       router.replace('/admin/lotes');
-      return;
     }
+  }, [user, authIsLoading, router, toast]);
 
+  useEffect(() => {
     async function loadAllAmbulances() {
         try {
-            const ambData = await getAmbulances(); // Carga todas para el selector
+            const ambData = await getAmbulances();
             setAllAmbulances(ambData);
         } catch (e) {
             console.error("Error loading all ambulances for select:", e);
             toast({ title: "Error", description: "No se pudieron cargar las ambulancias disponibles para asignación.", variant: "destructive"});
         }
     }
-
     if (user && ['admin', 'centroCoordinador'].includes(user.role)) {
         loadAllAmbulances();
     }
+  }, [user, toast]);
+  
+  useEffect(() => {
+    fetchData();
+  }, [fetchData]);
 
-    if (user && ['admin', 'centroCoordinador'].includes(user.role) && loteId) {
-      const fetchData = async () => {
-        setIsLoading(true);
-        setError(null);
-        try {
-          const fetchedLote = await getLoteByIdMock(loteId); 
-          if (!fetchedLote) {
-            setError("No se encontró el lote o no tiene permisos para verlo.");
-            setLote(null); setRuta(null); setAssignedAmbulance(null);
-            setIsLoading(false);
-            return;
-          }
-          setLote(fetchedLote);
-          setSelectedAmbulanceToAssign(fetchedLote.ambulanciaIdAsignada);
-
-          if (fetchedLote.rutaCalculadaId) {
-            const fetchedRuta = await getRutaCalculadaByLoteIdMock(fetchedLote.id, fetchedLote.rutaCalculadaId);
-            setRuta(fetchedRuta || null);
-          } else {
-            setRuta(null);
-          }
-          
-          if (fetchedLote.ambulanciaIdAsignada) {
-            const ambData = await getAmbulanceById(fetchedLote.ambulanciaIdAsignada);
-            setAssignedAmbulance(ambData || null);
-          } else {
-            setAssignedAmbulance(null);
-          }
-
-        } catch (e) {
-          console.error("Error fetching lote details:", e);
-          setError("Error al cargar los datos del lote.");
-        } finally {
-          setIsLoading(false);
-        }
-      };
-      fetchData();
-    }
-  }, [loteId, user, authIsLoading, router, toast]);
-
-  const handleOptimizarRuta = () => {
-    toast({ title: "Optimizar Ruta (Simulado)", description: "En un sistema real, esto llamaría a un flujo de IA/Genkit para calcular la ruta óptima y se guardaría en la BBDD."});
-    if (ruta) {
-        setRuta(prev => prev ? {...prev, optimizadaEn: new Date().toISOString(), duracionTotalEstimadaMin: prev.duracionTotalEstimadaMin - 10 } : null);
-        setLote(prev => prev ? {...prev, estadoLote: 'calculado'} : null);
-    }
+  const handleOptimizarRuta = async () => {
+    if (!lote) return;
+    toast({ title: "Optimizando Ruta (Simulado)", description: "En un sistema real, esto llamaría a un flujo de IA/Genkit para calcular la ruta óptima."});
+    setIsLoading(true); 
+    const newRuta = await getRutaCalculadaByLoteIdMock(lote.id, lote.rutaCalculadaId); 
+    setRuta(newRuta);
+    setLote(prev => prev ? {...prev, estadoLote: newRuta && newRuta.paradas.length > 0 ? 'calculado' : 'pendienteCalculo' } : null);
+    setIsLoading(false);
+     toast({ title: "Ruta Actualizada", description: "La ruta ha sido re-calculada basada en los servicios asignados."});
   };
 
   const handleGestionAmbulancia = async () => {
     if (!lote) return;
     setIsSubmittingAmbulance(true);
-
-    // Simulación: En una app real, aquí harías una llamada a la API para actualizar el lote.
-    // Por ejemplo: await updateLoteAmbulance(lote.id, selectedAmbulanceToAssign === "unassign" ? null : selectedAmbulanceToAssign);
-
     if (selectedAmbulanceToAssign === "unassign") {
       setLote(prev => prev ? { ...prev, ambulanciaIdAsignada: undefined, estadoLote: 'calculado' } : null);
       setAssignedAmbulance(null);
@@ -172,6 +193,46 @@ export default function LoteDetailPage() {
     }
     setIsSubmittingAmbulance(false);
   };
+  
+  const handleConfirmServiceChanges = async (servicesToAddIds: string[], servicesToRemoveIds: string[]): Promise<boolean> => {
+    if (!lote) return false;
+    setIsLoading(true);
+    let success = false;
+    try {
+      // Update ProgrammedTransportRequests
+      for (const serviceId of servicesToAddIds) {
+        await updateProgrammedRequestLoteAssignment(serviceId, lote.id, 'batched');
+      }
+      for (const serviceId of servicesToRemoveIds) {
+        await updateProgrammedRequestLoteAssignment(serviceId, null, 'pending');
+      }
+
+      // Update LoteProgramado
+      const currentServiceIds = lote.serviciosIds.filter(id => !servicesToRemoveIds.includes(id));
+      const finalServiceIds = Array.from(new Set([...currentServiceIds, ...servicesToAddIds]));
+      
+      const updatedLote = await updateLoteServiciosMock(lote.id, finalServiceIds);
+      if (updatedLote) {
+        setLote(updatedLote);
+        // Re-fetch assigned services for modal display consistency for next open
+        const assignedToThisLote = await getProgrammedRequestsByLoteId(lote.id);
+        setAssignedServicesForModal(assignedToThisLote);
+        const unassigned = await getProgrammedTransportRequestsForPlanning();
+        setAvailableServicesForModal(unassigned.filter(s => s.fechaIda === updatedLote.fechaServicio && !assignedToThisLote.find(as => as.id === s.id)));
+
+        // Important: Mark the route as needing re-optimization
+        setRuta(prevRuta => prevRuta ? {...prevRuta, paradas: []} : null); // Clear current paradas
+        toast({ title: "Servicios del Lote Actualizados", description: "La ruta ha sido marcada como 'modificada' y necesitará ser re-optimizada."});
+        success = true;
+      }
+    } catch (error) {
+      console.error("Error managing lot services:", error);
+      toast({ title: "Error", description: "No se pudieron actualizar los servicios del lote.", variant: "destructive" });
+    }
+    setIsLoading(false);
+    return success;
+  };
+
 
   if (authIsLoading || isLoading) {
     return (
@@ -220,6 +281,14 @@ export default function LoteDetailPage() {
 
   return (
     <div className="rioja-container">
+      <ManageLotServicesModal
+        isOpen={isManageServicesModalOpen}
+        onClose={() => setIsManageServicesModalOpen(false)}
+        lote={lote}
+        allAvailableServices={availableServicesForModal}
+        currentAssignedServices={assignedServicesForModal}
+        onConfirmChanges={handleConfirmServiceChanges}
+      />
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link href="/admin/lotes" passHref>
@@ -227,8 +296,11 @@ export default function LoteDetailPage() {
               <ArrowLeft className="h-5 w-5" />
             </Button>
           </Link>
-          <h1 className="page-title">Detalle Lote: {lote.id}</h1>
+          <h1 className="page-title">Detalle Lote: {lote.id.substring(0,8)}...</h1>
         </div>
+         <Button onClick={() => setIsManageServicesModalOpen(true)} variant="outline" className="btn-outline">
+            <ListPlus className="mr-2 h-4 w-4" /> Gestionar Servicios del Lote
+        </Button>
       </div>
 
       <div className="grid lg:grid-cols-3 gap-6 items-start">
@@ -295,18 +367,19 @@ export default function LoteDetailPage() {
             <CardHeader>
               <div className="flex justify-between items-center">
                 <CardTitle className="section-title">Ruta Calculada</CardTitle>
-                <Button onClick={handleOptimizarRuta} variant="outline" className="btn-outline">
+                <Button onClick={handleOptimizarRuta} variant="outline" className="btn-outline" disabled={lote.serviciosIds.length === 0 && (!ruta || ruta.paradas.length === 0)}>
                   <Waypoints className="mr-2 h-4 w-4" /> Optimizar Ruta (Simulado)
                 </Button>
               </div>
                {ruta && ruta.optimizadaEn && (
                  <CardDescription className="text-xs mt-1">
-                    Optimizada el: {format(parseISO(ruta.optimizadaEn), "Pp", { locale: es })}
+                    Optimizada el: {format(parseISO(ruta.optimizadaEn), "PPPp", { locale: es })}. 
+                    {lote.estadoLote === 'modificado' && <span className="text-orange-600 font-semibold"> El lote ha sido modificado, re-optimice la ruta.</span>}
                  </CardDescription>
                 )}
             </CardHeader>
             <CardContent>
-              {ruta ? (
+              {ruta && ruta.paradas.length > 0 ? (
                 <div className="space-y-3 text-sm">
                   <div className="grid grid-cols-2 md:grid-cols-3 gap-2 p-3 bg-muted rounded-md">
                       <p><strong>Salida Base:</strong> {ruta.horaSalidaBaseEstimada}</p>
@@ -347,7 +420,7 @@ export default function LoteDetailPage() {
                             <TableCell className="text-right">
                                 <Link href={`/request-management/programmed/${parada.servicioId}/edit`} passHref>
                                   <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary" title="Editar Servicio">
-                                      <Edit className="h-4 w-4" />
+                                      <Edit2 className="h-4 w-4" />
                                   </Button>
                                 </Link>
                             </TableCell>
@@ -358,7 +431,12 @@ export default function LoteDetailPage() {
                   </div>
                 </div>
               ) : (
-                <p className="text-muted-foreground text-center py-6">No hay una ruta calculada para este lote aún. Pulse "Optimizar Ruta".</p>
+                <p className="text-muted-foreground text-center py-6">
+                    {lote.serviciosIds.length > 0 
+                        ? 'Este lote tiene servicios asignados. Pulse "Optimizar Ruta" para generar las paradas.' 
+                        : 'No hay servicios asignados a este lote. Añádalos desde "Gestionar Servicios del Lote".'
+                    }
+                </p>
               )}
             </CardContent>
           </Card>

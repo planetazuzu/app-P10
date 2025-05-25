@@ -70,7 +70,7 @@ export interface Ambulance {
   walkingSeats: number;
 
   specialEquipment: string[];
-  equipment?: AmbulanceEquipment; // Could be used to store the resolved equipment object
+  // equipment?: AmbulanceEquipment; // Este campo se podría calcular o resolver al obtener la ambulancia
 
   latitude?: number;
   longitude?: number;
@@ -122,27 +122,29 @@ export interface ProgrammedTransportRequest {
 
   nombrePaciente: string;
   dniNieSsPaciente: string;
-  patientId?: string;
-  servicioPersonaResponsable?: string;
+  patientId?: string; // Could be used if there's a separate patient management system
+  servicioPersonaResponsable?: string; // Doctor, nurse, etc.
   tipoServicio: TipoServicioProgramado;
   tipoTraslado: TipoTrasladoProgramado;
-  centroOrigen: string;
-  origenDireccion?: string;
-  destino: string;
-  destinoId?: string;
-  fechaIda: string;
-  fechaServicio?: string; 
-  horaIda: string; 
-  horaConsultaMedica?: string; 
+  centroOrigen: string; // Name of the origin center/hospital or "Domicilio"
+  origenDireccion?: string; // Full address if Domicilio or specific
+  destino: string; // Name of the destination center/hospital
+  destinoId?: string; // Optional ID for the destination if it's a known entity
+  destinoDireccion?: string; // Full address of destination if specific
+  fechaIda: string; // YYYY-MM-DD
+  fechaServicio?: string; // Legacy or alternative, prefer fechaIda
+  horaIda: string; // HH:MM, pickup time from origin
+  horaConsultaMedica?: string; // HH:MM, appointment time at destination
+  // fechaVuelta and horaVuelta could be added if tipoTraslado is 'idaYVuelta' and needs separate scheduling
   medioRequerido: MedioRequeridoProgramado;
   equipamientoEspecialRequerido?: EquipamientoEspecialProgramadoId[];
-  barrerasArquitectonicas?: string;
-  necesidadesEspeciales?: string;
+  barrerasArquitectonicas?: string; // Architectural barriers
+  necesidadesEspeciales?: string; // Special needs of the patient
   observacionesMedicasAdicionales?: string;
-  autorizacionMedicaPdf?: string; 
+  autorizacionMedicaPdf?: string; // Path or ID to the PDF file
   assignedAmbulanceId?: string;
-  priority: 'low' | 'medium'; 
-  loteId?: string; 
+  priority: 'low' | 'medium'; // Programmed are typically low or medium
+  loteId?: string; // ID of the LoteProgramado it belongs to
 }
 
 // Zod Schemas for AdvancedTransportData Steps
@@ -152,31 +154,31 @@ export const AdvancedTransportPatientInfoSchema = z.object({
   patientId: z.string().min(5, "El identificador del paciente es obligatorio (DNI, SS, etc.)."),
   serviceType: z.string().min(3, "El tipo de servicio o motivo es obligatorio."),
   patientContact: z.string().regex(/^(\+?\d{1,3}[-.\s]?)?(\(?\d{3}\)?[-.\s]?)?\d{3}[-.\s]?\d{3,4}$/, "Número de teléfono inválido.").optional().or(z.literal('')),
-  patientObservations: z.string().optional(),
+  patientObservations: z.string().max(500, "Máximo 500 caracteres.").optional(),
 });
 
 export const AdvancedTransportSchedulingSchema = z.object({
   recurrenceType: z.enum(['specificDates', 'daily', 'weekly', 'monthly'], { required_error: "El tipo de recurrencia es obligatorio."}),
   startDate: z.string().refine(val => val && !isNaN(Date.parse(val)), { message: "La fecha de inicio es obligatoria y debe ser válida."}),
-  specificDatesNotes: z.string().optional(),
+  specificDatesNotes: z.string().max(500, "Máximo 500 caracteres.").optional(),
   pickupTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: "Formato de hora de recogida inválido (HH:MM)." }),
   returnTime: z.string().regex(/^([01]\d|2[0-3]):([0-5]\d)$/, { message: "Formato de hora de retorno inválido (HH:MM)." }).optional().or(z.literal('')),
-  durationEstimate: z.string().optional(),
+  durationEstimate: z.string().max(100, "Máximo 100 caracteres.").optional(),
 });
 
 export const AdvancedTransportLocationsSchema = z.object({
-  originAddress: z.string().min(10, "La dirección de origen debe tener al menos 10 caracteres."),
-  originDetails: z.string().optional(),
-  destinationAddress: z.string().min(10, "La dirección de destino debe tener al menos 10 caracteres."),
-  destinationDetails: z.string().optional(),
+  originAddress: z.string().min(10, "La dirección de origen debe tener al menos 10 caracteres.").max(200, "Máximo 200 caracteres."),
+  originDetails: z.string().max(300, "Máximo 300 caracteres.").optional(),
+  destinationAddress: z.string().min(10, "La dirección de destino debe tener al menos 10 caracteres.").max(200, "Máximo 200 caracteres."),
+  destinationDetails: z.string().max(300, "Máximo 300 caracteres.").optional(),
 });
 
 export const AdvancedTransportConfigurationSchema = z.object({
   transportType: z.enum(ALL_AMBULANCE_TYPES, { required_error: "El tipo de ambulancia es obligatorio."}).or(z.literal("Otros")),
-  transportTypeOther: z.string().optional(),
+  transportTypeOther: z.string().max(100, "Máximo 100 caracteres.").optional(),
   mobilityNeeds: z.enum(ALL_MEDIOS_REQUERIDOS_PROGRAMADO, { required_error: "Las necesidades de movilidad son obligatorias."}),
   advancedEquipment: z.array(z.string()).optional(),
-  additionalNotes: z.string().optional(),
+  additionalNotes: z.string().max(500, "Máximo 500 caracteres.").optional(),
 }).refine(data => {
     if (data.transportType === 'Otros') {
         return data.transportTypeOther && data.transportTypeOther.trim().length >= 3;
@@ -189,27 +191,31 @@ export const AdvancedTransportConfigurationSchema = z.object({
 
 
 export interface AdvancedTransportData {
+  // Step 1
   patientName?: string;
   patientId?: string;
   serviceType?: string;
   patientContact?: string;
   patientObservations?: string;
+  // Step 2
   recurrenceType?: 'specificDates' | 'daily' | 'weekly' | 'monthly';
-  startDate?: string;
-  specificDatesNotes?: string;
-  pickupTime?: string;
-  returnTime?: string;
-  durationEstimate?: string;
+  startDate?: string; // YYYY-MM-DD from date input
+  specificDatesNotes?: string; // For complex patterns or list of dates
+  pickupTime?: string; // HH:MM
+  returnTime?: string; // HH:MM, optional
+  durationEstimate?: string; // e.g., "2 hours", "45 minutes"
+  // Step 3
   originAddress?: string;
   originDetails?: string;
   destinationAddress?: string;
   destinationDetails?: string;
+  // Step 4
   transportType?: AmbulanceType | 'Otros';
   transportTypeOther?: string;
   mobilityNeeds?: MedioRequeridoProgramado;
-  advancedEquipment?: string[];
+  advancedEquipment?: string[]; // Array of equipment IDs
   additionalNotes?: string;
-  [key: string]: any;
+  [key: string]: any; // To allow other properties if needed temporarily
 }
 
 
@@ -233,9 +239,9 @@ export interface DestinoLote {
 export type ParadaEstado = 'pendiente' | 'enRutaRecogida' | 'pacienteRecogido' | 'enDestino' | 'finalizado' | 'cancelado' | 'noPresentado';
 
 export interface ParadaRuta {
-  servicioId: string;
-  paciente: PacienteLote;
-  horaConsultaMedica: string;
+  servicioId: string; // Corresponds to ProgrammedTransportRequest.id
+  paciente: PacienteLote; // Denormalized patient info for the route
+  horaConsultaMedica: string; // Appointment time
   horaRecogidaEstimada: string;
   horaLlegadaDestinoEstimada: string;
   tiempoTrasladoDesdeAnteriorMin: number;
@@ -244,7 +250,7 @@ export interface ParadaRuta {
   horaRealLlegadaRecogida?: string;
   horaRealSalidaRecogida?: string;
   horaRealLlegadaDestino?: string;
-  notasParada?: string;
+  notasParada?: string; // Specific notes for this stop during execution
 }
 
 export interface RutaCalculada {
@@ -254,21 +260,21 @@ export interface RutaCalculada {
   horaSalidaBaseEstimada: string;
   duracionTotalEstimadaMin: number;
   distanciaTotalEstimadaKm?: number;
-  optimizadaEn?: string;
+  optimizadaEn?: string; // ISO Date string
 }
 
 export interface LoteProgramado {
   id: string;
   fechaServicio: string; // YYYY-MM-DD
-  destinoPrincipal: DestinoLote;
-  serviciosIds: string[];
+  destinoPrincipal: DestinoLote; // Main destination this batch is for
+  serviciosIds: string[]; // Array of ProgrammedTransportRequest IDs
   estadoLote: 'pendienteCalculo' | 'calculado' | 'asignado' | 'enCurso' | 'completado' | 'modificado' | 'cancelado';
-  equipoMovilUserIdAsignado?: string;
-  ambulanciaIdAsignada?: string;
-  rutaCalculadaId?: string;
+  equipoMovilUserIdAsignado?: string; // User ID of the 'equipoMovil'
+  ambulanciaIdAsignada?: string; // Ambulance ID
+  rutaCalculadaId?: string; // ID of the associated RutaCalculada
   notasLote?: string;
-  createdAt: string;
-  updatedAt: string;
+  createdAt: string; // ISO Date string
+  updatedAt: string; // ISO Date string
 }
 
 export const LoteCreateFormSchema = z.object({
@@ -289,14 +295,14 @@ export const ALL_MOTIVOS_MODIFICACION_HORARIO: MotivoModificacionHorario[] = ['t
 export interface SolicitudModificacionHorario {
   id: string;
   loteId: string;
-  servicioIdAfectado: string;
-  equipoMovilIdSolicitante: string;
-  fechaSolicitud: string;
+  servicioIdAfectado: string; // ParadaRuta.servicioId
+  equipoMovilIdSolicitante: string; // User.id of 'equipoMovil'
+  fechaSolicitud: string; // ISO Date string
   minutosRetrasoEstimado: number;
   motivo: MotivoModificacionHorario;
   descripcionMotivo?: string;
   estadoSolicitud: 'pendiente' | 'aprobada' | 'rechazada';
-  fechaResolucion?: string;
+  fechaResolucion?: string; // ISO Date string
   notasResolucion?: string;
 }
 
@@ -331,9 +337,10 @@ export type UserEditFormValues = z.infer<typeof UserEditFormSchema>;
 export type UserFormValues = UserCreateFormValues | UserEditFormValues;
 
 // Default equipment is no longer string[], it's a structured object. This type might be unused or refactored.
-export type SpecialEquipmentId = typeof equipmentOptions[number]['id'];
+// export type SpecialEquipmentId = typeof equipmentOptions[number]['id'];
 
 // Keep equipmentOptions for ambulance form (special checkboxes)
+// These IDs should align with what might be stored in Ambulance.specialEquipment (array of strings)
 export const equipmentOptions = [
   { id: "stair-chair", label: "Silla oruga" },
   { id: "bariatric-stretcher", label: "Camilla bariátrica" },
@@ -363,3 +370,10 @@ export const SystemConfigSchema = z.object({
 });
 
 export type SystemConfigFormValues = z.infer<typeof SystemConfigSchema>;
+
+// Schema for the modal to manage services in a lot
+export const ManageLotServicesSchema = z.object({
+    servicesToAssign: z.array(z.string()).optional(), // IDs of ProgrammedTransportRequest to add
+    servicesToRemove: z.array(z.string()).optional(), // IDs of ProgrammedTransportRequest to remove
+});
+export type ManageLotServicesFormValues = z.infer<typeof ManageLotServicesSchema>;
