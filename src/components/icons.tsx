@@ -6,13 +6,14 @@ import Image from 'next/image';
 export const Icons = {
   Logo: (props: Omit<React.ComponentProps<typeof Image>, 'src' | 'alt' | 'width' | 'height'> & { width?: number, height?: number }) => (
     <Image
-      src="/images/logo.png"
+      src="/images/logo.png" // Esto espera public/images/logo.png para el logo dentro de la app
       alt="Gestión de Usuarios y Flota Logo"
       width={props.width || 28}
       height={props.height || 28}
       className={props.className}
       style={props.style}
       priority
+      data-ai-hint="logo company"
     />
   ),
   Ambulance: (props: LucideProps) => <Ambulance {...props} />,
