@@ -10,12 +10,12 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { PlusCircle, Eye, ArrowLeft, Loader2, Waypoints } from 'lucide-react';
 import type { LoteProgramado } from '@/types';
-import { mockLotes } from '@/lib/driver-data'; 
-import { mockAmbulances } from '@/lib/ambulance-data';
+import { getLotesMock } from '@/lib/driver-data';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const getLoteStatusLabel = (status: LoteProgramado['estadoLote']): string => {
   switch (status) {
@@ -70,11 +70,11 @@ export default function ManageLotesPage() {
         async function loadLotes() {
           setIsLoading(true);
           try {
-            // Simulación de carga de datos
-            await new Promise(resolve => setTimeout(resolve, 500));
-            setLotes(mockLotes);
+            const data = await getLotesMock(); 
+            setLotes(data);
           } catch (error) {
             toast({ title: "Error", description: "No se pudieron cargar los lotes.", variant: "destructive" });
+            setLotes([]);
           }
           setIsLoading(false);
         }
@@ -82,10 +82,8 @@ export default function ManageLotesPage() {
     }
   }, [user, toast]);
 
-  const getAmbulanceName = (ambulanceId?: string) => {
-    if (!ambulanceId) return 'N/A';
-    const ambulance = mockAmbulances.find(a => a.id === ambulanceId);
-    return ambulance ? `${ambulance.name} (${ambulance.licensePlate})` : 'Desconocida';
+  const getAmbulanceName = (lote: LoteProgramado) => {
+    return lote.ambulanciaIdAsignada || 'N/A';
   };
   
   if (authIsLoading || (!user || !['admin', 'centroCoordinador'].includes(user.role))) {
@@ -95,6 +93,42 @@ export default function ManageLotesPage() {
       </div>
     );
   }
+
+  if (isLoading) {
+     return (
+        <div className="rioja-container">
+            <div className="flex items-center justify-between mb-6">
+                <div className="flex items-center gap-3">
+                    <Skeleton className="h-9 w-9 rounded-md" />
+                    <Skeleton className="h-10 w-64" />
+                </div>
+                <Skeleton className="h-10 w-40 rounded-md" />
+            </div>
+            <Card>
+                <CardHeader>
+                    <Skeleton className="h-8 w-1/4 mb-2" />
+                    <Skeleton className="h-6 w-1/2" />
+                </CardHeader>
+                <CardContent>
+                    <div className="space-y-3">
+                        {[...Array(5)].map((_, i) => (
+                             <TableRow key={i} className="flex items-center space-x-4 p-2">
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/12 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
+                                <TableCell className="w-1/12 p-0 text-right"><Skeleton className="h-8 w-full" /></TableCell>
+                            </TableRow>
+                        ))}
+                    </div>
+                </CardContent>
+            </Card>
+        </div>
+    )
+  }
+
 
   return (
     <div className="rioja-container">
@@ -107,9 +141,11 @@ export default function ManageLotesPage() {
             </Link>
             <h1 className="page-title">Gestión de Lotes y Rutas</h1>
         </div>
-        <Button className="btn-primary" disabled>
-          <PlusCircle className="mr-2 h-4 w-4" /> Crear Nuevo Lote (Próx.)
-        </Button>
+        <Link href="/admin/lotes/new" passHref>
+            <Button className="btn-primary">
+            <PlusCircle className="mr-2 h-4 w-4" /> Crear Nuevo Lote
+            </Button>
+        </Link>
       </div>
 
       <Card>
@@ -118,12 +154,7 @@ export default function ManageLotesPage() {
           <CardDescription>Ver, gestionar y optimizar lotes de servicios de transporte programado.</CardDescription>
         </CardHeader>
         <CardContent>
-          {isLoading ? (
-            <div className="flex justify-center items-center py-10">
-                <Loader2 className="h-8 w-8 animate-spin text-primary mr-3" />
-                <span>Cargando lotes...</span>
-            </div>
-          ) : lotes.length === 0 ? (
+          {lotes.length === 0 ? (
             <p className="text-center text-muted-foreground py-8">No se encontraron lotes programados.</p>
           ) : (
             <div className="overflow-x-auto">
@@ -134,7 +165,7 @@ export default function ManageLotesPage() {
                     <TableHead>Fecha Servicio</TableHead>
                     <TableHead>Destino Principal</TableHead>
                     <TableHead>Nº Servicios</TableHead>
-                    <TableHead>Ambulancia Asignada</TableHead>
+                    <TableHead>Ambulancia Asignada (ID)</TableHead>
                     <TableHead>Estado Lote</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -143,10 +174,10 @@ export default function ManageLotesPage() {
                   {lotes.map((lote) => (
                     <TableRow key={lote.id}>
                       <TableCell className="font-medium text-primary">{lote.id}</TableCell>
-                      <TableCell>{format(parseISO(lote.fechaServicio + 'T00:00:00'), "PPP", { locale: es })}</TableCell>
+                      <TableCell>{format(parseISO(lote.fechaServicio + 'T00:00:00Z'), "PPP", { locale: es })}</TableCell>
                       <TableCell>{lote.destinoPrincipal.nombre}</TableCell>
                       <TableCell className="text-center">{lote.serviciosIds.length}</TableCell>
-                      <TableCell>{getAmbulanceName(lote.ambulanciaIdAsignada)}</TableCell>
+                      <TableCell>{getAmbulanceName(lote)}</TableCell>
                       <TableCell>
                         <Badge className={`${getLoteStatusBadgeVariant(lote.estadoLote)} text-white text-xs`}>
                           {getLoteStatusLabel(lote.estadoLote)}
@@ -170,5 +201,3 @@ export default function ManageLotesPage() {
     </div>
   );
 }
-
-    

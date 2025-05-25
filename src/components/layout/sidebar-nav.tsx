@@ -12,7 +12,6 @@ import {
   SidebarMenuItem,
   SidebarMenuButton,
   SidebarMenuSub,
-  // SidebarMenuSubItem, // Not used directly, sub-items are SidebarMenuItem
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import React, { useState, useEffect } from 'react';
@@ -33,7 +32,7 @@ interface NavItem {
 const navItems: NavItem[] = [
   { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
   { title: 'Seguimiento Ambulancias', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital', 'centroCoordinador'] },
-  { title: 'Despacho Inteligente', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital', 'centroCoordinador'] },
+  { title: 'Despacho Inteligente IA', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital', 'centroCoordinador'] },
   {
     title: 'Gestión Solicitudes',
     href: '/request-management',
@@ -46,7 +45,7 @@ const navItems: NavItem[] = [
         { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital', 'centroCoordinador'] },
     ]
   },
-  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] /*, disabled: true */ },
+  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
   {
     title: 'Mi Ruta de Hoy', 
     href: '/driver/batch-view/lote-demo-123', 
@@ -67,7 +66,7 @@ const navItems: NavItem[] = [
           roles: ['admin', 'centroCoordinador'],
           submenu: [
             { title: 'Listar Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin', 'centroCoordinador'], exactMatch: true },
-            { title: 'Añadir Usuario', href: '/admin/user-management/new', icon: 'Users', roles: ['admin', 'centroCoordinador'] },
+            { title: 'Añadir Usuario', href: '/admin/user-management/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
           ]
         },
         {
@@ -77,16 +76,21 @@ const navItems: NavItem[] = [
           roles: ['admin', 'centroCoordinador'],
           submenu: [
             { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin', 'centroCoordinador'], exactMatch: true },
-            { title: 'Añadir Ambulancia', href: '/admin/ambulances/new', icon: 'Ambulance', roles: ['admin', 'centroCoordinador'] },
+            { title: 'Añadir Ambulancia', href: '/admin/ambulances/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
           ]
         },
         { 
           title: 'Gestión Lotes y Rutas', 
           href: '/admin/lotes', 
           icon: 'Waypoints', 
-          roles: ['admin', 'centroCoordinador'] 
+          roles: ['admin', 'centroCoordinador'],
+          submenu: [
+            { title: 'Listar Lotes', href: '/admin/lotes', icon: 'Waypoints', roles: ['admin', 'centroCoordinador'], exactMatch: true },
+            { title: 'Crear Lote', href: '/admin/lotes/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
+            { title: 'Planificar Servicios', href: '/admin/services-planning', icon: 'ListChecks', roles: ['admin', 'centroCoordinador'] },
+          ]
         },
-        { title: 'Config. Sistema', href: '/admin/system-settings', icon: 'Settings', roles: ['admin', 'centroCoordinador'], disabled: true },
+        { title: 'Config. Sistema', href: '/admin/system-settings', icon: 'Settings', roles: ['admin', 'centroCoordinador'] },
     ]
   },
 ];
@@ -103,10 +107,14 @@ export function SidebarNav() {
       items.forEach(item => {
         const currentItemPath = item.href;
         if (item.submenu) {
-          // An item is active if its path starts with the current pathname OR any of its children are active
-          if (pathname.startsWith(currentItemPath) || item.submenu.some(subItem => pathname.startsWith(subItem.href) || (subItem.submenu && subItem.submenu.some(s => pathname.startsWith(s.href))))) {
+          const isChildActiveOrPathStartsWith = item.submenu.some(subItem => 
+            (subItem.exactMatch ? pathname === subItem.href : pathname.startsWith(subItem.href)) ||
+            (subItem.submenu && subItem.submenu.some(s => pathname.startsWith(s.href)))
+          );
+          
+          if (pathname.startsWith(currentItemPath) || isChildActiveOrPathStartsWith) {
             initialOpen[currentItemPath] = true;
-            checkAndSetOpen(item.submenu, currentItemPath); // Recursively check children
+            checkAndSetOpen(item.submenu, currentItemPath); 
           }
         }
       });
@@ -130,11 +138,12 @@ export function SidebarNav() {
     const Icon = Icons[item.icon];
     
     let isActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
+    
     if (item.submenu && item.submenu.length > 0 && !isActive) {
       const isChildActive = (childItems: NavItem[]): boolean => {
         return childItems.some(child => {
-          const childIsActive = child.exactMatch ? pathname === child.href : pathname.startsWith(child.href);
-          if (childIsActive) return true;
+          const childIsActiveCurrentLevel = child.exactMatch ? pathname === child.href : pathname.startsWith(child.href);
+          if (childIsActiveCurrentLevel) return true;
           if (child.submenu && child.submenu.length > 0) return isChildActive(child.submenu);
           return false;
         });
@@ -158,29 +167,24 @@ export function SidebarNav() {
         </>
     );
     
-    const effectiveIsActiveForButton = isActive && !item.disabled; // An item isn't "active" if it's disabled
+    const effectiveIsActiveForButton = isActive && !item.disabled; 
     
-    // Button Element for both Link and direct render
     const buttonElement = (
         <ButtonComponent
-            // @ts-ignore - asChild and href are managed conditionally
-            asChild={!isSubmenuItem && !item.disabled}
-            href={isSubmenuItem && !item.disabled ? item.href : undefined}
+            asChild={!hasSubmenu && !item.disabled && !isSubmenuItem}
+            href={ (hasSubmenu || item.disabled || isSubmenuItem) ? undefined : item.href }
             isActive={effectiveIsActiveForButton}
             disabled={item.disabled}
             className={cn(
                 {"bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90": effectiveIsActiveForButton && !hasSubmenu && !isSubmenuItem },
                 {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isSubmenuItem},
                 {"hover:bg-sidebar-accent hover:text-sidebar-accent-foreground": !effectiveIsActiveForButton && !item.disabled },
-                // Explicit disabled styles if not handled by ButtonComponent variants sufficiently
                 item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-sidebar-foreground" 
             )}
             tooltip={item.title}
-            // Prevent click if disabled, especially for top-level items not wrapped in Link
             onClick={item.disabled ? (e) => e.preventDefault() : undefined}
         >
-            {/* Render as 'a' tag only if it's part of a non-disabled Link */}
-            {(!isSubmenuItem && !item.disabled) ? (
+            {(!hasSubmenu && !item.disabled && !isSubmenuItem) ? ( 
                 <a className="flex w-full items-center gap-2">{buttonContent}</a>
             ) : (
                 buttonContent
@@ -191,23 +195,16 @@ export function SidebarNav() {
     return (
       <SidebarMenuItem key={item.href} className={cn({"bg-sidebar-accent/50": effectiveIsActiveForButton && hasSubmenu && isMenuOpen && !isSubmenuItem })}>
         {hasSubmenu ? (
-          <ButtonComponent
-            onClick={item.disabled ? (e) => e.preventDefault() : () => toggleMenu(item.href)}
-            isActive={effectiveIsActiveForButton && isMenuOpen}
-            aria-expanded={isMenuOpen}
-            className={cn(
-                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem && level === 0 },
-                {"hover:bg-sidebar-accent/80": effectiveIsActiveForButton && isMenuOpen && !isSubmenuItem && level === 0},
-                {"text-sidebar-accent-foreground": effectiveIsActiveForButton && isMenuOpen && level > 0},
-                item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-sidebar-foreground" 
-            )}
-            disabled={item.disabled}
-          >
-            {buttonContent}
-          </ButtonComponent>
+          <div onClick={item.disabled ? (e) => e.preventDefault() : () => toggleMenu(item.href)} className="cursor-pointer">
+             {buttonElement}
+          </div>
         ) : item.disabled ? (
-             buttonElement // Render the styled, non-linked button directly
-        ) : (
+             buttonElement 
+        ) : isSubmenuItem ? ( 
+            <Link href={item.href} passHref legacyBehavior>
+                 {buttonElement}
+            </Link>
+        ) : ( 
           <Link href={item.href} passHref legacyBehavior>
             {buttonElement}
           </Link>

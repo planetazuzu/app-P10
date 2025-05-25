@@ -1,7 +1,7 @@
 
-import type { LoteProgramado, RutaCalculada, ParadaRuta, PacienteLote, DestinoLote, ProgrammedTransportRequest, ParadaEstado, MedioRequeridoProgramado } from '@/types';
+import type { LoteProgramado, RutaCalculada, ParadaRuta, PacienteLote, DestinoLote, ProgrammedTransportRequest, ParadaEstado, MedioRequeridoProgramado, LoteCreateFormValues } from '@/types';
 import { mockProgrammedTransportRequests } from './request-data'; 
-import { mockAmbulances } from './ambulance-data';
+import { fallbackMockAmbulances } from './ambulance-data'; // Usar fallback para los nombres
 
 // Mock Data - Expandiendo a 10+ pacientes
 const mockPacientes: Record<string, PacienteLote> = {
@@ -35,7 +35,7 @@ if (mockProgrammedTransportRequests.length === 0) {
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
         nombrePaciente: mockPacientes[pId].nombre,
-        dniNieSsPaciente: `Y0${1234560+index}${String.fromCharCode(65+index)}`, // ensure DNI is unique enough
+        dniNieSsPaciente: `Y0${1234560+index}${String.fromCharCode(65+index)}`, 
         patientId: pId,
         tipoServicio: 'consulta',
         tipoTraslado: 'idaYVuelta', 
@@ -43,7 +43,7 @@ if (mockProgrammedTransportRequests.length === 0) {
         destino: mockDestinos[destinoKey].nombre,
         destinoId: mockDestinos[destinoKey].id,
         fechaIda: today,
-        horaIda: `${String(parseInt(horaCita.split(':')[0]) - 1).padStart(2,'0')}:${horaCita.split(':')[1]}`, // Recogida 1h antes
+        horaIda: `${String(parseInt(horaCita.split(':')[0]) - 1).padStart(2,'0')}:${horaCita.split(':')[1]}`, 
         horaConsultaMedica: horaCita,
         medioRequerido: mockPacientes[pId].medioRequerido,
         priority: 'low',
@@ -51,17 +51,12 @@ if (mockProgrammedTransportRequests.length === 0) {
         observacionesMedicasAdicionales: observaciones || mockPacientes[pId].observaciones,
     });
     
-    // Ensure all 10 patients get a request for lote-demo-123
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[0], "lote-demo-123", 1, "dest-hsp", "11:00")); // Ana Perez
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[1], "lote-demo-123", 2, "dest-hsp", "12:00")); // Juan Rodriguez
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[2], "lote-demo-123", 3, "dest-carpa", "14:00")); // Maria Sanchez
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[3], "lote-demo-123", 4, "dest-hsp", "13:00")); // Carlos Gomez
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[4], "lote-demo-123", 5, "dest-hsp", "10:30")); // Laura Martinez
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[5], "lote-demo-123", 6, "dest-carpa", "15:00")); // Pedro Jimenez
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[6], "lote-demo-123", 7, "dest-hsp", "09:30")); // Elena Navarro
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[7], "lote-demo-123", 8, "dest-carpa", "11:30")); // Roberto Sanz
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[8], "lote-demo-123", 9, "dest-hsp", "16:00")); // Isabel Torres
-    mockProgrammedTransportRequests.push(createMockRequest(pacienteIds[9], "lote-demo-123", 10, "dest-carpa", "10:00")); // David Alonso
+    pacienteIds.forEach((pId, index) => {
+        const destino = index % 2 === 0 ? "dest-hsp" : "dest-carpa";
+        const hora = 9 + Math.floor(index / 2); // 9:00, 9:00, 10:00, 10:00 etc.
+        const minutos = (index % 2) * 30; // 00 or 30
+        mockProgrammedTransportRequests.push(createMockRequest(pId, "lote-demo-123", index + 1, destino as keyof typeof mockDestinos, `${String(hora).padStart(2,'0')}:${String(minutos).padStart(2,'0')}`));
+    });
 }
 
 
@@ -70,21 +65,23 @@ const mockRutas: RutaCalculada[] = [
     id: "ruta-lote-demo-123",
     loteId: "lote-demo-123",
     horaSalidaBaseEstimada: "07:45",
-    duracionTotalEstimadaMin: 480, // 8 hours
+    duracionTotalEstimadaMin: 480, 
     distanciaTotalEstimadaKm: 115,
-    optimizadaEn: new Date(Date.now() - 3600000 * 2).toISOString(), // Hace 2 horas
-    paradas: [ // Reordenado y con tiempos ajustados para 10 pacientes
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-007")!.id, paciente: mockPacientes["pac-007"], horaConsultaMedica: "09:30", horaRecogidaEstimada: "08:30", horaLlegadaDestinoEstimada: "09:15", tiempoTrasladoDesdeAnteriorMin: 45, orden: 1, estado: 'pendiente', notasParada: "Primera recogida, destino HSP." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-010")!.id, paciente: mockPacientes["pac-010"], horaConsultaMedica: "10:00", horaRecogidaEstimada: "09:20", horaLlegadaDestinoEstimada: "09:50", tiempoTrasladoDesdeAnteriorMin: 20, orden: 2, estado: 'pendiente', notasParada: "Destino CARPA." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-005")!.id, paciente: mockPacientes["pac-005"], horaConsultaMedica: "10:30", horaRecogidaEstimada: "09:55", horaLlegadaDestinoEstimada: "10:20", tiempoTrasladoDesdeAnteriorMin: 25, orden: 3, estado: 'pendiente', notasParada: "Destino HSP. Alérgica a AINES." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-001")!.id, paciente: mockPacientes["pac-001"], horaConsultaMedica: "11:00", horaRecogidaEstimada: "10:25", horaLlegadaDestinoEstimada: "10:50", tiempoTrasladoDesdeAnteriorMin: 20, orden: 4, estado: 'pendiente', notasParada: "Asegurar medicación. Destino HSP." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-008")!.id, paciente: mockPacientes["pac-008"], horaConsultaMedica: "11:30", horaRecogidaEstimada: "10:55", horaLlegadaDestinoEstimada: "11:20", tiempoTrasladoDesdeAnteriorMin: 25, orden: 5, estado: 'pendiente', notasParada: "Silla de ruedas. Rampa lateral. Destino CARPA." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-002")!.id, paciente: mockPacientes["pac-002"], horaConsultaMedica: "12:00", horaRecogidaEstimada: "11:25", horaLlegadaDestinoEstimada: "11:50", tiempoTrasladoDesdeAnteriorMin: 20, orden: 6, estado: 'pendiente', notasParada: "Desde Calahorra. Destino HSP." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-004")!.id, paciente: mockPacientes["pac-004"], horaConsultaMedica: "13:00", horaRecogidaEstimada: "12:20", horaLlegadaDestinoEstimada: "12:50", tiempoTrasladoDesdeAnteriorMin: 30, orden: 7, estado: 'pendiente', notasParada: "Destino HSP." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-003")!.id, paciente: mockPacientes["pac-003"], horaConsultaMedica: "14:00", horaRecogidaEstimada: "13:10", horaLlegadaDestinoEstimada: "13:50", tiempoTrasladoDesdeAnteriorMin: 30, orden: 8, estado: 'pendiente', notasParada: "Desde Haro. Camilla. Destino CARPA." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-006")!.id, paciente: mockPacientes["pac-006"], horaConsultaMedica: "15:00", horaRecogidaEstimada: "14:15", horaLlegadaDestinoEstimada: "14:50", tiempoTrasladoDesdeAnteriorMin: 35, orden: 9, estado: 'pendiente', notasParada: "Post-operatorio. Camilla. Destino CARPA." },
-      { servicioId: mockProgrammedTransportRequests.find(r=>r.loteId === "lote-demo-123" && r.patientId === "pac-009")!.id, paciente: mockPacientes["pac-009"], horaConsultaMedica: "16:00", horaRecogidaEstimada: "15:05", horaLlegadaDestinoEstimada: "15:50", tiempoTrasladoDesdeAnteriorMin: 35, orden: 10, estado: 'pendiente', notasParada: "Desde Alberite. Camilla. Requiere 2 técnicos. Destino HSP." },
-    ]
+    optimizadaEn: new Date(Date.now() - 3600000 * 2).toISOString(), 
+    paradas: mockProgrammedTransportRequests
+                .filter(r => r.loteId === "lote-demo-123")
+                .sort((a,b) => (a.horaConsultaMedica || a.horaIda).localeCompare(b.horaConsultaMedica || b.horaIda))
+                .map((req, index) => ({
+                    servicioId: req.id,
+                    paciente: mockPacientes[req.patientId!] || {id: req.patientId!, nombre: req.nombrePaciente, direccionOrigen: req.centroOrigen, medioRequerido: req.medioRequerido},
+                    horaConsultaMedica: req.horaConsultaMedica || req.horaIda,
+                    horaRecogidaEstimada: `${String(parseInt((req.horaConsultaMedica || req.horaIda).split(':')[0]) -1).padStart(2,'0')}:${(req.horaConsultaMedica || req.horaIda).split(':')[1]}`,
+                    horaLlegadaDestinoEstimada: req.horaConsultaMedica || req.horaIda,
+                    tiempoTrasladoDesdeAnteriorMin: index === 0 ? 45 : 20 + Math.floor(Math.random() * 15),
+                    orden: index + 1,
+                    estado: 'pendiente' as ParadaEstado,
+                    notasParada: `Notas para ${req.nombrePaciente}. Destino ${req.destino}.`
+                }))
   },
   {
     id: "ruta-lote-secondary-456",
@@ -100,17 +97,17 @@ const mockRutas: RutaCalculada[] = [
   }
 ];
 
-export const mockLotes: LoteProgramado[] = [
+export let mockLotes: LoteProgramado[] = [
   {
     id: "lote-demo-123",
-    fechaServicio: new Date().toISOString().split('T')[0], // Today
+    fechaServicio: new Date().toISOString().split('T')[0], 
     destinoPrincipal: mockDestinos["dest-hsp"], 
     serviciosIds: mockProgrammedTransportRequests.filter(r => r.loteId === "lote-demo-123").map(r => r.id),
     estadoLote: 'asignado',
     equipoMovilUserIdAsignado: 'user-vehiculo-AMB101', 
-    ambulanciaIdAsignada: mockAmbulances.find(a => a.name.includes("Águila Sanitaria") && a.status === 'available')?.id || mockAmbulances.find(a=> a.status === 'available')?.id || "amb-1001", 
+    ambulanciaIdAsignada: fallbackMockAmbulances.find(a => a.name.includes("Alfa 101") && a.status === 'available')?.id || fallbackMockAmbulances.find(a=> a.status === 'available')?.id || "amb-1001", 
     rutaCalculadaId: "ruta-lote-demo-123",
-    createdAt: new Date(Date.now() - 86400000).toISOString(), // Yesterday
+    createdAt: new Date(Date.now() - 86400000).toISOString(), 
     updatedAt: new Date().toISOString(),
     notasLote: "Ruta optimizada para múltiples consultas en Hospital San Pedro y CARPA a lo largo del día."
   },
@@ -118,7 +115,7 @@ export const mockLotes: LoteProgramado[] = [
     id: "lote-secondary-456",
     fechaServicio: new Date(Date.now() + 86400000).toISOString().split('T')[0], // Tomorrow
     destinoPrincipal: mockDestinos["dest-carpa"],
-    serviciosIds: ["prog-req-lote-secondary-456-001", "prog-req-lote-secondary-456-002"],
+    serviciosIds: mockProgrammedTransportRequests.filter(r => r.loteId === "lote-secondary-456").map(r => r.id),
     estadoLote: 'pendienteCalculo',
     createdAt: new Date(Date.now() - 86400000 * 2).toISOString(),
     updatedAt: new Date(Date.now() - 86400000).toISOString(),
@@ -126,8 +123,15 @@ export const mockLotes: LoteProgramado[] = [
   }
 ];
 
+export const getLotesMock = (): Promise<LoteProgramado[]> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...mockLotes]);
+    }, 300);
+  });
+};
 
-// Mock API functions
+
 export const getLoteByIdMock = (loteId: string): Promise<LoteProgramado | null> => {
   return new Promise((resolve) => {
     setTimeout(() => {
@@ -137,10 +141,10 @@ export const getLoteByIdMock = (loteId: string): Promise<LoteProgramado | null> 
   });
 };
 
-export const getRutaCalculadaByLoteIdMock = (loteId: string, rutaId: string): Promise<RutaCalculada | null> => {
+export const getRutaCalculadaByLoteIdMock = (loteId: string, rutaId?: string): Promise<RutaCalculada | null> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      const ruta = mockRutas.find(r => r.loteId === loteId && r.id === rutaId);
+      const ruta = mockRutas.find(r => r.loteId === loteId && (!rutaId || r.id === rutaId));
       resolve(ruta || null);
     }, 300);
   });
@@ -155,7 +159,7 @@ export const updateParadaEstadoMock = (loteId: string, servicioId: string, newSt
           if (paradaIndex !== -1) {
             ruta.paradas[paradaIndex].estado = newStatus;
             const now = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            if (newStatus === 'enRutaRecogida') ruta.paradas[paradaIndex].horaRealLlegadaRecogida = undefined;
+            if (newStatus === 'enRutaRecogida') ruta.paradas[paradaIndex].horaRealLlegadaRecogida = undefined; // Clear previous times if restarting
             if (newStatus === 'pacienteRecogido') ruta.paradas[paradaIndex].horaRealSalidaRecogida = now;
             if (newStatus === 'enDestino') ruta.paradas[paradaIndex].horaRealLlegadaDestino = now;
             
@@ -168,4 +172,69 @@ export const updateParadaEstadoMock = (loteId: string, servicioId: string, newSt
     });
   };
 
-    
+// Tipo para los datos que vienen del formulario, que solo tiene fecha
+interface LoteCreateDataFromForm {
+  fechaServicio: Date; // Viene como objeto Date del formulario
+  destinoPrincipalNombre: string;
+  destinoPrincipalDireccion: string;
+  notasLote?: string;
+}
+
+
+// Modificada para que coincida con la llamada desde NewLotePage
+export const createLoteMock = (
+  loteData: Omit<LoteProgramado, 'id' | 'createdAt' | 'updatedAt' | 'serviciosIds' | 'estadoLote' | 'fechaServicio'> & { fechaServicio: Date }
+): Promise<LoteProgramado> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newLote: LoteProgramado = {
+        id: `lote-${Date.now()}`,
+        fechaServicio: loteData.fechaServicio.toISOString().split('T')[0], // Convertir Date a string YYYY-MM-DD
+        destinoPrincipal: loteData.destinoPrincipal,
+        serviciosIds: [], 
+        estadoLote: 'pendienteCalculo',
+        notasLote: loteData.notasLote,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      mockLotes.push(newLote);
+      resolve(newLote);
+    }, 500);
+  });
+};
+
+
+export const createLoteWithServicesMock = (
+  serviceIds: string[], 
+  ambulanceId: string,
+  loteDetails: { fechaServicio: Date, destinoPrincipalNombre: string, destinoPrincipalDireccion: string, notasLote?: string }
+): Promise<LoteProgramado> => {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      const newLote: LoteProgramado = {
+        id: `lote-${Date.now()}-${Math.random().toString(36).substring(2,7)}`,
+        fechaServicio: loteDetails.fechaServicio.toISOString().split('T')[0],
+        destinoPrincipal: {
+            id: `dest-${Date.now()}`,
+            nombre: loteDetails.destinoPrincipalNombre,
+            direccion: loteDetails.destinoPrincipalDireccion,
+        },
+        serviciosIds: serviceIds,
+        estadoLote: 'asignado', 
+        ambulanciaIdAsignada: ambulanceId,
+        notasLote: loteDetails.notasLote,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
+      };
+      mockLotes.push(newLote);
+
+      mockProgrammedTransportRequests.forEach(req => {
+        if (serviceIds.includes(req.id)) {
+          req.loteId = newLote.id;
+          req.status = 'batched';
+        }
+      });
+      resolve(newLote);
+    }, 500);
+  });
+};

@@ -70,7 +70,7 @@ export interface Ambulance {
   walkingSeats: number;
 
   specialEquipment: string[];
-  equipment?: AmbulanceEquipment;
+  equipment?: AmbulanceEquipment; // Could be used to store the resolved equipment object
 
   latitude?: number;
   longitude?: number;
@@ -131,18 +131,18 @@ export interface ProgrammedTransportRequest {
   destino: string;
   destinoId?: string;
   fechaIda: string;
-  fechaServicio?: string; // Potentially redundant with fechaIda, review if needed
-  horaIda: string; // HH:MM format
-  horaConsultaMedica?: string; // HH:MM format
+  fechaServicio?: string; 
+  horaIda: string; 
+  horaConsultaMedica?: string; 
   medioRequerido: MedioRequeridoProgramado;
   equipamientoEspecialRequerido?: EquipamientoEspecialProgramadoId[];
   barrerasArquitectonicas?: string;
   necesidadesEspeciales?: string;
   observacionesMedicasAdicionales?: string;
-  autorizacionMedicaPdf?: string; // Could be a URL or filename
+  autorizacionMedicaPdf?: string; 
   assignedAmbulanceId?: string;
-  priority: 'low' | 'medium'; // Typically low for programmed
-  loteId?: string; // ID of the LoteProgramado it belongs to
+  priority: 'low' | 'medium'; 
+  loteId?: string; 
 }
 
 // Zod Schemas for AdvancedTransportData Steps
@@ -259,7 +259,7 @@ export interface RutaCalculada {
 
 export interface LoteProgramado {
   id: string;
-  fechaServicio: string;
+  fechaServicio: string; // YYYY-MM-DD
   destinoPrincipal: DestinoLote;
   serviciosIds: string[];
   estadoLote: 'pendienteCalculo' | 'calculado' | 'asignado' | 'enCurso' | 'completado' | 'modificado' | 'cancelado';
@@ -270,6 +270,18 @@ export interface LoteProgramado {
   createdAt: string;
   updatedAt: string;
 }
+
+export const LoteCreateFormSchema = z.object({
+  fechaServicio: z.date({ 
+    required_error: "La fecha del servicio es obligatoria.",
+    invalid_type_error: "Fecha inválida.",
+  }),
+  destinoPrincipalNombre: z.string().min(3, "El nombre del destino principal es obligatorio (mín. 3 caracteres)."),
+  destinoPrincipalDireccion: z.string().min(5, "La dirección del destino principal es obligatoria (mín. 5 caracteres)."),
+  notasLote: z.string().max(500, "Las notas no pueden exceder los 500 caracteres.").optional(),
+});
+export type LoteCreateFormValues = z.infer<typeof LoteCreateFormSchema>;
+
 
 export type MotivoModificacionHorario = 'trafico' | 'pacienteNoLocalizable' | 'retrasoPaciente' | 'incidenciaVehiculo' | 'otro';
 export const ALL_MOTIVOS_MODIFICACION_HORARIO: MotivoModificacionHorario[] = ['trafico', 'pacienteNoLocalizable', 'retrasoPaciente', 'incidenciaVehiculo', 'otro'];
@@ -305,7 +317,7 @@ export type UserCreateFormValues = z.infer<typeof UserCreateFormSchema>;
 // Zod schema for user editing
 export const UserEditFormSchema = z.object({
   name: z.string().min(3, { message: "El nombre debe tener al menos 3 caracteres." }),
-  email: z.string().email({ message: "Correo electrónico inválido." }), // Email might be non-editable in real app
+  email: z.string().email({ message: "Correo electrónico inválido." }), 
   role: z.enum(ALL_USER_ROLES, { required_error: "El rol es obligatorio." }),
   password: z.string().min(6, { message: "La contraseña debe tener al menos 6 caracteres." }).optional().or(z.literal('')),
   confirmPassword: z.string().min(6, { message: "La confirmación de contraseña debe tener al menos 6 caracteres." }).optional().or(z.literal('')),
@@ -341,7 +353,6 @@ export interface SystemConfig {
   defaultTimezone: string;
   emailNotificationsEnabled: boolean;
   requestHistoryDays: number;
-  // Add more configuration fields as needed
 }
 
 export const SystemConfigSchema = z.object({
@@ -352,5 +363,3 @@ export const SystemConfigSchema = z.object({
 });
 
 export type SystemConfigFormValues = z.infer<typeof SystemConfigSchema>;
-
-    
