@@ -109,55 +109,52 @@ const ChatMessage: React.FC<{ message: Message; currentUserEmail: string | undef
 export default function MessagesPage() {
   const { user } = useAuth();
   const [conversations, setConversations] = useState<Conversation[]>(mockConversations);
-  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(mockConversations[0]?.id || null);
+  const [selectedConversationId, setSelectedConversationId] = useState<string | null>(conversations[0]?.id || null);
   const [newMessage, setNewMessage] = useState('');
   const scrollAreaRef = useRef<HTMLDivElement>(null);
-  const previousConversationIdRef = useRef<string | null | undefined>(null);
-  const lastMessageIdRef = useRef<string | null>(null);
+  const inputRef = useRef<HTMLInputElement>(null);
+  const lastScrolledMessageIdRef = useRef<string | null>(null);
+  const previousConversationIdRef = useRef<string | null>(null);
 
+
+  const selectedConversation = conversations.find(conv => conv.id === selectedConversationId);
 
   useEffect(() => {
-    // Scroll to bottom when messages or conversation changes
     const viewport = scrollAreaRef.current;
-    if (viewport) {
-      const timer = setTimeout(() => {
-        const { scrollHeight, clientHeight, scrollTop } = viewport;
-        const isUserNearBottom = scrollHeight - clientHeight <= scrollTop + 50; // 50px threshold
-        const lastMessage = selectedConversation?.messages[selectedConversation.messages.length - 1];
-        const conversationJustChanged = selectedConversationId !== previousConversationIdRef.current;
-        // Check if it's a new message from the user that we haven't scrolled for yet
-        const isNewMessageFromUser = lastMessage?.sender === 'user' && lastMessage.id !== lastMessageIdRef.current;
+    if (viewport && selectedConversation) {
+      const { scrollHeight, clientHeight, scrollTop } = viewport;
+      const lastMessage = selectedConversation.messages[selectedConversation.messages.length - 1];
+      
+      // Determine if user is near the bottom or if it's a new message they sent
+      const isUserNearBottom = scrollHeight - clientHeight <= scrollTop + 100; // 100px threshold
+      const conversationChanged = selectedConversationId !== previousConversationIdRef.current;
+      const isNewMessageFromUser = lastMessage?.sender === 'user' && lastMessage?.id !== lastScrolledMessageIdRef.current;
 
-        if (isNewMessageFromUser || conversationJustChanged || (isUserNearBottom && lastMessage)) {
-          viewport.scrollTo({ top: scrollHeight, behavior: conversationJustChanged ? 'auto' : 'smooth' });
-          if(lastMessage) {
-            lastMessageIdRef.current = lastMessage.id; // Track last scrolled message
-          }
-        }
-        
-        if (selectedConversationId !== previousConversationIdRef.current) {
-            previousConversationIdRef.current = selectedConversationId;
-             // Reset last message id when conversation changes to ensure scroll for first message if any
-            if (selectedConversation?.messages.length === 0) {
-                 lastMessageIdRef.current = null;
-            } else if (selectedConversation?.messages.length > 0) {
-                 // If switching to a convo with messages, and user was at bottom, scroll to bottom.
-                 // Otherwise, user might want to stay at current scroll position if they switch back and forth.
-                 // For simplicity now, always scroll to bottom on convo change.
-                 lastMessageIdRef.current = selectedConversation.messages[selectedConversation.messages.length -1].id;
-            }
-        }
-
-      }, 0); // Small delay to ensure DOM is updated
-      return () => clearTimeout(timer);
+      if (lastMessage && (conversationChanged || isNewMessageFromUser || isUserNearBottom)) {
+        // Use setTimeout to ensure DOM has updated before scrolling
+        setTimeout(() => {
+            viewport.scrollTo({ top: scrollHeight, behavior: conversationChanged ? 'auto' : 'smooth' });
+            lastScrolledMessageIdRef.current = lastMessage.id;
+        }, 0);
+      }
     }
-  }, [selectedConversation?.messages, selectedConversationId]);
+    if (selectedConversationId !== previousConversationIdRef.current) {
+        previousConversationIdRef.current = selectedConversationId;
+        // When conversation changes, reset last scrolled message to ensure scroll if messages exist
+        if (selectedConversation && selectedConversation.messages.length > 0) {
+            lastScrolledMessageIdRef.current = selectedConversation.messages[selectedConversation.messages.length -1].id;
+        } else {
+            lastScrolledMessageIdRef.current = null;
+        }
+    }
+  }, [selectedConversation?.messages, selectedConversationId, selectedConversation]);
 
   const handleSelectConversation = (id: string) => {
     setSelectedConversationId(id);
     setConversations(prev => 
         prev.map(conv => conv.id === id ? { ...conv, unread: 0 } : conv)
     );
+    inputRef.current?.focus();
   };
 
   const handleSendMessage = (e?: React.FormEvent) => {
@@ -181,15 +178,26 @@ export default function MessagesPage() {
       )
     );
     setNewMessage('');
+    inputRef.current?.focus();
 
-    if (selectedConversation?.id === 'bot-soporte' || selectedConversation?.type === 'channel') {
+    if (selectedConversation?.id === 'bot-soporte' || (selectedConversation?.type === 'channel' && Math.random() > 0.3)) { // Simulate bot/Alice reply
       setTimeout(() => {
+        const replies = [
+            `He recibido tu mensaje: "${messageToSend.text.substring(0,20)}${messageToSend.text.length > 20 ? '...' : ''}". Lo estoy procesando.`,
+            `Interesante lo que dices sobre "${messageToSend.text.substring(0,15)}${messageToSend.text.length > 15 ? '...' : ''}". ¿Podrías dar más detalles?`,
+            `Entendido. Respecto a "${messageToSend.text.substring(0,25)}${messageToSend.text.length > 25 ? '...' : ''}", te responderé en breve.`,
+            `Gracias por tu mensaje. Tomo nota de: "${messageToSend.text.substring(0,30)}${messageToSend.text.length > 30 ? '...' : ''}".`
+        ];
+        const botReplyText = selectedConversation.id === 'bot-soporte' 
+            ? `Soy un bot, pero he entendido: "${messageToSend.text.substring(0,25)}${messageToSend.text.length > 25 ? '...' : ''}".`
+            : replies[Math.floor(Math.random() * replies.length)];
+
         const botReply: Message = {
           id: `bot-reply-${Date.now()}`,
           sender: selectedConversation.id === 'bot-soporte' ? 'bot' : 'Alice', 
           senderName: selectedConversation.id === 'bot-soporte' ? 'Soporte IA' : 'Alice',
           avatar: selectedConversation.id === 'bot-soporte' ? 'https://placehold.co/40x40.png?text=IA' : 'https://placehold.co/40x40.png?text=A',
-          text: `Respuesta simulada a: "${messageToSend.text.substring(0,25)}${messageToSend.text.length > 25 ? '...' : ''}"`,
+          text: botReplyText,
           timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
         };
         setConversations(prevConvs =>
@@ -217,10 +225,10 @@ export default function MessagesPage() {
     <div className="flex flex-col h-[calc(100vh-theme(spacing.16)-theme(spacing.16))] shadow-lg border rounded-lg">
       <div className="flex flex-1 overflow-hidden">
         {/* Sidebar - Conversation List */}
-        <aside className="w-full max-w-xs border-r bg-secondary/5 p-0 flex flex-col">
-          <div className="p-3 border-b">
+        <aside className="w-full max-w-xs border-r bg-muted/30 p-0 flex flex-col">
+          <div className="p-3 border-b bg-card">
             <h2 className="text-lg font-semibold text-secondary flex items-center gap-2">
-              <Users className="h-5 w-5" />
+              <MessageSquare className="h-5 w-5" />
               Canales y DMs
             </h2>
           </div>
@@ -231,11 +239,11 @@ export default function MessagesPage() {
                   key={conv.id}
                   onClick={() => handleSelectConversation(conv.id)}
                   className={cn(
-                    "w-full flex items-center gap-2.5 px-3 py-2 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors rounded-md mx-1.5 my-0.5",
-                    selectedConversationId === conv.id ? "bg-primary/10 text-primary font-semibold" : "text-muted-foreground hover:text-foreground"
+                    "w-full flex items-center gap-2.5 px-3 py-2.5 text-left text-sm hover:bg-accent hover:text-accent-foreground transition-colors rounded-md mx-1.5 my-0.5",
+                    selectedConversationId === conv.id ? "bg-primary/10 text-primary ring-1 ring-primary/50 font-semibold" : "text-muted-foreground hover:text-foreground"
                   )}
                 >
-                  <Avatar className="h-6 w-6 text-xs">
+                  <Avatar className="h-7 w-7 text-xs">
                     <AvatarImage src={conv.avatar || `https://placehold.co/32x32.png?text=${getInitials(conv.name)}`} alt={conv.name} data-ai-hint="avatar channel list" />
                     <AvatarFallback>{getInitials(conv.name)}</AvatarFallback>
                   </Avatar>
@@ -256,7 +264,7 @@ export default function MessagesPage() {
         <main className="flex-1 flex flex-col bg-background">
           {selectedConversation ? (
             <>
-              <header className="p-3 border-b flex items-center gap-2.5 shadow-sm">
+              <header className="p-3 border-b flex items-center gap-2.5 shadow-sm bg-card">
                 <Avatar className="h-8 w-8">
                    <AvatarImage src={selectedConversation.avatar || `https://placehold.co/40x40.png?text=${getInitials(selectedConversation.name)}`} alt={selectedConversation.name} data-ai-hint="avatar header chat"/>
                   <AvatarFallback>{getInitials(selectedConversation.name)}</AvatarFallback>
@@ -280,6 +288,7 @@ export default function MessagesPage() {
               <footer className="p-3 border-t bg-card">
                 <form onSubmit={handleSendMessage} className="flex items-center gap-2">
                   <Input
+                    ref={inputRef}
                     type="text"
                     placeholder={`Mensaje a ${selectedConversation.type === 'channel' ? '#' : ''}${selectedConversation.name}`}
                     value={newMessage}
@@ -308,3 +317,4 @@ export default function MessagesPage() {
     </div>
   );
 }
+
