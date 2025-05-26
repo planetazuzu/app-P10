@@ -5,7 +5,7 @@ import type { Ambulance, AmbulanceStatus } from '@/types';
 import { MapContainer, TileLayer, Marker, Popup, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
 import L from 'leaflet';
-import React, { useEffect } from 'react';
+import React, { useEffect, useRef } from 'react';
 
 // Fix for default Leaflet icon path issue with Next.js/Webpack
 if (typeof window !== 'undefined' && L.Icon.Default.prototype.options) {
@@ -48,9 +48,17 @@ interface AmbulanceMapProps {
 
 export function AmbulanceMap({ ambulances, selectedAmbulance, onAmbulanceSelect }: AmbulanceMapProps) {
   const defaultPosition: L.LatLngExpression = [42.4659, -2.4487]; // Logroño, La Rioja
+  const mapRef = useRef<L.Map | null>(null);
 
-  // Removed mapRef, whenCreated, and useEffect for manual cleanup.
-  // Relying on MapContainer's internal lifecycle management.
+  useEffect(() => {
+    // This effect runs once on mount and its cleanup runs once on unmount.
+    return () => {
+      if (mapRef.current) {
+        mapRef.current.remove(); // Explicitly remove the map instance on unmount
+        mapRef.current = null;   // Clear the ref
+      }
+    };
+  }, []); // Empty dependency array is crucial here
 
   return (
     <MapContainer
@@ -58,8 +66,11 @@ export function AmbulanceMap({ ambulances, selectedAmbulance, onAmbulanceSelect 
       zoom={10}
       style={{ height: '100%', width: '100%' }}
       className="rounded-lg shadow-inner"
-      // placeholder can be used if needed, e.g., for a loading state within MapContainer
-      // placeholder={<div className="flex items-center justify-center h-full">Cargando mapa...</div>}
+      // The `whenCreated` prop sets the map instance to our ref.
+      // This ensures mapRef.current is populated when the map is ready.
+      whenCreated={mapInstance => {
+        mapRef.current = mapInstance;
+      }}
     >
       <TileLayer
         attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors &copy; <a href="https://carto.com/attributions">CARTO</a>'
