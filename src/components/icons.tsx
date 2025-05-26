@@ -6,13 +6,13 @@ import Image from 'next/image';
 export const Icons = {
   Logo: (props: Omit<React.ComponentProps<typeof Image>, 'src' | 'alt' | 'width' | 'height'> & { width?: number, height?: number }) => (
     <Image
-      src="/images/logo.png" 
+      src="/images/logo.png"
       alt="Gestión de Usuarios y Flota Logo"
-      width={props.width || 28}
-      height={props.height || 28}
+      width={props.width || 28} // Default width if not provided
+      height={props.height || 28} // Default height if not provided
       className={props.className}
       style={props.style}
-      priority
+      priority // Consider adding priority if it's LCP
       data-ai-hint="logo company"
     />
   ),
@@ -26,7 +26,7 @@ export const Icons = {
   Dashboard: (props: LucideProps) => <LayoutDashboard {...props} />,
   Map: (props: LucideProps) => <Map {...props} />,
   MapPin: (props: LucideProps) => <MapPinIcon {...props} />,
-  MapIcon: (props: LucideProps) => <MapPinIcon {...props} />, 
+  MapIcon: (props: LucideProps) => <MapPinIcon {...props} />,
   SmartDispatch: (props: LucideProps) => <Zap {...props} />,
   RequestManagement: (props: LucideProps) => <FileText {...props} />,
   Messages: (props: LucideProps) => <MessageSquare {...props} />,

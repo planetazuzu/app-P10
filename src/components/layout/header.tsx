@@ -13,8 +13,7 @@ import {
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
 import { Icons } from '@/components/icons';
-import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar'; // Import useSidebar
-import { cn } from '@/lib/utils';
+import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import type { UserRole } from '@/types';
 
 // Helper para traducir el rol del usuario
@@ -29,7 +28,7 @@ const translateUserRole = (role: UserRole): string => {
     case 'centroCoordinador':
       return 'Centro Coordinador';
     case 'equipoMovil':
-      return 'Equipo Móvil (Vehículo)';
+      return 'Equipo Móvil';
     default:
       return role;
   }
@@ -37,7 +36,7 @@ const translateUserRole = (role: UserRole): string => {
 
 export function Header() {
   const { user, logout } = useAuth();
-  const { isMobile } = useSidebar(); // Get isMobile from useSidebar context
+  const { isMobile } = useSidebar(); 
 
   const getInitials = (name: string = '') => {
     return name
@@ -51,9 +50,10 @@ export function Header() {
     <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
       <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
-          {isMobile && <SidebarTrigger />} 
+          {isMobile && <SidebarTrigger />}
           <div className="flex items-center gap-2">
-            <Icons.Logo className="h-7 w-7 text-primary" />
+            {/* Usamos un tamaño explícito para el logo aquí */}
+            <Icons.Logo className="h-8 w-8" /> 
             <span className="hidden font-bold text-secondary sm:inline-block text-lg">
               Gestión de Usuarios y Flota
             </span>
@@ -64,7 +64,7 @@ export function Header() {
           <div className="flex items-center gap-4">
             <div className="text-right hidden md:block">
               <p className="font-semibold text-sm text-foreground">{user.name}</p>
-              <p className="text-xs text-muted-foreground capitalize">{translateUserRole(user.role)}</p>
+              <p className="text-xs text-muted-foreground">{translateUserRole(user.role)}</p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>

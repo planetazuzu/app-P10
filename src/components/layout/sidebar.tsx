@@ -53,7 +53,8 @@ export function AppSidebar() {
     <Sidebar collapsible="icon" variant="sidebar" side="left">
       <SidebarHeader className="items-center justify-between p-4">
         <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden">
-          <Icons.Logo className="h-7 w-7 text-primary" />
+          {/* Usamos un tamaño explícito para el logo aquí */}
+          <Icons.Logo className="h-8 w-8" />
           <h1 className="font-bold text-lg text-secondary">GUF</h1> {/* GUF por Gestión de Usuarios y Flota */}
         </div>
         <SidebarTrigger className="group-data-[collapsible=icon]:hidden md:flex" />
@@ -71,7 +72,7 @@ export function AppSidebar() {
           </Avatar>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground">{user.name}</span>
-            <span className="text-xs text-muted-foreground capitalize">{translateUserRole(user.role)}</span>
+            <span className="text-xs text-muted-foreground">{translateUserRole(user.role)}</span>
           </div>
           <Button 
             variant="ghost" 
