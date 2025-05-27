@@ -3,7 +3,7 @@
 
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
-import { Ambulance, FileText, Users, Zap, MapIcon } from 'lucide-react';
+import { Ambulance, FileText, Users, Zap, MapIcon, ListChecks } from 'lucide-react';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 
@@ -43,6 +43,9 @@ export default function DashboardPage() {
     activeUsers: 120,
     averageResponseTime: '12 min',
     servicesTodayForEquipoMovil: 5, 
+    // Simulación para solicitudes del usuario individual
+    individualPendingRequests: 1, 
+    individualInProgressRequests: 0,
   };
 
   const canViewAmbulanceTracking = ['admin', 'hospital', 'centroCoordinador'].includes(user.role);
@@ -50,13 +53,27 @@ export default function DashboardPage() {
   const canViewRequestManagement = ['admin', 'hospital', 'individual', 'centroCoordinador'].includes(user.role);
   const isEquipoMovil = user.role === 'equipoMovil';
   const isAdminOrCoordinator = ['admin', 'centroCoordinador'].includes(user.role);
+  const isIndividual = user.role === 'individual';
 
   return (
     <div>
       <h1 className="page-title mb-8">¡Bienvenido, {user.name}!</h1>
       
-      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
-        {isEquipoMovil ? (
+      {isIndividual ? (
+        // Vista específica para el rol Individual
+        <div className="grid gap-6 md:grid-cols-2 mb-8">
+          <StatsCard
+            title="Estado de Mis Solicitudes"
+            value={`${stats.individualPendingRequests} Pendiente(s), ${stats.individualInProgressRequests} En Curso`}
+            icon={<ListChecks className="h-5 w-5 text-muted-foreground" />}
+            description="Revisa el estado de tus transportes solicitados."
+            link="/request-management"
+            linkText="Ver Mis Solicitudes"
+          />
+        </div>
+      ) : isEquipoMovil ? (
+        // Vista específica para el rol Equipo Móvil
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
             <StatsCard
                 title="Servicios de Hoy"
                 value={stats.servicesTodayForEquipoMovil}
@@ -65,41 +82,44 @@ export default function DashboardPage() {
                 link="/driver/batch-view/lote-demo-123" 
                 linkText="Ver Mi Ruta"
             />
-        ) : (
-            <>
+        </div>
+      ) : (
+        // Vista para Admin, Hospital, CentroCoordinador
+        <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-4 mb-8">
+            <StatsCard 
+            title="Ambulancias Activas" 
+            value={stats.activeAmbulances}
+            icon={<Ambulance className="h-5 w-5 text-muted-foreground" />}
+            description="+2 desde la última hora"
+            {...(canViewAmbulanceTracking && { link: "/ambulance-tracking", linkText: "Ver Mapa"})}
+            />
+            <StatsCard 
+            title="Solicitudes Pendientes" 
+            value={stats.pendingRequests}
+            icon={<FileText className="h-5 w-5 text-muted-foreground" />}
+            description="Prioridad alta: 3"
+            {...(canViewRequestManagement && { link: "/request-management", linkText: "Gestionar Solicitudes"})}
+            />
+            {isAdminOrCoordinator && (
                 <StatsCard 
-                title="Ambulancias Activas" 
-                value={stats.activeAmbulances}
-                icon={<Ambulance className="h-5 w-5 text-muted-foreground" />}
-                description="+2 desde la última hora"
-                {...(canViewAmbulanceTracking && { link: "/ambulance-tracking", linkText: "Ver Mapa"})}
+                    title="Usuarios Activos" 
+                    value={stats.activeUsers}
+                    icon={<Users className="h-5 w-5 text-muted-foreground" />}
+                    description="En todos los roles"
+                    {...(user.role === 'admin' && { link: "/admin/user-management", linkText: "Gestionar Usuarios"})}
                 />
-                <StatsCard 
-                title="Solicitudes Pendientes" 
-                value={stats.pendingRequests}
-                icon={<FileText className="h-5 w-5 text-muted-foreground" />}
-                description="Prioridad alta: 3"
-                {...(canViewRequestManagement && { link: "/request-management", linkText: "Gestionar Solicitudes"})}
-                />
-                 {isAdminOrCoordinator && (
-                    <StatsCard 
-                        title="Usuarios Activos" 
-                        value={stats.activeUsers}
-                        icon={<Users className="h-5 w-5 text-muted-foreground" />}
-                        description="En todos los roles"
-                        {...(user.role === 'admin' && { link: "/admin/user-management", linkText: "Gestionar Usuarios"})}
-                    />
-                    )}
-                <StatsCard 
+            )}
+            {user.role === 'admin' && ( // Solo Admin ve el tiempo de respuesta
+               <StatsCard 
                 title="Tiempo Medio Respuesta" 
                 value={stats.averageResponseTime}
                 icon={<Zap className="h-5 w-5 text-muted-foreground" />}
                 description="Últimas 24 horas"
                 {...(canViewSmartDispatch && { link: "/smart-dispatch", linkText: "Optimizar Despacho"})}
                 />
-            </>
-        )}
-      </div>
+            )}
+        </div>
+      )}
 
       <Card>
         <CardHeader>
@@ -111,17 +131,17 @@ export default function DashboardPage() {
                 <Button className="w-full btn-primary">Ver Mi Ruta de Hoy</Button>
             </Link>
           )}
-          { (user.role === 'individual' || user.role === 'hospital' || isAdminOrCoordinator) && (
+          { (isIndividual || user.role === 'hospital' || isAdminOrCoordinator) && (
             <Link href="/request-management/new" passHref>
               <Button className="w-full btn-primary">Crear Nueva Solicitud</Button>
             </Link>
           )}
-          { canViewAmbulanceTracking && (
+          { canViewAmbulanceTracking && !isIndividual && ( // Ocultar para individual
              <Link href="/ambulance-tracking" passHref>
                 <Button className="w-full btn-secondary">Seguimiento de Ambulancias</Button>
             </Link>
           )}
-          { canViewSmartDispatch && (
+          { canViewSmartDispatch && !isIndividual && ( // Ocultar para individual
              <Link href="/smart-dispatch" passHref>
                 <Button className="w-full btn-outline">Despacho Inteligente IA</Button>
             </Link>
@@ -134,17 +154,17 @@ export default function DashboardPage() {
         </CardContent>
       </Card>
 
-      {/* Placeholder for recent activity or notifications */}
-      <Card className="mt-8">
-        <CardHeader>
-          <CardTitle className="section-title">Actividad Reciente</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <p className="text-muted-foreground">No hay actividad reciente para mostrar.</p>
-        </CardContent>
-      </Card>
+      {/* Placeholder for recent activity or notifications, oculto para individual */}
+      {!isIndividual && (
+        <Card className="mt-8">
+            <CardHeader>
+            <CardTitle className="section-title">Actividad Reciente</CardTitle>
+            </CardHeader>
+            <CardContent>
+            <p className="text-muted-foreground">No hay actividad reciente para mostrar.</p>
+            </CardContent>
+        </Card>
+      )}
     </div>
   );
 }
-
-    
