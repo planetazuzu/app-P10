@@ -1,82 +1,159 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-body {
-  font-family: Georgia, 'Times New Roman', serif;
+/* Definición de fuentes personalizadas (placeholders, reemplazar con rutas reales o importaciones CDN) */
+@font-face {
+  font-family: 'Riojana Regular';
+  src: url('/fonts/Riojana-Regular.woff2') format('woff2'); /* Cambiar ruta si es necesario */
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
 }
+
+@font-face {
+  font-family: 'Riojana Condensed';
+  src: url('/fonts/Riojana-Condensed.woff2') format('woff2'); /* Cambiar ruta si es necesario */
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Riojana Slab';
+  src: url('/fonts/Riojana-Slab.woff2') format('woff2'); /* Cambiar ruta si es necesario */
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 
 @layer base {
   :root {
-    --background: 0 0% 100%; /* Blanco */
-    --foreground: 0 0% 3.9%; /* Default dark for text */
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 3.9%;
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 3.9%;
-    --primary: 85 69% 43%; /* Verde Rioja */
-    --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 205 31% 21%; /* Azul Rioja */
-    --secondary-foreground: 0 0% 100%; /* White */
-    --muted: 205 31% 96%; /* Lighter Azul Rioja for muted backgrounds */
-    --muted-foreground: 205 31% 45%; /* Mid Azul Rioja for muted text */
-    --accent: 85 69% 90%; /* Lighter Verde Rioja for hover/accent backgrounds */
-    --accent-foreground: 85 69% 30%; /* Darker Verde Rioja for text on accent */
-    --destructive: 0 84.2% 60.2%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 205 31% 85%; /* Lighter Azul Rioja for borders */
-    --input: 0 0% 100%; /* White background for inputs */
-    --input-border: 205 31% 80%; /* Specific border for inputs */
-    --ring: 85 69% 43%; /* Verde Rioja for focus rings */
+    /* Nuevas Constantes Visuales Corporativas */
+    --color-primary-val: 203 100% 31.6%; /* #0066A1 Azul institucional */
+    --color-secondary-val: 356 95.2% 45.3%; /* #E30613 Rojo institucional */
+    --color-accent-val: 49 100% 50%;    /* #FFD200 Amarillo de acento */
+    --color-bg-light-val: 216 60% 98%;   /* #F5F7FA Fondo claro */
+    --color-bg-dark-val: 0 0% 11.8%;    /* #1E1E1E Fondo oscuro */
+    --color-text-default-val: 0 0% 20%; /* #333333 Texto principal */
+    --color-text-muted-val: 0 0% 40%;  /* #666666 Texto secundario */
+    --color-text-on-primary-val: 0 0% 100%; /* Blanco para texto sobre primario */
+    --color-text-on-secondary-val: 0 0% 100%; /* Blanco para texto sobre secundario */
+    --color-text-on-accent-val: 0 0% 10%; /* Negro/Gris muy oscuro para texto sobre acento amarillo */
+
+    /* Mapeo a variables de ShadCN */
+    --background: var(--color-bg-light-val);
+    --foreground: var(--color-text-default-val);
+    
+    --card: var(--color-bg-light-val); /* O un blanco puro 0 0% 100% si se prefiere más contraste */
+    --card-foreground: var(--color-text-default-val);
+    
+    --popover: var(--color-bg-light-val); /* O un blanco puro */
+    --popover-foreground: var(--color-text-default-val);
+    
+    --primary: var(--color-primary-val);
+    --primary-foreground: var(--color-text-on-primary-val);
+    
+    --secondary: var(--color-secondary-val);
+    --secondary-foreground: var(--color-text-on-secondary-val);
+    
+    --muted: 216 30% 94%; /* Un gris azulado muy claro, derivado de bg-light */
+    --muted-foreground: var(--color-text-muted-val);
+    
+    --accent: var(--color-accent-val);
+    --accent-foreground: var(--color-text-on-accent-val);
+    
+    --destructive: 0 84.2% 60.2%; /* Rojo shadcn por defecto, puede ajustarse a --color-secondary si se prefiere */
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 216 30% 88%; /* Un gris azulado claro para bordes */
+    --input: 0 0% 100%; /* Fondo blanco para inputs */
+    --input-border: 216 30% 80%; /* Borde para inputs */
+    --ring: var(--color-primary-val); /* Azul primario para anillos de foco */
+
+    /* Radios de Borde */
+    --radius-sm: 0.25rem;  /* 4px */
+    --radius-md: 0.5rem;   /* 8px */
+    --radius-lg: 1rem;     /* 16px */
+    --radius: var(--radius-md); /* Default radius for ShadCN components */
+
+    /* Fuentes */
+    --font-base: 'Riojana Regular', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-condensed: 'Riojana Condensed', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    --font-slab: 'Riojana Slab', Georgia, Cambria, 'Times New Roman', Times, serif;
+
+    /* Chart Colors (manteniendo los de ShadCN por ahora, pueden personalizarse) */
     --chart-1: 12 76% 61%;
     --chart-2: 173 58% 39%;
     --chart-3: 197 37% 24%;
     --chart-4: 43 74% 66%;
     --chart-5: 27 87% 67%;
-    --radius: 0.5rem;
 
-    /* Sidebar specific colors */
-    --sidebar-background: 0 0% 100%; /* White, or a very light off-white like 205 31% 98% */
-    --sidebar-foreground: 205 31% 21%; /* Azul Rioja */
-    --sidebar-primary: 85 69% 43%; /* Verde Rioja */
-    --sidebar-primary-foreground: 0 0% 100%; /* White */
-    --sidebar-accent: 85 69% 90%; /* Lighter Verde Rioja */
-    --sidebar-accent-foreground: 85 69% 30%; /* Darker Verde Rioja */
-    --sidebar-border: 205 31% 90%; /* Lighter Azul Rioja for sidebar internal borders */
-    --sidebar-ring: 85 69% 43%; /* Verde Rioja */
+    /* Sidebar specific colors - ALIGNED WITH NEW CORPORATE COLORS */
+    --sidebar-background: var(--color-bg-light-val);
+    --sidebar-foreground: var(--color-text-default-val);
+    --sidebar-primary: var(--color-primary-val);
+    --sidebar-primary-foreground: var(--color-text-on-primary-val);
+    --sidebar-accent: 203 100% 92%; /* Azul primario muy claro para hover/submenú activo */
+    --sidebar-accent-foreground: var(--color-primary-val); /* Texto azul primario sobre fondo de acento */
+    --sidebar-border: 216 30% 92%; /* Borde interno del sidebar, más claro */
+    --sidebar-ring: var(--color-primary-val);
   }
 
   .dark {
-    --background: 205 31% 10%; /* Dark Azul Rioja */
-    --foreground: 0 0% 98%; /* White */
-    --card: 205 31% 10%;
-    --card-foreground: 0 0% 98%;
-    --popover: 205 31% 10%;
-    --popover-foreground: 0 0% 98%;
-    --primary: 85 69% 43%; /* Verde Rioja */
-    --primary-foreground: 0 0% 100%; /* White */
-    --secondary: 205 31% 35%; /* Lighter Azul Rioja for dark mode secondary elements */
-    --secondary-foreground: 0 0% 98%; /* White */
-    --muted: 205 31% 15%;
-    --muted-foreground: 205 31% 65%;
-    --accent: 85 69% 30%; /* Darker Verde Rioja for dark mode accents */
-    --accent-foreground: 0 0% 98%; /* White */
-    --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 0% 98%;
-    --border: 205 31% 25%;
-    --input: 205 31% 15%;
-    --input-border: 205 31% 25%;
-    --ring: 85 69% 43%; /* Verde Rioja */
+    /* Nuevas Constantes Visuales Corporativas para Dark Mode */
+    --color-primary-val: 203 100% 45%; /* Ajustar primario para mejor contraste en oscuro, ej #0077C2 */
+    --color-secondary-val: 356 95.2% 55%; /* Ajustar secundario para mejor contraste en oscuro, ej #F03A47 */
+    --color-accent-val: 49 100% 55%;    /* Ajustar acento para mejor contraste en oscuro, ej #FFDB1F */
+    --color-bg-light-val: 216 60% 98%;   /* No se usa directamente en dark, pero se mantiene la variable */
+    --color-bg-dark-val: 0 0% 11.8%;    /* #1E1E1E Fondo oscuro */
+    --color-text-default-val: 0 0% 95%; /* #F2F2F2 Texto principal en oscuro */
+    --color-text-muted-val: 0 0% 60%;  /* #999999 Texto secundario en oscuro */
+    --color-text-on-primary-val: 0 0% 100%; 
+    --color-text-on-secondary-val: 0 0% 100%;
+    --color-text-on-accent-val: 0 0% 10%;
 
-    /* Dark Sidebar specific colors */
-    --sidebar-background: 205 31% 8%;
-    --sidebar-foreground: 0 0% 98%;
-    --sidebar-primary: 85 69% 43%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 85 69% 30%;
-    --sidebar-accent-foreground: 0 0% 98%;
-    --sidebar-border: 205 31% 20%;
-    --sidebar-ring: 85 69% 43%;
+    /* Mapeo a variables de ShadCN para Dark Mode */
+    --background: var(--color-bg-dark-val);
+    --foreground: var(--color-text-default-val);
+    
+    --card: 0 0% 14%; /* Un poco más claro que el fondo general oscuro */
+    --card-foreground: var(--color-text-default-val);
+    
+    --popover: 0 0% 10%; /* Más oscuro para popovers */
+    --popover-foreground: var(--color-text-default-val);
+    
+    --primary: var(--color-primary-val);
+    --primary-foreground: var(--color-text-on-primary-val);
+    
+    --secondary: var(--color-secondary-val);
+    --secondary-foreground: var(--color-text-on-secondary-val);
+    
+    --muted: 0 0% 20%; 
+    --muted-foreground: var(--color-text-muted-val);
+    
+    --accent: var(--color-accent-val);
+    --accent-foreground: var(--color-text-on-accent-val);
+    
+    --destructive: 0 70% 50%; /* Ajustar destructivo para dark mode */
+    --destructive-foreground: 0 0% 100%;
+    
+    --border: 0 0% 25%;
+    --input: 0 0% 18%;
+    --input-border: 0 0% 30%;
+    --ring: var(--color-primary-val);
+
+    /* Dark Sidebar specific colors - ALIGNED WITH NEW CORPORATE COLORS */
+    --sidebar-background: 0 0% 13%; /* Ligeramente diferente al fondo principal */
+    --sidebar-foreground: var(--color-text-default-val);
+    --sidebar-primary: var(--color-primary-val);
+    --sidebar-primary-foreground: var(--color-text-on-primary-val);
+    --sidebar-accent: 203 100% 20%; /* Azul primario oscuro para hover/submenú activo */
+    --sidebar-accent-foreground: 0 0% 95%; /* Texto claro sobre fondo de acento oscuro */
+    --sidebar-border: 0 0% 22%; 
+    --sidebar-ring: var(--color-primary-val);
   }
 }
 
@@ -86,34 +163,57 @@ body {
   }
   body {
     @apply bg-background text-foreground;
-    font-family: Georgia, 'Times New Roman', serif;
+    font-family: var(--font-base);
   }
   input,
   textarea,
   select {
-    /* The '*' rule already applies a border (width, style, and default color).
-       We just need to override the border-color here using the CSS variable. */
     border-color: hsl(var(--input-border));
+  }
+  /* Aplicar fuentes a elementos comunes */
+  h1, h2, h3, h4, h5, h6 {
+    font-family: var(--font-slab); /* O --font-condensed según preferencia para títulos */
   }
 }
 
 @layer components {
   .rioja-container {
-    @apply max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8;
+    @apply max-w-7xl mx-auto px-[var(--space-md)] sm:px-[var(--space-lg)] lg:px-[var(--space-xl)] py-[var(--space-lg)];
   }
 
   .page-title {
     @apply text-3xl font-bold tracking-tight sm:text-4xl md:text-5xl;
-    color: hsl(var(--secondary));
+    /* Color ya heredado de h1,h2,etc. o de foreground. Puede especificarse si es diferente. */
+    /* color: hsl(var(--primary)); */ /* Ejemplo si quieres que los títulos de página sean del color primario */
   }
 
   .section-title {
     @apply text-2xl font-semibold tracking-tight sm:text-3xl;
-    color: hsl(var(--secondary));
   }
 
   .card-stats {
-    @apply rounded-lg border-2 bg-card text-card-foreground shadow-sm;
-    border-color: hsl(var(--primary));
+    @apply rounded-[var(--radius-md)] border-2 bg-card text-card-foreground;
+    border-color: hsl(var(--primary)); /* Usando el color primario de la app general */
+    box-shadow: var(--shadow-sm);
+  }
+
+  /* Clases de botón personalizadas si es necesario, aunque ShadCN Button ya es configurable */
+  .btn-primary {
+    @apply bg-primary text-primary-foreground hover:bg-primary/90;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+  }
+  .btn-secondary {
+     @apply bg-secondary text-secondary-foreground hover:bg-secondary/90;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
+  }
+   .btn-outline {
+    @apply border border-primary text-primary bg-transparent hover:bg-primary/10;
+    padding: var(--space-sm) var(--space-md);
+    border-radius: var(--radius-sm);
+    font-weight: 600;
   }
 }
