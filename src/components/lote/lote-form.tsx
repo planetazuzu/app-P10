@@ -145,7 +145,7 @@ export function LoteForm({ onSubmit, isSaving, initialData }: LoteFormProps) {
           <Button type="button" variant="outline" onClick={() => router.push('/admin/lotes')} disabled={isSaving}>
             Cancelar
           </Button>
-          <Button type="submit" disabled={isSaving} className="btn-primary">
+          <Button type="submit" disabled={isSaving || !form.formState.isValid && form.formState.isSubmitted} className="btn-primary">
             {isSaving ? (
               <>
                 <Loader2 className="mr-2 h-4 w-4 animate-spin" />
