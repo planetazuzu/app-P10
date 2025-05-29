@@ -26,7 +26,7 @@ import {
 } from "@/components/ui/popover";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription as UiCardDescription } from '@/components/ui/card';
 import { useAuth } from '@/hooks/use-auth';
-import { createProgrammedTransportRequest } from '@/lib/request-data'; // Assuming this will be created
+import { createProgrammedTransportRequest } from '@/lib/request-data';
 import type { ProgrammedTransportRequest, TipoServicioProgramado, TipoTrasladoProgramado, MedioRequeridoProgramado, EquipamientoEspecialProgramadoId } from '@/types';
 import { ALL_TIPOS_SERVICIO_PROGRAMADO, ALL_TIPOS_TRASLADO_PROGRAMADO, ALL_MEDIOS_REQUERIDOS_PROGRAMADO, EQUIPAMIENTO_ESPECIAL_PROGRAMADO_OPTIONS } from '@/types';
 import { useToast } from "@/hooks/use-toast";
@@ -34,8 +34,9 @@ import { useRouter } from 'next/navigation';
 import { cn } from "@/lib/utils";
 import { format } from "date-fns";
 import { es } from "date-fns/locale";
-import { CalendarIcon } from "lucide-react";
-import React from 'react';
+import { CalendarIcon, Paperclip, UploadCloud } from "lucide-react";
+import React, { useState, useEffect } from 'react';
+import { Progress } from '@/components/ui/progress'; // Import Progress component
 
 const programmedTransportFormSchema = z.object({
   nombrePaciente: z.string().min(3, { message: 'El nombre del paciente debe tener al menos 3 caracteres.' }),
@@ -52,19 +53,28 @@ const programmedTransportFormSchema = z.object({
   barrerasArquitectonicas: z.string().optional(),
   necesidadesEspeciales: z.string().optional(),
   observacionesMedicasAdicionales: z.string().optional(),
-  autorizacionMedicaPdf: z.any().optional(), // Simplified for now
+  autorizacionMedicaPdf: z.instanceof(File).optional().nullable(),
 });
 
 type ProgrammedTransportFormValues = z.infer<typeof programmedTransportFormSchema>;
 
 interface ProgrammedTransportFormProps {
   onFormSubmit?: () => void;
+  mode?: 'create' | 'edit';
+  initialData?: ProgrammedTransportRequest;
+  requestId?: string; // Added for edit mode
 }
 
-export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFormProps) {
+export function ProgrammedTransportForm({ onFormSubmit, mode = 'create', initialData, requestId }: ProgrammedTransportFormProps) {
   const { user } = useAuth();
   const { toast } = useToast();
   const router = useRouter();
+
+  const [selectedFileName, setSelectedFileName] = useState<string | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadProgress, setUploadProgress] = useState(0);
+  const [isFilePersisted, setIsFilePersisted] = useState(false); // To know if a file was already there in edit mode
+
 
   const form = useForm<ProgrammedTransportFormValues>({
     resolver: zodResolver(programmedTransportFormSchema),
@@ -76,14 +86,51 @@ export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFor
       tipoTraslado: 'soloIda',
       centroOrigen: '',
       destino: '',
+      // fechaIda: new Date(), // Let's set this in useEffect for edit mode
       horaIda: '10:00',
       medioRequerido: 'andando',
       equipamientoEspecialRequerido: [],
       barrerasArquitectonicas: '',
       necesidadesEspeciales: '',
       observacionesMedicasAdicionales: '',
+      autorizacionMedicaPdf: null,
     },
   });
+
+  useEffect(() => {
+    if (mode === 'edit' && initialData) {
+      const defaultVals: Partial<ProgrammedTransportFormValues> = {
+        nombrePaciente: initialData.nombrePaciente || '',
+        dniNieSsPaciente: initialData.dniNieSsPaciente || '',
+        servicioPersonaResponsable: initialData.servicioPersonaResponsable || '',
+        tipoServicio: initialData.tipoServicio || 'consulta',
+        tipoTraslado: initialData.tipoTraslado || 'soloIda',
+        centroOrigen: initialData.centroOrigen || '',
+        destino: initialData.destino || '',
+        fechaIda: initialData.fechaIda ? parseISO(initialData.fechaIda) : new Date(),
+        horaIda: initialData.horaIda || '10:00',
+        medioRequerido: initialData.medioRequerido || 'andando',
+        equipamientoEspecialRequerido: initialData.equipamientoEspecialRequerido || [],
+        barrerasArquitectonicas: initialData.barrerasArquitectonicas || '',
+        necesidadesEspeciales: initialData.necesidadesEspeciales || '',
+        observacionesMedicasAdicionales: initialData.observacionesMedicasAdicionales || '',
+        autorizacionMedicaPdf: null, // File input cannot be pre-filled for security reasons
+      };
+      form.reset(defaultVals);
+      if (initialData.autorizacionMedicaPdf) {
+        setSelectedFileName(initialData.autorizacionMedicaPdf); // Display name of existing file
+        setIsFilePersisted(true);
+      }
+    } else {
+      // For create mode, ensure fechaIda has a default if not set.
+      if (!form.getValues('fechaIda')) {
+        form.setValue('fechaIda', new Date());
+      }
+       setSelectedFileName(null);
+       setIsFilePersisted(false);
+    }
+  }, [mode, initialData, form]);
+
 
   async function onSubmit(values: ProgrammedTransportFormValues) {
     if (!user) {
@@ -91,50 +138,99 @@ export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFor
       return;
     }
 
-    const requestData: Omit<ProgrammedTransportRequest, 'id' | 'requesterId' | 'status' | 'createdAt' | 'updatedAt' | 'priority' | 'assignedAmbulanceId'> = {
-      ...values,
-      fechaIda: values.fechaIda.toISOString().split('T')[0], // Store date as YYYY-MM-DD
-      // autorizacionMedicaPdf will be undefined if no file is selected. Actual file handling is complex.
-      autorizacionMedicaPdf: values.autorizacionMedicaPdf instanceof File ? values.autorizacionMedicaPdf.name : undefined,
-    };
-    
-    try {
-      // await createProgrammedTransportRequest(requestData, user.id); // Assuming this function structure
-      console.log("Simulating creation of programmed transport request:", requestData, "by user:", user.id);
-      // For demo, directly call mock creation
-       await createProgrammedTransportRequest({
-        ...requestData,
-        requesterId: user.id,
-        status: 'pending',
-        priority: 'low', // Programmed requests are typically low priority
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString(),
+    let finalAutorizacionMedicaPdfName: string | undefined = selectedFileName;
+
+    if (values.autorizacionMedicaPdf instanceof File) {
+      setIsUploading(true);
+      setUploadProgress(0);
+
+      // Simulate upload progress
+      await new Promise(resolve => {
+        let progress = 0;
+        const interval = setInterval(() => {
+          progress += 20;
+          setUploadProgress(progress);
+          if (progress >= 100) {
+            clearInterval(interval);
+            resolve(true);
+          }
+        }, 200);
       });
+      setIsUploading(false);
+      finalAutorizacionMedicaPdfName = values.autorizacionMedicaPdf.name; // Use the new file name
+      setIsFilePersisted(true); // Mark as "persisted" after simulated upload
+    } else if (mode === 'edit' && !selectedFileName && isFilePersisted) {
+        // This means the user cleared a previously existing file in edit mode, but we don't have a mechanism
+        // to "delete" it from a mock backend here. We'll just assume it's cleared for the UI.
+        finalAutorizacionMedicaPdfName = undefined;
+    }
 
 
-      toast({ title: "Solicitud de Transporte Enviada", description: "Su solicitud de transporte programado ha sido enviada."});
-      form.reset();
+    const requestDataPayload = {
+      ...values,
+      fechaIda: values.fechaIda.toISOString().split('T')[0],
+      autorizacionMedicaPdf: finalAutorizacionMedicaPdfName,
+    };
+
+    // Remove autorizacionMedicaPdf if it's null (which it would be if it was a File object)
+    // The actual file object values.autorizacionMedicaPdf is not sent, only its name after "upload"
+    const { autorizacionMedicaPdf, ...dataToSend } = requestDataPayload;
+
+
+    try {
+      if (mode === 'create') {
+        const requestData: Omit<ProgrammedTransportRequest, 'id' | 'requesterId' | 'status' | 'createdAt' | 'updatedAt' | 'priority' | 'assignedAmbulanceId'> = {
+            ...dataToSend,
+        };
+        await createProgrammedTransportRequest({
+            ...requestData,
+            requesterId: user.id,
+            status: 'pending',
+            priority: 'low',
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString(),
+        });
+        toast({ title: "Solicitud de Transporte Enviada", description: "Su solicitud de transporte programado ha sido enviada."});
+      } else if (mode === 'edit' && requestId) {
+        // await updateProgrammedRequest(requestId, dataToSend);
+        console.log("Simulando actualización de solicitud programada:", requestId, dataToSend);
+        toast({ title: "Solicitud Actualizada", description: "La solicitud de transporte programado ha sido actualizada (simulado)."});
+      }
+
+      form.reset({ // Reset with defaults for create mode or re-initialData for edit
+        ...form.control._defaultValues,
+        fechaIda: new Date(),
+        autorizacionMedicaPdf: null
+      });
+      setSelectedFileName(null);
+      setUploadProgress(0);
+      setIsFilePersisted(false);
+
       if (onFormSubmit) {
         onFormSubmit();
       } else {
-        router.push('/request-management'); // Or a list of programmed requests
+        router.push('/request-management');
       }
     } catch (error) {
       console.error('Error al enviar la solicitud de transporte programado:', error);
       toast({ title: "Envío Fallido", description: "No se pudo enviar su solicitud. Por favor, inténtelo de nuevo.", variant: "destructive"});
+      setIsUploading(false); // Reset upload state on error too
     }
   }
+
+  const cardTitle = mode === 'create' ? 'Formulario de Solicitud de Transporte' : `Editar Solicitud Programada: ${requestId?.substring(0,8) || ''}...`;
 
   return (
     <Card className="w-full">
       <CardHeader>
-        <CardTitle className="section-title">Formulario de Solicitud de Transporte</CardTitle>
+        <CardTitle className="section-title">{cardTitle}</CardTitle>
         <UiCardDescription>Complete todos los campos para solicitar un transporte sanitario programado. Los campos marcados con * son obligatorios.</UiCardDescription>
       </CardHeader>
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid md:grid-cols-2 gap-6">
+            {/* ... (otros campos del formulario, sin cambios) ... */}
+             <div className="grid md:grid-cols-2 gap-6">
               <FormField
                 control={form.control}
                 name="nombrePaciente"
@@ -181,25 +277,17 @@ export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFor
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} // Ensure value is controlled
                         className="flex flex-col space-y-1"
                       >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="consulta" /></FormControl>
-                          <FormLabel className="font-normal">Consulta</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="alta" /></FormControl>
-                          <FormLabel className="font-normal">Alta</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="ingreso" /></FormControl>
-                          <FormLabel className="font-normal">Ingreso</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="trasladoEntreCentros" /></FormControl>
-                          <FormLabel className="font-normal">Traslado entre centros</FormLabel>
-                        </FormItem>
+                        {ALL_TIPOS_SERVICIO_PROGRAMADO.map(tipo => (
+                            <FormItem key={tipo} className="flex items-center space-x-3 space-y-0">
+                                <FormControl><RadioGroupItem value={tipo} /></FormControl>
+                                <FormLabel className="font-normal capitalize">
+                                    {tipo.replace(/([A-Z])/g, ' $1').toLowerCase()} {/* Auto-format label */}
+                                </FormLabel>
+                            </FormItem>
+                        ))}
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
@@ -215,17 +303,17 @@ export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFor
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} // Ensure value is controlled
                         className="flex flex-col space-y-1"
                       >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="soloIda" /></FormControl>
-                          <FormLabel className="font-normal">Solo ida</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="idaYVuelta" /></FormControl>
-                          <FormLabel className="font-normal">Ida y vuelta</FormLabel>
-                        </FormItem>
+                         {ALL_TIPOS_TRASLADO_PROGRAMADO.map(tipo => (
+                             <FormItem key={tipo} className="flex items-center space-x-3 space-y-0">
+                                <FormControl><RadioGroupItem value={tipo} /></FormControl>
+                                <FormLabel className="font-normal capitalize">
+                                    {tipo === 'soloIda' ? 'Solo ida' : 'Ida y vuelta'}
+                                </FormLabel>
+                            </FormItem>
+                         ))}
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
@@ -291,7 +379,7 @@ export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFor
                                 selected={field.value}
                                 onSelect={field.onChange}
                                 disabled={(date) =>
-                                date < new Date(new Date().setHours(0,0,0,0)) // Disable past dates
+                                date < new Date(new Date().setHours(0,0,0,0)) 
                                 }
                                 initialFocus
                                 locale={es}
@@ -324,21 +412,17 @@ export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFor
                     <FormControl>
                       <RadioGroup
                         onValueChange={field.onChange}
-                        defaultValue={field.value}
+                        value={field.value} // Ensure value is controlled
                         className="flex flex-col sm:flex-row sm:space-x-4 space-y-1 sm:space-y-0"
                       >
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="camilla" /></FormControl>
-                          <FormLabel className="font-normal">Camilla</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="sillaDeRuedas" /></FormControl>
-                          <FormLabel className="font-normal">Silla de ruedas</FormLabel>
-                        </FormItem>
-                        <FormItem className="flex items-center space-x-3 space-y-0">
-                          <FormControl><RadioGroupItem value="andando" /></FormControl>
-                          <FormLabel className="font-normal">Andando</FormLabel>
-                        </FormItem>
+                        {ALL_MEDIOS_REQUERIDOS_PROGRAMADO.map(medio => (
+                            <FormItem key={medio} className="flex items-center space-x-3 space-y-0">
+                                <FormControl><RadioGroupItem value={medio} /></FormControl>
+                                <FormLabel className="font-normal capitalize">
+                                    {medio === 'camilla' ? 'Camilla' : medio === 'sillaDeRuedas' ? 'Silla de ruedas' : 'Andando'}
+                                </FormLabel>
+                            </FormItem>
+                        ))}
                       </RadioGroup>
                     </FormControl>
                     <FormMessage />
@@ -436,31 +520,64 @@ export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFor
             <FormField
                 control={form.control}
                 name="autorizacionMedicaPdf"
-                render={({ field }) => ( // field value will be FileList, we are interested in field.value[0]
+                render={({ field: { onChange, value, ...restField } }) => (
                     <FormItem>
                         <FormLabel>Autorización médica (PDF)</FormLabel>
                         <FormControl>
                             <Input 
                                 type="file" 
                                 accept=".pdf"
-                                onChange={(e) => field.onChange(e.target.files ? e.target.files[0] : null)} 
-                                // {...field} but we don't want to spread value and ref directly for file inputs
+                                {...restField}
+                                onChange={(e) => {
+                                    const file = e.target.files ? e.target.files[0] : null;
+                                    onChange(file); // Pass File object to react-hook-form
+                                    setSelectedFileName(file ? file.name : null);
+                                    if (file) setIsFilePersisted(false); // New file selected, not persisted from initialData
+                                }}
                             />
                         </FormControl>
                         <FormDescription>
-                            Para usuarios particulares, es obligatorio adjuntar la autorización médica del traslado en formato PDF.
+                            {mode === 'create' ? 'Para usuarios particulares, es obligatorio adjuntar la autorización médica.' : 'Puede adjuntar una nueva autorización o dejarla para mantener la existente (si la hay).'}
                         </FormDescription>
+                        {selectedFileName && !isUploading && (
+                          <div className="mt-2 text-sm text-muted-foreground flex items-center">
+                            <Paperclip className="h-4 w-4 mr-2" />
+                            Archivo seleccionado: {selectedFileName}
+                            {(mode === 'edit' && isFilePersisted && !value) && <span className="text-xs text-green-600 ml-2">(Archivo existente guardado)</span>}
+                            <Button
+                                type="button"
+                                variant="ghost"
+                                size="sm"
+                                className="ml-2 text-red-500 hover:text-red-700"
+                                onClick={() => {
+                                    form.setValue('autorizacionMedicaPdf', null); // Clear RHF value
+                                    setSelectedFileName(null);
+                                    setUploadProgress(0);
+                                    // If it was an existing file, we just clear the UI indication for now
+                                    // The actual deletion from backend would happen on save if confirmed
+                                }}
+                            >
+                                Quitar
+                            </Button>
+                          </div>
+                        )}
+                        {isUploading && (
+                          <div className="mt-2">
+                            <Progress value={uploadProgress} className="w-full h-2" />
+                            <p className="text-xs text-muted-foreground text-center mt-1">Cargando: {uploadProgress}%</p>
+                          </div>
+                        )}
                         <FormMessage />
                     </FormItem>
                 )}
             />
             
             <div className="flex justify-end space-x-3 pt-4">
-                <Button type="button" variant="outline" onClick={() => router.back()}>
+                <Button type="button" variant="outline" onClick={() => router.back()} disabled={isUploading}>
                     Cancelar
                 </Button>
-                <Button type="submit" variant="default" disabled={form.formState.isSubmitting}>
-                    {form.formState.isSubmitting ? 'Enviando...' : 'Enviar Solicitud'}
+                <Button type="submit" variant="default" disabled={form.formState.isSubmitting || isUploading}>
+                    {form.formState.isSubmitting || isUploading ? 'Procesando...' : (mode === 'create' ? 'Enviar Solicitud' : 'Guardar Cambios')}
                 </Button>
             </div>
           </form>
@@ -469,3 +586,4 @@ export function ProgrammedTransportForm({ onFormSubmit }: ProgrammedTransportFor
     </Card>
   );
 }
+
