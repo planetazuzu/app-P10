@@ -14,11 +14,12 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Waypoints, AlertTriangle, Ambulance as AmbulanceIcon, User, Clock, MapPin, Edit2, Unlink, ListPlus } from 'lucide-react'; // Changed Edit to Edit2
+import { ArrowLeft, Loader2, Waypoints, AlertTriangle, Ambulance as AmbulanceIcon, User, Clock, MapPin, Edit2, Unlink, ListPlus } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { ManageLotServicesModal } from '@/components/lote/manage-lot-services-modal';
+import { Skeleton } from '@/components/ui/skeleton';
 
 const translateParadaStatus = (status: ParadaRuta['estado']): string => {
   switch (status) {
@@ -66,7 +67,7 @@ export default function LoteDetailPage() {
   const [ruta, setRuta] = useState<RutaCalculada | null>(null);
   const [assignedAmbulance, setAssignedAmbulance] = useState<Ambulance | null>(null);
   const [allAmbulances, setAllAmbulances] = useState<Ambulance[]>([]); 
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoadingData, setIsLoadingData] = useState(true);
   const [isSubmittingAmbulance, setIsSubmittingAmbulance] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [selectedAmbulanceToAssign, setSelectedAmbulanceToAssign] = useState<string | undefined>(undefined);
@@ -78,17 +79,17 @@ export default function LoteDetailPage() {
 
   const fetchData = useCallback(async () => {
     if (!user || !['admin', 'centroCoordinador'].includes(user.role) || !loteId) {
-      setIsLoading(false);
+      setIsLoadingData(false);
       return;
     }
-    setIsLoading(true);
+    setIsLoadingData(true);
     setError(null);
     try {
       const fetchedLote = await getLoteByIdMock(loteId);
       if (!fetchedLote) {
         setError("No se encontró el lote o no tiene permisos para verlo.");
         setLote(null); setRuta(null); setAssignedAmbulance(null);
-        setIsLoading(false);
+        setIsLoadingData(false);
         return;
       }
       setLote(fetchedLote);
@@ -108,12 +109,10 @@ export default function LoteDetailPage() {
         setAssignedAmbulance(null);
       }
 
-      // Fetch services for modal
       const [unassigned, assignedToThisLote] = await Promise.all([
-        getProgrammedTransportRequestsForPlanning(), // Gets services not in *any* lot
-        getProgrammedRequestsByLoteId(loteId)    // Gets services specifically for *this* lot
+        getProgrammedTransportRequestsForPlanning(),
+        getProgrammedRequestsByLoteId(loteId)
       ]);
-      // For "available", we filter by the lot's date AND ensure they are not already in THIS lot.
       setAvailableServicesForModal(unassigned.filter(s => s.fechaIda === fetchedLote.fechaServicio && !assignedToThisLote.find(as => as.id === s.id) ));
       setAssignedServicesForModal(assignedToThisLote);
 
@@ -121,7 +120,7 @@ export default function LoteDetailPage() {
       console.error("Error fetching lote details:", e);
       setError("Error al cargar los datos del lote.");
     } finally {
-      setIsLoading(false);
+      setIsLoadingData(false);
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [loteId, user]); 
@@ -159,11 +158,11 @@ export default function LoteDetailPage() {
   const handleOptimizarRuta = async () => {
     if (!lote) return;
     toast({ title: "Optimizando Ruta (Simulado)", description: "En un sistema real, esto llamaría a un flujo de IA/Genkit para calcular la ruta óptima."});
-    setIsLoading(true); 
+    setIsLoadingData(true); 
     const newRuta = await getRutaCalculadaByLoteIdMock(lote.id, lote.rutaCalculadaId); 
     setRuta(newRuta);
     setLote(prev => prev ? {...prev, estadoLote: newRuta && newRuta.paradas.length > 0 ? 'calculado' : 'pendienteCalculo' } : null);
-    setIsLoading(false);
+    setIsLoadingData(false);
      toast({ title: "Ruta Actualizada", description: "La ruta ha sido re-calculada basada en los servicios asignados."});
   };
 
@@ -196,10 +195,9 @@ export default function LoteDetailPage() {
   
   const handleConfirmServiceChanges = async (servicesToAddIds: string[], servicesToRemoveIds: string[]): Promise<boolean> => {
     if (!lote) return false;
-    setIsLoading(true);
+    setIsLoadingData(true);
     let success = false;
     try {
-      // Update ProgrammedTransportRequests
       for (const serviceId of servicesToAddIds) {
         await updateProgrammedRequestLoteAssignment(serviceId, lote.id, 'batched');
       }
@@ -207,21 +205,17 @@ export default function LoteDetailPage() {
         await updateProgrammedRequestLoteAssignment(serviceId, null, 'pending');
       }
 
-      // Update LoteProgramado
       const currentServiceIds = lote.serviciosIds.filter(id => !servicesToRemoveIds.includes(id));
       const finalServiceIds = Array.from(new Set([...currentServiceIds, ...servicesToAddIds]));
       
       const updatedLote = await updateLoteServiciosMock(lote.id, finalServiceIds);
       if (updatedLote) {
         setLote(updatedLote);
-        // Re-fetch assigned services for modal display consistency for next open
         const assignedToThisLote = await getProgrammedRequestsByLoteId(lote.id);
         setAssignedServicesForModal(assignedToThisLote);
         const unassigned = await getProgrammedTransportRequestsForPlanning();
         setAvailableServicesForModal(unassigned.filter(s => s.fechaIda === updatedLote.fechaServicio && !assignedToThisLote.find(as => as.id === s.id)));
-
-        // Important: Mark the route as needing re-optimization
-        setRuta(prevRuta => prevRuta ? {...prevRuta, paradas: []} : null); // Clear current paradas
+        setRuta(prevRuta => prevRuta ? {...prevRuta, paradas: []} : null);
         toast({ title: "Servicios del Lote Actualizados", description: "La ruta ha sido marcada como 'modificada' y necesitará ser re-optimizada."});
         success = true;
       }
@@ -229,16 +223,56 @@ export default function LoteDetailPage() {
       console.error("Error managing lot services:", error);
       toast({ title: "Error", description: "No se pudieron actualizar los servicios del lote.", variant: "destructive" });
     }
-    setIsLoading(false);
+    setIsLoadingData(false);
     return success;
   };
 
-
-  if (authIsLoading || isLoading) {
+  if (authIsLoading || isLoadingData) {
     return (
-      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
-        <Loader2 className="h-12 w-12 animate-spin text-primary" />
-        <p className="ml-4 text-lg text-muted-foreground">Cargando detalles del lote...</p>
+      <div className="rioja-container">
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-3">
+            <Skeleton className="h-9 w-9" />
+            <Skeleton className="h-10 w-48" />
+          </div>
+          <Skeleton className="h-10 w-40" />
+        </div>
+        <div className="grid lg:grid-cols-3 gap-6 items-start">
+          <div className="lg:col-span-1 space-y-6">
+            <Card>
+              <CardHeader><Skeleton className="h-8 w-3/4" /></CardHeader>
+              <CardContent className="space-y-3">
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-5/6" />
+                <Skeleton className="h-5 w-full" />
+                <Skeleton className="h-5 w-4/6" />
+              </CardContent>
+            </Card>
+            <Card>
+              <CardHeader><Skeleton className="h-8 w-3/4" /></CardHeader>
+              <CardContent className="space-y-3">
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+                <Skeleton className="h-10 w-full" />
+              </CardContent>
+            </Card>
+          </div>
+          <div className="lg:col-span-2">
+            <Card>
+              <CardHeader>
+                <div className="flex justify-between items-center">
+                  <Skeleton className="h-8 w-1/2" />
+                  <Skeleton className="h-10 w-36" />
+                </div>
+                <Skeleton className="h-4 w-3/4 mt-1" />
+              </CardHeader>
+              <CardContent>
+                <Skeleton className="h-6 w-full mb-4" />
+                <Skeleton className="h-40 w-full" /> {/* Placeholder for table */}
+              </CardContent>
+            </Card>
+          </div>
+        </div>
       </div>
     );
   }
@@ -445,3 +479,5 @@ export default function LoteDetailPage() {
     </div>
   );
 }
+
+    
