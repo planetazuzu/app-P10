@@ -1,7 +1,6 @@
 
 import type { AmbulanceRequest, RequestStatus, UserRole, ProgrammedTransportRequest, TipoServicioProgramado, TipoTrasladoProgramado, MedioRequeridoProgramado, EquipamientoEspecialProgramadoId } from '@/types';
-// import { mockAmbulances } from './ambulance-data'; // No se usa directamente aquí
-import { MOCK_USERS } from './auth';
+import { MOCK_USERS } from './auth'; // Asegúrate de que MOCK_USERS se exporta y está disponible
 import { ALL_TIPOS_SERVICIO_PROGRAMADO, ALL_TIPOS_TRASLADO_PROGRAMADO, ALL_MEDIOS_REQUERIDOS_PROGRAMADO, EQUIPAMIENTO_ESPECIAL_PROGRAMADO_OPTIONS } from '@/types';
 
 
@@ -43,35 +42,45 @@ const hospitalUser = mockUserValues.find(u => u.role === 'hospital');
 const adminUser = mockUserValues.find(u => u.role === 'admin');
 const centroCoordinadorUser = mockUserValues.find(u => u.role === 'centroCoordinador');
 
+const otherSpecificUsers = [
+  hospitalUser,
+  adminUser,
+  centroCoordinadorUser
+].filter(Boolean); // Filtra undefined si alguno no existiera
+
 
 export let mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
-  const baseLocation = { lat: 42.4659, lng: -2.4487 }; // Logroño
-  const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2); // Around La Rioja
-  const createdAt = new Date(Date.now() - Math.floor(Math.random() * 24 * 3 * 60 * 60 * 1000)); // Up to 3 days ago
+  const baseLocation = { lat: 42.4659, lng: -2.4487 };
+  const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2);
+  const createdAt = new Date(Date.now() - Math.floor(Math.random() * 24 * 3 * 60 * 60 * 1000));
   const statusOptions: RequestStatus[] = ['pending', 'dispatched', 'on-scene', 'transporting', 'completed', 'cancelled'];
   const status = getRandomElement<RequestStatus>(statusOptions);
-  
   let assignedAmbulanceId: string | undefined = undefined;
-  // if (status !== 'pending' && status !== 'cancelled' && status !== 'batched' && mockAmbulances.length > 0) {
-  //   const availableAmbulances = mockAmbulances.filter(a => a.status === 'busy' || a.status === 'available');
-  //   if (availableAmbulances.length > 0) {
-  //       assignedAmbulanceId = getRandomElement(availableAmbulances).id;
-  //   }
-  // }
-  // Comentado temporalmente porque mockAmbulances ahora es asíncrono de NocoDB
-  
-  let requesterUser = getRandomElement(mockUserValues); 
-  if (i < 2 && individualUser) requesterUser = individualUser; 
-  else if (i >= 2 && i < 4 && hospitalUser) requesterUser = hospitalUser;
-  else if (i >= 4 && i < 6 && centroCoordinadorUser) requesterUser = centroCoordinadorUser;
-  else if (i >= 6 && i < 8 && adminUser) requesterUser = adminUser;
- 
+
+  let assignedRequesterId: string;
+
+  if (individualUser && i < 3) { // Primeras 3 solicitudes para el usuario individual
+    assignedRequesterId = individualUser.id;
+  } else if (otherSpecificUsers.length > 0 && i < 3 + otherSpecificUsers.length) {
+    // Siguientes N solicitudes para otros usuarios específicos (admin, hospital, coordinador)
+    assignedRequesterId = otherSpecificUsers[(i - 3) % otherSpecificUsers.length]!.id;
+  } else {
+    // El resto para usuarios aleatorios, asegurando que no sea el individual
+    let randomOtherUser = getRandomElement(mockUserValues.filter(u => u.id !== individualUser?.id && otherSpecificUsers.every(su => su!.id !== u.id) ));
+    if (!randomOtherUser && otherSpecificUsers.length > 0) { // Fallback si el filtro deja array vacío
+        randomOtherUser = getRandomElement(otherSpecificUsers)!;
+    } else if (!randomOtherUser) { // Fallback si no hay otros usuarios definidos
+        randomOtherUser = adminUser || hospitalUser || centroCoordinadorUser || mockUserValues[0];
+    }
+    assignedRequesterId = randomOtherUser.id;
+  }
+
   return {
-    id: `req-${101 + i}-${Math.random().toString(36).substring(2, 7)}`, 
-    requesterId: requesterUser.id,
+    id: `req-${101 + i}-${Math.random().toString(36).substring(2, 7)}`,
+    requesterId: assignedRequesterId,
     patientDetails: getRandomElement(patientDetailsSamples),
-    location: { 
-        latitude: coords.latitude, 
+    location: {
+        latitude: coords.latitude,
         longitude: coords.longitude,
         address: getRandomElement(addresses)
     },
@@ -88,26 +97,22 @@ export let mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) 
 export function getRequests(userId: string, userRole: UserRole): Promise<AmbulanceRequest[]> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      let userRequests: AmbulanceRequest[] = [];
-      switch (userRole) {
-        case 'admin':
-        case 'hospital':
-        case 'centroCoordinador': 
-          userRequests = [...mockRequests]; 
-          break;
-        case 'individual':
-          userRequests = mockRequests.filter(req => req.requesterId === userId); 
-          break;
-        case 'equipoMovil': 
-             userRequests = []; 
-             break;
-        default:
-          const _exhaustiveCheck: never = userRole; 
-          console.warn(`Rol de usuario no manejado en getRequests: ${_exhaustiveCheck}`);
-          break;
+      let userRequestsToReturn: AmbulanceRequest[];
+
+      if (userRole === 'individual') {
+        userRequestsToReturn = mockRequests.filter(req => req.requesterId === userId);
+      } else if (userRole === 'admin' || userRole === 'hospital' || userRole === 'centroCoordinador') {
+        userRequestsToReturn = [...mockRequests]; // Devuelve una copia para evitar mutaciones directas
+      } else if (userRole === 'equipoMovil') {
+        userRequestsToReturn = []; // El equipo móvil no ve estas solicitudes directamente
+      } else {
+        // Esto no debería suceder con UserRole bien tipado, pero es un fallback
+        console.warn(`Rol de usuario no manejado en getRequests: ${userRole}`);
+        userRequestsToReturn = [];
       }
-      resolve(userRequests.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    }, 500);
+      // Ordenar por fecha de creación descendente
+      resolve(userRequestsToReturn.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    }, 300); // Simular retardo de red
   });
 }
 
@@ -128,24 +133,27 @@ export function createRequest(requestData: Omit<AmbulanceRequest, 'id' | 'create
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      mockRequests.unshift(newRequest);
+      mockRequests.unshift(newRequest); // Añade al principio para verla primero si se ordena por fecha
       resolve(newRequest);
     }, 300);
   });
 }
 
 export function updateSimpleRequest(
-  id: string, 
-  dataToUpdate: Partial<Omit<AmbulanceRequest, 'id' | 'createdAt' | 'requesterId' | 'status' | 'assignedAmbulanceId'>> 
+  id: string,
+  dataToUpdate: Partial<Omit<AmbulanceRequest, 'id' | 'createdAt' | 'requesterId' | 'assignedAmbulanceId'>> // 'status' puede ser actualizado por otra función
 ): Promise<AmbulanceRequest | undefined> {
   return new Promise((resolve) => {
     setTimeout(() => {
       const requestIndex = mockRequests.findIndex(req => req.id === id);
       if (requestIndex > -1) {
         const existingRequest = mockRequests[requestIndex];
+        // Evitar cambiar el status aquí si hay una función dedicada para ello
+        const { status, ...restOfDataToUpdate } = dataToUpdate as any; // any para evitar error de tipo con status
+
         mockRequests[requestIndex] = {
           ...existingRequest,
-          ...dataToUpdate,
+          ...restOfDataToUpdate,
           location: dataToUpdate.location ? { ...existingRequest.location, ...dataToUpdate.location } : existingRequest.location,
           updatedAt: new Date().toISOString(),
         };
@@ -166,6 +174,8 @@ export function updateRequestStatus(id: string, status: RequestStatus, ambulance
                 mockRequests[requestIndex].updatedAt = new Date().toISOString();
                 if (ambulanceId) {
                     mockRequests[requestIndex].assignedAmbulanceId = ambulanceId;
+                } else if (status === 'pending' || status === 'cancelled') { // Opcionalmente limpiar ambulancia asignada
+                    mockRequests[requestIndex].assignedAmbulanceId = undefined;
                 }
                 resolve(mockRequests[requestIndex]);
             } else {
@@ -180,7 +190,7 @@ export function updateRequestStatus(id: string, status: RequestStatus, ambulance
 export let mockProgrammedTransportRequests: ProgrammedTransportRequest[] = [];
 
 // Initialize mockProgrammedTransportRequests with some data if it's empty
-if (mockProgrammedTransportRequests.length === 0) {
+if (mockProgrammedTransportRequests.length === 0 && individualUser) {
     const today = new Date();
     const createDate = (daysOffset: number) => {
         const date = new Date(today);
@@ -190,38 +200,38 @@ if (mockProgrammedTransportRequests.length === 0) {
 
     const programmedRequesters = [
         MOCK_USERS['hospital@gmr.com']?.id || 'user-hospital-fallback',
-        MOCK_USERS['individual@gmr.com']?.id || 'user-individual-fallback',
+        individualUser.id, // Asegurar que el usuario individual tenga solicitudes programadas
         MOCK_USERS['coordinador@gmr.com']?.id || 'user-coordinador-fallback',
     ];
 
     const sampleProgrammedRequests: Omit<ProgrammedTransportRequest, 'id' | 'requesterId' | 'createdAt' | 'updatedAt'>[] = [
-        { status: 'pending', nombrePaciente: 'Elena Navarro', dniNieSsPaciente: '12345678A', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Domicilio: Calle Falsa 123, Logroño', destino: 'Hospital San Pedro', fechaIda: createDate(1), horaIda: '10:00', horaConsultaMedica: '10:30', medioRequerido: 'sillaDeRuedas', priority: 'low' },
-        { status: 'pending', nombrePaciente: 'Roberto Sanz', dniNieSsPaciente: '87654321B', tipoServicio: 'rehabilitacion', tipoTraslado: 'soloIda', centroOrigen: 'Centro de Día Sol', destino: 'Domicilio: Avenida de la Paz 50, Calahorra', fechaIda: createDate(1), horaIda: '14:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Necesita ayuda para bajar escalón.' },
-        { status: 'batched', loteId: 'lote-demo-123', nombrePaciente: 'Ana Pérez García', dniNieSsPaciente: '11223344C', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Plaza del Ayuntamiento 1, Haro', destino: 'CARPA', fechaIda: createDate(0), horaIda: '09:00', horaConsultaMedica: '09:30', medioRequerido: 'camilla', priority: 'low' },
-        { status: 'pending', nombrePaciente: 'Carlos Gómez Ruiz', dniNieSsPaciente: '55667788D', tipoServicio: 'tratamientoContinuado', tipoTraslado: 'idaYVuelta', centroOrigen: 'Hospital de Calahorra', destino: 'Hospital San Pedro - Oncología', fechaIda: createDate(2), horaIda: '11:00', horaConsultaMedica: '11:45', medioRequerido: 'sillaDeRuedas', priority: 'low', equipamientoEspecialRequerido: ['oxigeno'] },
-        { status: 'pending', nombrePaciente: 'Laura Martínez Soler', dniNieSsPaciente: '99001122E', tipoServicio: 'alta', tipoTraslado: 'soloIda', centroOrigen: 'Hospital San Pedro - Planta 3', destino: 'Residencia Los Tulipanes', fechaIda: createDate(3), horaIda: '13:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Entregar informe de alta.' },
-        { status: 'pending', nombrePaciente: 'Pedro Jiménez Vega', dniNieSsPaciente: '66778899F', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Domicilio: Calle Gran Vía 50, Logroño', destino: 'Hospital San Pedro - Rayos', fechaIda: createDate(0), horaIda: '15:00', horaConsultaMedica: '15:30', medioRequerido: 'andando', priority: 'low', barrerasArquitectonicas: '3 escalones en portal' },
-        { status: 'pending', nombrePaciente: 'Sofía Lorente', dniNieSsPaciente: '22334455G', tipoServicio: 'rehabilitacion', tipoTraslado: 'idaYVuelta', centroOrigen: 'CARPA', destino: 'Domicilio: Calle Chile 10, Logroño', fechaIda: createDate(1), horaIda: '12:00', horaConsultaMedica: '12:30', medioRequerido: 'sillaDeRuedas', priority: 'low' },
+        { status: 'pending', nombrePaciente: 'Elena Navarro (Prog)', dniNieSsPaciente: '12345678A', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Domicilio: Calle Falsa 123, Logroño', destino: 'Hospital San Pedro', fechaIda: createDate(1), horaIda: '10:00', horaConsultaMedica: '10:30', medioRequerido: 'sillaDeRuedas', priority: 'low', requesterId: individualUser.id },
+        { status: 'pending', nombrePaciente: 'Roberto Sanz (Prog)', dniNieSsPaciente: '87654321B', tipoServicio: 'rehabilitacion', tipoTraslado: 'soloIda', centroOrigen: 'Centro de Día Sol', destino: 'Domicilio: Avenida de la Paz 50, Calahorra', fechaIda: createDate(1), horaIda: '14:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Necesita ayuda para bajar escalón.', requesterId: programmedRequesters[0] },
+        { status: 'batched', loteId: 'lote-demo-123', nombrePaciente: 'Ana Pérez García (Prog)', dniNieSsPaciente: '11223344C', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Plaza del Ayuntamiento 1, Haro', destino: 'CARPA', fechaIda: createDate(0), horaIda: '09:00', horaConsultaMedica: '09:30', medioRequerido: 'camilla', priority: 'low', requesterId: programmedRequesters[2] },
+        { status: 'pending', nombrePaciente: 'Carlos Gómez Ruiz (Prog)', dniNieSsPaciente: '55667788D', tipoServicio: 'tratamientoContinuado', tipoTraslado: 'idaYVuelta', centroOrigen: 'Hospital de Calahorra', destino: 'Hospital San Pedro - Oncología', fechaIda: createDate(2), horaIda: '11:00', horaConsultaMedica: '11:45', medioRequerido: 'sillaDeRuedas', priority: 'low', equipamientoEspecialRequerido: ['oxigeno'], requesterId: individualUser.id  },
+        { status: 'pending', nombrePaciente: 'Laura Martínez Soler (Prog)', dniNieSsPaciente: '99001122E', tipoServicio: 'alta', tipoTraslado: 'soloIda', centroOrigen: 'Hospital San Pedro - Planta 3', destino: 'Residencia Los Tulipanes', fechaIda: createDate(3), horaIda: '13:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Entregar informe de alta.', requesterId: programmedRequesters[0] },
     ];
-    
+
     mockProgrammedTransportRequests = sampleProgrammedRequests.map((reqBase, index) => ({
         ...reqBase,
         id: `prog-req-${String(index + 1).padStart(3, '0')}`,
-        requesterId: getRandomElement(programmedRequesters),
-        createdAt: new Date(Date.now() - Math.floor(Math.random() * 72 * 60 * 60 * 1000)).toISOString(), // Up to 3 days ago
+        // requesterId is now part of reqBase
+        createdAt: new Date(Date.now() - Math.floor(Math.random() * 72 * 60 * 60 * 1000)).toISOString(),
         updatedAt: new Date().toISOString(),
     }));
 }
 
 
 export function createProgrammedTransportRequest(
-  requestData: Omit<ProgrammedTransportRequest, 'id'>
+  requestDataWithRequester: Omit<ProgrammedTransportRequest, 'id' | 'createdAt' | 'updatedAt'>
 ): Promise<ProgrammedTransportRequest> {
   return new Promise((resolve) => {
     setTimeout(() => {
       const newProgrammedRequest: ProgrammedTransportRequest = {
-        ...requestData,
+        ...requestDataWithRequester,
         id: `prog-req-${Date.now()}-${Math.random().toString(36).substring(2, 7)}`,
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString(),
       };
       mockProgrammedTransportRequests.unshift(newProgrammedRequest);
       resolve(newProgrammedRequest);
@@ -232,26 +242,16 @@ export function createProgrammedTransportRequest(
 export function getProgrammedTransportRequests(userId: string, userRole: UserRole): Promise<ProgrammedTransportRequest[]> {
   return new Promise((resolve) => {
     setTimeout(() => {
-      let userRequests: ProgrammedTransportRequest[] = [];
-      switch (userRole) {
-        case 'admin':
-        case 'hospital':
-        case 'centroCoordinador': 
-          userRequests = [...mockProgrammedTransportRequests];
-          break;
-        case 'individual':
-          userRequests = mockProgrammedTransportRequests.filter(req => req.requesterId === userId);
-          break;
-        case 'equipoMovil':
-            userRequests = []; 
-            break;
-        default:
-          const _exhaustiveCheck: never = userRole;
-          console.warn(`Rol de usuario no manejado en getProgrammedTransportRequests: ${_exhaustiveCheck}`);
-          break;
+      let userRequests: ProgrammedTransportRequest[];
+      if (userRole === 'individual') {
+        userRequests = mockProgrammedTransportRequests.filter(req => req.requesterId === userId);
+      } else if (userRole === 'admin' || userRole === 'hospital' || userRole === 'centroCoordinador') {
+        userRequests = [...mockProgrammedTransportRequests];
+      } else {
+        userRequests = [];
       }
       resolve(userRequests.sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    }, 500);
+    }, 300);
   });
 }
 
@@ -264,7 +264,7 @@ export function getProgrammedRequestById(id: string): Promise<ProgrammedTranspor
 }
 
 export function updateProgrammedRequest(
-  id: string, 
+  id: string,
   dataToUpdate: Partial<Omit<ProgrammedTransportRequest, 'id' | 'createdAt' | 'requesterId'>>
 ): Promise<ProgrammedTransportRequest | undefined> {
   return new Promise((resolve) => {
@@ -288,7 +288,7 @@ export function getProgrammedTransportRequestsForPlanning(): Promise<ProgrammedT
   return new Promise((resolve) => {
     setTimeout(() => {
       const plannableRequests = mockProgrammedTransportRequests.filter(
-        req => (!req.loteId && req.status === 'pending') || req.status === 'cancelled' 
+        req => (!req.loteId && req.status === 'pending') || req.status === 'cancelled'
       );
       resolve(plannableRequests.sort((a,b) => new Date(a.fechaIda + 'T' + (a.horaConsultaMedica || a.horaIda)).getTime() - new Date(b.fechaIda + 'T' + (b.horaConsultaMedica || b.horaIda)).getTime()));
     }, 300);
@@ -310,15 +310,13 @@ export function updateProgrammedRequestLoteAssignment(serviceId: string, newLote
     setTimeout(() => {
       const serviceIndex = mockProgrammedTransportRequests.findIndex(s => s.id === serviceId);
       if (serviceIndex > -1) {
-        mockProgrammedTransportRequests[serviceIndex].loteId = newLoteId ?? undefined; // Set to undefined if null
+        mockProgrammedTransportRequests[serviceIndex].loteId = newLoteId ?? undefined;
         mockProgrammedTransportRequests[serviceIndex].status = newStatus;
         mockProgrammedTransportRequests[serviceIndex].updatedAt = new Date().toISOString();
-        resolve(mockProgrammedTransportRequests[serviceIndex]);
+        resolve({...mockProgrammedTransportRequests[serviceIndex]}); // Return a copy
       } else {
         resolve(null);
       }
     }, 100);
   });
 }
-    
-
