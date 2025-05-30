@@ -1,5 +1,5 @@
 
-import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapPin as MapPinIcon, UserX, Waypoints, ListChecks, Unlink, SendHorizonal, Hash, ClipboardList, ListFilter, Edit3, PlusCircle, RefreshCw, Loader2, Eye, AlertTriangle, Info, CalendarDays, ArrowLeft, ListPlus, Edit2 } from 'lucide-react';
+import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapPin as MapPinIcon, UserX, Waypoints, ListChecks, Unlink, SendHorizonal, Hash, ClipboardList, ListFilter, Edit3, PlusCircle, RefreshCw, Loader2, Eye, AlertTriangle, Info, CalendarDays, ArrowLeft, ListPlus, Edit2, Bell } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import Image from 'next/image';
 
@@ -53,6 +53,7 @@ export const Icons = {
   CalendarDays: (props: LucideProps) => <CalendarDays {...props} />,
   ArrowLeft: (props: LucideProps) => <ArrowLeft {...props} />,
   ListPlus: (props: LucideProps) => <ListPlus {...props} />,
+  Bell: (props: LucideProps) => <Bell {...props} />,
 };
 
 export type IconName = keyof typeof Icons;
