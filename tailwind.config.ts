@@ -9,14 +9,14 @@ export default {
     "./src/app/**/*.{js,ts,jsx,tsx,mdx}",
   ],
   theme: {
-    container: { // Para .rioja-container si se usa @apply container
+    container: { 
       center: true,
       padding: {
-        DEFAULT: '1rem', // Corresponde a --space-md (16px)
-        sm: '1rem',      // 576px+
-        md: '1.5rem',    // 768px+ (corresponde a --space-lg)
-        lg: '2rem',      // 992px+ (corresponde a --space-xl)
-        xl: '2rem',      // 1200px+
+        DEFAULT: 'var(--space-md)', 
+        sm: 'var(--space-md)',      
+        md: 'var(--space-lg)',    
+        lg: 'var(--space-xl)',      
+        xl: 'var(--space-xl)',      
       },
     },
   	extend: {
@@ -47,6 +47,10 @@ export default {
   				DEFAULT: 'hsl(var(--accent))',
   				foreground: 'hsl(var(--accent-foreground))'
   			},
+        emphasis: { // Añadido para el amarillo de acento si blanco es --accent
+  				DEFAULT: 'hsl(var(--emphasis))',
+  				foreground: 'hsl(var(--emphasis-foreground))'
+        },
   			destructive: {
   				DEFAULT: 'hsl(var(--destructive))',
   				foreground: 'hsl(var(--destructive-foreground))'
@@ -54,7 +58,7 @@ export default {
   			border: 'hsl(var(--border))',
   			input: {
           DEFAULT: 'hsl(var(--input))',
-          border: 'hsl(var(--input-border))'
+          border: 'hsl(var(--input-border))' 
         },
   			ring: 'hsl(var(--ring))',
   			chart: {
@@ -76,40 +80,39 @@ export default {
   			}
   		},
   		borderRadius: {
-  			lg: 'var(--radius-lg)', // 0.5rem o 8px
-  			md: 'var(--radius-md)', // 0.375rem o 6px
-  			sm: 'var(--radius-sm)'  // 0.25rem o 4px
+  			lg: 'var(--radius-lg)', 
+  			md: 'var(--radius-md)', 
+  			sm: 'var(--radius-sm)'  
   		},
       fontFamily: {
-        base: ['var(--font-base)', 'sans-serif'],
-        condensed: ['var(--font-condensed)', 'sans-serif'],
-        slab: ['var(--font-slab)', 'serif'],
+        base: ['var(--font-base)'], // Tailwind añadirá automáticamente los fallbacks sans-serif
+        condensed: ['var(--font-condensed)'], // Usará la pila sans-serif base
+        slab: ['var(--font-slab)'], // Tailwind añadirá automáticamente los fallbacks serif
       },
-      fontSize: { // Escala de fuentes (ejemplo, Tailwind ya tiene una buena escala)
-        'xs': '0.75rem',      // 12px
-        'sm': '0.875rem',    // 14px (tu sm)
-        'base': '1rem',      // 16px (tu base)
-        'lg': '1.125rem',    // 18px
-        'xl': '1.25rem',     // 20px (tu lg)
-        '2xl': '1.5rem',     // 24px (tu xl)
-        '3xl': '1.875rem',   // 30px
-        '4xl': '2.25rem',    // 36px (tu 2xl)
-        '5xl': '3rem',       // 48px (tu 3xl)
+      fontSize: { 
+        'xs': ['0.75rem', { lineHeight: '1rem' }],     
+        'sm': ['0.875rem', { lineHeight: '1.25rem' }],   
+        'base': ['1rem', { lineHeight: '1.5rem' }],     
+        'lg': ['1.125rem', { lineHeight: '1.75rem' }],   
+        'xl': ['1.25rem', { lineHeight: '1.75rem' }],    
+        '2xl': ['1.5rem', { lineHeight: '2rem' }],     
+        '3xl': ['1.875rem', { lineHeight: '2.25rem' }],  
+        '4xl': ['2.25rem', { lineHeight: '2.5rem' }],   
+        '5xl': ['3rem', { lineHeight: '1' }],       
       },
       boxShadow: {
-        sm: '0 1px 2px 0 rgba(0, 0, 0, 0.05)', // --shadow-sm
-        md: '0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06)', // Sombra suave por defecto de Tailwind, ajustable
-        lg: '0 4px 8px -2px rgba(0, 0, 0, 0.1), 0 2px 4px -2px rgba(0, 0, 0, 0.06)', // Sombra más grande, ajustable
-        'rioja-sm': 'var(--shadow-sm)', // Para usar tus sombras exactas si es necesario
+        sm: 'var(--shadow-sm)', 
+        md: 'var(--shadow-md)',
+        lg: 'var(--shadow-lg)',
+        'rioja-sm': 'var(--shadow-sm)', 
         'rioja-md': 'var(--shadow-md)',
         'rioja-lg': 'var(--shadow-lg)',
       },
-      screens: { // Breakpoints
+      screens: { 
         'sm': '576px',
         'md': '768px',
-        'lg': '992px',
+        'lg': '992px', 
         'xl': '1200px',
-        // '2xl': '1536px', // Tailwind default, puedes mantenerlo o quitarlo
       },
   		keyframes: {
   			'accordion-down': {
