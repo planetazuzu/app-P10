@@ -94,8 +94,8 @@ export default function ManageAmbulancesPage() {
         setAmbulances(data);
       } catch (error) {
         console.error("Error al cargar ambulancias:", error);
-        toast({ title: "Error de Carga", description: "No se pudieron cargar las ambulancias desde la API.", variant: "destructive" });
-        setAmbulances([]); // En caso de error, mostrar lista vacía
+        toast({ title: "Error de Carga", description: "No se pudieron cargar las ambulancias. Verifique la consola o la configuración de la API.", variant: "destructive" });
+        setAmbulances([]); 
       }
       setIsLoading(false);
     }
@@ -127,8 +127,9 @@ export default function ManageAmbulancesPage() {
 
     const success = await deleteAmbulanceAPI(ambulanceToDeleteId);
     if (success) {
-        setAmbulances(prev => prev.filter(amb => amb.id !== ambulanceToDeleteId)); 
-        toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${ambulanceToDeleteName}" (ID: ${ambulanceToDeleteId}) ha sido eliminada.`});
+        toast({ title: "Ambulancia Eliminada", description: `La ambulancia "${ambulanceToDeleteName}" ha sido eliminada de Firestore.`});
+        // Volver a cargar las ambulancias para reflejar el cambio
+        fetchAmbulances(); 
     } else {
         toast({ title: "Error al Eliminar", description: `No se pudo eliminar la ambulancia "${ambulanceToDeleteName}". Verifique la consola para más detalles.`, variant: "destructive"});
     }
@@ -207,7 +208,7 @@ export default function ManageAmbulancesPage() {
       <Card>
         <CardHeader>
           <CardTitle className="section-title">Listado de Unidades</CardTitle>
-          <CardDescription>Ver, editar o eliminar ambulancias del sistema.</CardDescription>
+          <CardDescription>Ver, editar o eliminar ambulancias del sistema. Los datos se obtienen de Firestore.</CardDescription>
           <div className="mt-4 flex flex-col sm:flex-row gap-2">
             <div className="relative flex-grow">
               <Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -240,8 +241,8 @@ export default function ManageAmbulancesPage() {
           </div>
         </CardHeader>
         <CardContent>
-          {filteredAmbulances.length === 0 ? (
-            <p className="text-center text-muted-foreground py-8">No se encontraron ambulancias con los filtros actuales. Verifique la configuración de la API o los filtros aplicados.</p>
+          {filteredAmbulances.length === 0 && !isLoading ? (
+            <p className="text-center text-muted-foreground py-8">No se encontraron ambulancias con los filtros actuales. Verifique la configuración de Firestore o los filtros aplicados.</p>
           ) : (
             <div className="overflow-x-auto">
               <Table>
@@ -307,7 +308,7 @@ export default function ManageAmbulancesPage() {
             <AlertDialogTitle>Confirmar Eliminación</AlertDialogTitle>
             <AlertDialogDescription>
               ¿Está seguro de que desea eliminar la ambulancia "{ambulanceToDeleteName || ''}" (ID: {ambulanceToDeleteId || ''})? 
-              Esta acción no se puede deshacer y se comunicará con la base de datos.
+              Esta acción no se puede deshacer y se comunicará con la base de datos Firestore.
             </AlertDialogDescription>
           </AlertDialogHeader>
           <AlertDialogFooter>

@@ -1,7 +1,5 @@
 
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
-import { ALL_AMBULANCE_TYPES, ALL_AMBULANCE_STATUSES, defaultEquipmentByType } from '@/types';
-import { equipmentOptions } from '@/components/ambulance/constants';
 import { db } from './firebase-config'; // Import Firestore instance
 import { collection, getDocs, doc, getDoc, addDoc, updateDoc, deleteDoc, query, where, Timestamp } from 'firebase/firestore';
 
@@ -13,67 +11,87 @@ const mapFirestoreDocToAmbulance = (docSnapshot: any): Ambulance => {
   const data = docSnapshot.data();
   return {
     id: docSnapshot.id,
-    name: data.name || '',
-    licensePlate: data.licensePlate || '',
-    model: data.model || '',
+    name: data.name || 'Nombre Desconocido',
+    licensePlate: data.licensePlate || 'Matrícula Desconocida',
+    model: data.model || 'Modelo Desconocido',
     type: data.type as AmbulanceType || 'Otros',
-    baseLocation: data.baseLocation || '',
+    baseLocation: data.baseLocation || 'Base Desconocida',
     zone: data.zone || '',
     status: data.status as AmbulanceStatus || 'unavailable',
-    hasMedicalBed: Boolean(data.hasMedicalBed),
-    stretcherSeats: data.stretcherSeats || 0,
-    hasWheelchair: Boolean(data.hasWheelchair),
-    wheelchairSeats: data.wheelchairSeats || 0,
+    hasMedicalBed: data.hasMedicalBed === undefined ? false : Boolean(data.hasMedicalBed),
+    stretcherSeats: data.stretcherSeats === undefined ? 0 : Number(data.stretcherSeats),
+    hasWheelchair: data.hasWheelchair === undefined ? false : Boolean(data.hasWheelchair),
+    wheelchairSeats: data.wheelchairSeats === undefined ? 0 : Number(data.wheelchairSeats),
     allowsWalking: data.allowsWalking === undefined ? true : Boolean(data.allowsWalking),
-    walkingSeats: data.walkingSeats || 0,
+    walkingSeats: data.walkingSeats === undefined ? 0 : Number(data.walkingSeats),
     specialEquipment: Array.isArray(data.specialEquipment) ? data.specialEquipment : [],
     latitude: data.latitude ? parseFloat(String(data.latitude)) : undefined,
     longitude: data.longitude ? parseFloat(String(data.longitude)) : undefined,
-    currentPatients: data.currentPatients ? parseInt(String(data.currentPatients), 10) : undefined,
+    currentPatients: data.currentPatients ? parseInt(String(data.currentPatients), 10) : 0,
     notes: data.notes || '',
     equipoMovilUserId: data.equipoMovilUserId,
-    // createdAt y updatedAt podrían ser Timestamps de Firestore, convertir si es necesario
-    // Por ahora, asumimos que se guardan/leen como strings o se manejan en la UI si son Timestamps
   };
 };
 
 // Helper para mapear nuestra interfaz Ambulance a lo que Firestore espera para crear/actualizar
 const mapAmbulanceToFirestorePayload = (ambulanceData: Partial<Omit<Ambulance, 'id'>>): any => {
   const payload: any = { ...ambulanceData };
-
-  // Firestore maneja bien los undefined, así que no es estrictamente necesario eliminarlos
-  // pero es buena práctica enviar solo lo que se quiere guardar/actualizar.
-  Object.keys(payload).forEach(key => payload[key] === undefined && delete payload[key]);
   
-  // Si tuvieras campos de fecha que quieres guardar como Timestamps de Firestore:
-  // if (payload.someDate) {
-  //   payload.someDate = Timestamp.fromDate(new Date(payload.someDate));
-  // }
+  // Asegurarse de que los campos numéricos son números
+  if (payload.stretcherSeats !== undefined) payload.stretcherSeats = Number(payload.stretcherSeats);
+  if (payload.wheelchairSeats !== undefined) payload.wheelchairSeats = Number(payload.wheelchairSeats);
+  if (payload.walkingSeats !== undefined) payload.walkingSeats = Number(payload.walkingSeats);
+  if (payload.currentPatients !== undefined) payload.currentPatients = Number(payload.currentPatients);
+  if (payload.latitude !== undefined) payload.latitude = Number(payload.latitude);
+  if (payload.longitude !== undefined) payload.longitude = Number(payload.longitude);
 
+  // Asegurarse de que los booleanos son booleanos
+  if (payload.hasMedicalBed !== undefined) payload.hasMedicalBed = Boolean(payload.hasMedicalBed);
+  if (payload.hasWheelchair !== undefined) payload.hasWheelchair = Boolean(payload.hasWheelchair);
+  if (payload.allowsWalking !== undefined) payload.allowsWalking = Boolean(payload.allowsWalking);
+
+
+  // Eliminar campos undefined para no sobrescribir innecesariamente en Firestore con 'undefined'
+  Object.keys(payload).forEach(key => {
+    if (payload[key] === undefined) {
+      delete payload[key];
+    }
+  });
+  
   return payload;
 };
 
 
 export async function getAmbulances(): Promise<Ambulance[]> {
+  // console.log("Attempting to fetch ambulances from Firestore...");
   try {
+    if (!db) { // Simple check, db should be initialized if firebase-config is correct
+        console.error("Firestore DB instance is not available. Check firebase-config.ts.");
+        return [];
+    }
     const querySnapshot = await getDocs(ambulancesCollectionRef);
+    // console.log(`Found ${querySnapshot.docs.length} ambulance documents.`);
     return querySnapshot.docs.map(mapFirestoreDocToAmbulance);
   } catch (error) {
     console.error("Error fetching ambulances from Firestore:", error);
-    // En un entorno de producción, podrías querer re-lanzar el error o manejarlo de forma más específica.
-    // Por ahora, devolvemos un array vacío para que la UI no se rompa.
     return [];
   }
 }
 
 export async function getAmbulanceById(id: string): Promise<Ambulance | undefined> {
+  // console.log(`Attempting to fetch ambulance with ID: ${id} from Firestore...`);
   try {
+    if (!db) {
+        console.error("Firestore DB instance is not available.");
+        return undefined;
+    }
     const docRef = doc(db, "ambulances", id);
     const docSnap = await getDoc(docRef);
     if (docSnap.exists()) {
+      // console.log("Ambulance document found:", docSnap.data());
       return mapFirestoreDocToAmbulance(docSnap);
     } else {
-      console.log(`No ambulance found with ID: ${id}`);
+      console.warn(`No ambulance found with ID: ${id}`);
       return undefined;
     }
   } catch (error) {
@@ -83,15 +101,17 @@ export async function getAmbulanceById(id: string): Promise<Ambulance | undefine
 }
 
 export async function createAmbulanceAPI(ambulanceData: Omit<Ambulance, 'id'>): Promise<Ambulance | null> {
+  // console.log("Attempting to create ambulance in Firestore:", ambulanceData);
   try {
+    if (!db) {
+        console.error("Firestore DB instance is not available.");
+        return null;
+    }
     const payload = mapAmbulanceToFirestorePayload(ambulanceData);
-    // Añadir timestamps de creación/actualización si los manejas en el cliente
-    // payload.createdAt = Timestamp.now();
-    // payload.updatedAt = Timestamp.now();
+    // payload.createdAt = Timestamp.now(); // Example if you add createdAt
+    // payload.updatedAt = Timestamp.now(); // Example if you add updatedAt
     const docRef = await addDoc(ambulancesCollectionRef, payload);
-    // Para obtener el objeto completo guardado, podríamos hacer un getDoc,
-    // o si addDoc devuelve el objeto completo (revisar documentación de Firebase)
-    // Por ahora, asumimos que necesitamos construirlo con el nuevo ID.
+    // console.log("Ambulance created with ID:", docRef.id);
     return { id: docRef.id, ...ambulanceData };
   } catch (error) {
     console.error("Error creating ambulance in Firestore:", error);
@@ -100,17 +120,23 @@ export async function createAmbulanceAPI(ambulanceData: Omit<Ambulance, 'id'>): 
 }
 
 export async function updateAmbulanceAPI(id: string, ambulanceData: Partial<Omit<Ambulance, 'id'>>): Promise<Ambulance | null> {
+  // console.log(`Attempting to update ambulance ${id} in Firestore:`, ambulanceData);
   try {
+    if (!db) {
+        console.error("Firestore DB instance is not available.");
+        return null;
+    }
     const docRef = doc(db, "ambulances", id);
     const payload = mapAmbulanceToFirestorePayload(ambulanceData);
-    // payload.updatedAt = Timestamp.now(); // Actualizar timestamp
+    // payload.updatedAt = Timestamp.now(); // Example if you add updatedAt
     await updateDoc(docRef, payload);
-    // Para devolver el objeto actualizado, hacemos un getDoc
     const updatedDocSnap = await getDoc(docRef);
     if (updatedDocSnap.exists()) {
-        return mapFirestoreDocToAmbulance(updatedDocSnap);
+      // console.log("Ambulance updated successfully.");
+      return mapFirestoreDocToAmbulance(updatedDocSnap);
     }
-    return null; // O el objeto parcial enviado si prefieres no hacer otra lectura
+    console.warn(`Ambulance ${id} not found after update attempt.`);
+    return null;
   } catch (error) {
     console.error(`Error updating ambulance ${id} in Firestore:`, error);
     return null;
@@ -118,9 +144,15 @@ export async function updateAmbulanceAPI(id: string, ambulanceData: Partial<Omit
 }
 
 export async function deleteAmbulanceAPI(id: string): Promise<boolean> {
+  // console.log(`Attempting to delete ambulance ${id} from Firestore...`);
   try {
+    if (!db) {
+        console.error("Firestore DB instance is not available.");
+        return false;
+    }
     const docRef = doc(db, "ambulances", id);
     await deleteDoc(docRef);
+    // console.log(`Ambulance ${id} deleted successfully.`);
     return true;
   } catch (error) {
     console.error(`Error deleting ambulance ${id} from Firestore:`, error);
@@ -132,8 +164,12 @@ export async function deleteAmbulanceAPI(id: string): Promise<boolean> {
 // Las siguientes funciones son para obtener cadenas de texto para la IA,
 // deberían obtener los datos de la API (Firestore) en un escenario real.
 export async function getAmbulanceLocationsForAI(): Promise<string> {
-  // TODO: Implementar con getAmbulances() de Firestore
-  const ambulances = await getAmbulances(); // Esto ahora llama a Firestore
+  // TODO: En un escenario real, esto debería usar getAmbulances() de Firestore
+  // y manejar el caso de que la base de datos esté vacía o haya errores.
+  const ambulances = await getAmbulances();
+  if (!ambulances || ambulances.length === 0) {
+    return "No hay información de ubicación de ambulancias disponible en este momento.";
+  }
   return ambulances
     .filter(a => a.status === 'available' && a.latitude && a.longitude)
     .map(a => `ID: ${a.id.substring(0,5)}... (${a.name}), Tipo: ${a.type}, Lat: ${a.latitude!.toFixed(4)}, Lng: ${a.longitude!.toFixed(4)}`)
@@ -141,8 +177,11 @@ export async function getAmbulanceLocationsForAI(): Promise<string> {
 }
 
 export async function getVehicleAvailabilityForAI(): Promise<string> {
-  // TODO: Implementar con getAmbulances() de Firestore
-  const ambulances = await getAmbulances(); // Esto ahora llama a Firestore
+  // TODO: En un escenario real, esto debería usar getAmbulances() de Firestore
+  const ambulances = await getAmbulances();
+  if (!ambulances || ambulances.length === 0) {
+    return "No hay información de disponibilidad de vehículos en este momento.";
+  }
   const availableAmbulances = ambulances.filter(a => a.status === 'available');
   const numAvailable = availableAmbulances.length;
   
