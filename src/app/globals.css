@@ -1,237 +1,290 @@
-
 @tailwind base;
-@tailwind components;
-@tailwind utilities;
+    @tailwind components;
+    @tailwind utilities;
 
-/* Definición de fuentes Riojana (placeholders, reemplazar con rutas reales o importaciones CDN) */
-@font-face {
-  font-family: 'Riojana Regular';
-  src: url('/fonts/Riojana-Regular.woff2') format('woff2'); /* Asume que los archivos están en public/fonts/ */
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-@font-face {
-  font-family: 'Riojana Regular Italic';
-  src: url('/fonts/Riojana-RegularItalic.woff2') format('woff2');
-  font-weight: normal;
-  font-style: italic;
-  font-display: swap;
-}
-/* Añadir más @font-face para los 12 estilos de Regular y 6 de Condensed si es necesario */
-@font-face {
-  font-family: 'Riojana Condensed';
-  src: url('/fonts/Riojana-CondensedRegular.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
-/* ...otros estilos de Riojana Condensed y Riojana Slab */
-@font-face {
-  font-family: 'Riojana Slab';
-  src: url('/fonts/RiojanaSlab-Regular.woff2') format('woff2');
-  font-weight: normal;
-  font-style: normal;
-  font-display: swap;
-}
+    /* Definición de fuentes Riojana (REEMPLAZAR CON RUTAS Y ARCHIVOS REALES) */
+    /* Riojana Regular */
+    @font-face {
+      font-family: 'Riojana Regular';
+      src: url('/fonts/Riojana-Regular.woff2') format('woff2'); /* Ejemplo */
+      font-weight: normal; /* o 400 */
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Riojana Regular';
+      src: url('/fonts/Riojana-RegularItalic.woff2') format('woff2'); /* Ejemplo */
+      font-weight: normal; /* o 400 */
+      font-style: italic;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Riojana Regular';
+      src: url('/fonts/Riojana-Bold.woff2') format('woff2'); /* Ejemplo */
+      font-weight: bold; /* o 700 */
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Riojana Regular';
+      src: url('/fonts/Riojana-BoldItalic.woff2') format('woff2'); /* Ejemplo */
+      font-weight: bold; /* o 700 */
+      font-style: italic;
+      font-display: swap;
+    }
+    /* ... Añade más @font-face para otros pesos de Riojana Regular si los tienes (Light, Medium, etc.) ... */
 
+    /* Riojana Condensed */
+    @font-face {
+      font-family: 'Riojana Condensed';
+      src: url('/fonts/Riojana-CondensedRegular.woff2') format('woff2'); /* Ejemplo */
+      font-weight: normal; /* o 400 */
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Riojana Condensed';
+      src: url('/fonts/Riojana-CondensedBold.woff2') format('woff2'); /* Ejemplo */
+      font-weight: bold; /* o 700 */
+      font-style: normal;
+      font-display: swap;
+    }
+    /* ... Añade más @font-face para otros pesos y estilos de Riojana Condensed ... */
 
-@layer base {
-  :root {
-    /* Gobierno de La Rioja - Identidad Corporativa */
-    --color-primary-rioja-val: 87 70% 43%;    /* Pantone 368 C Verde: #78BE20 */
-    --color-secondary-rioja-val: 218 8% 31%;  /* Pantone 7546 C Gris: #4A4F55 */
-    --color-background-rioja-val: 0 0% 100%;  /* Blanco puro: #FFFFFF */
-    --color-text-rioja-val: 218 8% 20%;       /* Un gris más oscuro para texto sobre blanco #333333 (similar al original) */
-    --color-text-muted-rioja-val: 218 8% 40%; /* #666666 (similar al original) */
-    --color-accent-rioja-val: 45 100% 50%;    /* Un amarillo vibrante, ejemplo #FFD700 */
-    --color-destructive-rioja-val: 0 72% 51%; /* Rojo para errores, ejemplo #E53E3E */
-
-
-    /* Mapeo a variables de ShadCN - MODO CLARO */
-    --background: var(--color-background-rioja-val); /* Fondo principal blanco */
-    --foreground: var(--color-text-rioja-val);       /* Texto principal gris oscuro */
-
-    --card: 220 13% 96%; /* Un gris muy claro para tarjetas, ligeramente diferente al fondo principal blanco: #F0F2F5 */
-    --card-foreground: var(--color-text-rioja-val);
-
-    --popover: var(--color-background-rioja-val);
-    --popover-foreground: var(--color-text-rioja-val);
-
-    --primary: var(--color-primary-rioja-val);           /* Verde corporativo */
-    --primary-foreground: 0 0% 100%;                     /* Blanco para texto sobre verde */
-
-    --secondary: var(--color-secondary-rioja-val);       /* Gris corporativo */
-    --secondary-foreground: 0 0% 100%;                   /* Blanco para texto sobre gris */
-
-    --muted: 220 14% 91%; /* Gris aún más claro para elementos muted: #E9ECEF */
-    --muted-foreground: var(--color-text-muted-rioja-val); /* Gris secundario para texto muted */
-
-    --accent: var(--color-accent-rioja-val);             /* Amarillo de acento */
-    --accent-foreground: 0 0% 13%;                       /* Texto oscuro para acento amarillo */
-
-    --destructive: var(--color-destructive-rioja-val);   /* Rojo para destructivo */
-    --destructive-foreground: 0 0% 100%;                 /* Blanco para texto sobre destructivo */
-
-    --border: 220 13% 88%; /* Gris claro para bordes: #DDE1E6 */
-    --input: 0 0% 100%; /* Fondo blanco para inputs */
-    --input-border: 220 13% 80%; /* Borde más definido para inputs: #C8CED3 */
-    --ring: var(--color-primary-rioja-val);              /* Verde corporativo para anillos de foco */
-
-    /* Radios de Borde */
-    --radius-sm: 0.25rem;  /* 4px */
-    --radius-md: 0.375rem; /* 6px (Tailwind default `rounded-md`) - Puede ser ajustado a 0.5rem si se prefiere */
-    --radius-lg: 0.5rem;   /* 8px (Tailwind default `rounded-lg`) */
-    --radius: var(--radius-sm); /* Default radius 4px para ShadCN components */
-
-    /* Fuentes */
-    --font-base: 'Riojana Regular', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    --font-condensed: 'Riojana Condensed', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
-    --font-slab: 'Riojana Slab', Georgia, Cambria, 'Times New Roman', Times, serif;
-
-    /* Chart Colors (ejemplos, pueden ajustarse a la paleta) */
-    --chart-1: var(--color-primary-rioja-val);
-    --chart-2: var(--color-accent-rioja-val);
-    --chart-3: var(--color-secondary-rioja-val);
-    --chart-4: 30 80% 55%; /* Naranja */
-    --chart-5: 260 60% 60%; /* Púrpura */
-
-    /* Sidebar specific colors - ALIGNED WITH NEW CORPORATE COLORS */
-    --sidebar-background: 218 8% 28%; /* Un tono más oscuro del gris corporativo Pantone 7546 C: #40444A */
-    --sidebar-foreground: 0 0% 95%;    /* Texto claro para contraste: #F2F2F2 */
-    --sidebar-primary: var(--color-primary-rioja-val); /* Verde corporativo para elemento activo */
-    --sidebar-primary-foreground: 0 0% 100%;            /* Blanco sobre verde */
-    --sidebar-accent: 87 70% 38%;      /* Verde corporativo ligeramente más oscuro para hover/submenú: #69A81C */
-    --sidebar-accent-foreground: 0 0% 100%;             /* Blanco sobre verde hover */
-    --sidebar-border: 218 8% 22%;      /* Borde interno del sidebar, más oscuro: #313438 */
-    --sidebar-ring: var(--color-primary-rioja-val);
-  }
-
-  .dark {
-    /* Gobierno de La Rioja - Identidad Corporativa - MODO OSCURO */
-    --color-primary-rioja-val: 87 70% 50%;    /* Pantone 368 C Verde (más brillante para oscuro): #85CC28 */
-    --color-secondary-rioja-val: 218 8% 70%;  /* Pantone 7546 C Gris (más claro para oscuro): #A7ABB0 */
-    --color-background-rioja-val: 218 8% 12%;  /* Fondo oscuro: #1C1E21 (ligeramente más claro que #1E1E1E) */
-    --color-text-rioja-val: 0 0% 95%;       /* Texto principal claro: #F2F2F2 */
-    --color-text-muted-rioja-val: 0 0% 65%; /* Texto secundario claro: #A6A6A6 */
-    --color-accent-rioja-val: 45 100% 55%;    /* Amarillo de acento (puede requerir ajuste): #FFDE2E */
-    --color-destructive-rioja-val: 0 72% 55%; /* Rojo para errores (más brillante): #EE4B4B */
+    /* Riojana Slab */
+    @font-face {
+      font-family: 'Riojana Slab';
+      src: url('/fonts/RiojanaSlab-Regular.woff2') format('woff2'); /* Ejemplo */
+      font-weight: normal; /* o 400 */
+      font-style: normal;
+      font-display: swap;
+    }
+    @font-face {
+      font-family: 'Riojana Slab';
+      src: url('/fonts/RiojanaSlab-Bold.woff2') format('woff2'); /* Ejemplo */
+      font-weight: bold; /* o 700 */
+      font-style: normal;
+      font-display: swap;
+    }
+    /* ... Añade más @font-face para otros pesos y estilos de Riojana Slab ... */
 
 
-    /* Mapeo a variables de ShadCN para Dark Mode */
-    --background: var(--color-background-rioja-val);
-    --foreground: var(--color-text-rioja-val);
+    @layer base {
+      :root {
+        /* Gobierno de La Rioja - Identidad Corporativa (Adaptado) */
+        /* Colores base en HSL para ShadCN */
+        --color-primary-rioja-val: 203 100% 31.6%; /* Azul institucional: #0066A1 */
+        --color-secondary-rioja-val: 356 91.4% 46.1%; /* Rojo institucional: #E30613 */
+        --color-accent-rioja-val: 47 100% 50%; /* Amarillo de acento: #FFD200 */
 
-    --card: 218 8% 15%; /* Ligeramente más claro que el fondo: #22252A */
-    --card-foreground: var(--color-text-rioja-val);
+        --color-bg-light-val: 216 60% 98%;    /* Fondo claro: #F5F7FA */
+        --color-text-default-val: 0 0% 20%;   /* Texto principal: #333333 */
+        --color-text-muted-val: 0 0% 40%;     /* Texto secundario: #666666 */
 
-    --popover: 218 8% 10%; /* Más oscuro para popovers: #17191C */
-    --popover-foreground: var(--color-text-rioja-val);
+        /* Modo Claro */
+        --background: var(--color-bg-light-val);
+        --foreground: var(--color-text-default-val);
 
-    --primary: var(--color-primary-rioja-val);
-    --primary-foreground: 0 0% 10%; /* Texto oscuro sobre verde brillante */
+        --card: 216 30% 94%; /* Un gris muy claro para tarjetas #ECF0F5, un poco más oscuro que el fondo */
+        --card-foreground: var(--color-text-default-val);
 
-    --secondary: var(--color-secondary-rioja-val);
-    --secondary-foreground: 0 0% 10%; /* Texto oscuro sobre gris claro */
+        --popover: var(--color-bg-light-val); /* Podría ser blanco puro también: 0 0% 100% */
+        --popover-foreground: var(--color-text-default-val);
 
-    --muted: 218 8% 25%; /* #383C42 */
-    --muted-foreground: var(--color-text-muted-rioja-val);
+        --primary: var(--color-primary-rioja-val);
+        --primary-foreground: 0 0% 100%; /* Blanco para texto sobre azul */
 
-    --accent: var(--color-accent-rioja-val);
-    --accent-foreground: 0 0% 10%;
+        --secondary: var(--color-secondary-rioja-val);
+        --secondary-foreground: 0 0% 100%; /* Blanco para texto sobre rojo */
 
-    --destructive: var(--color-destructive-rioja-val);
-    --destructive-foreground: 0 0% 100%;
+        --muted: 216 30% 90%; /* #E1E5EB */
+        --muted-foreground: var(--color-text-muted-val);
 
-    --border: 218 8% 22%; /* #313438 */
-    --input: 218 8% 18%; /* #2A2D31 */
-    --input-border: 218 8% 28%; /* #40444A */
-    --ring: var(--color-primary-rioja-val);
+        --accent: var(--color-accent-rioja-val);
+        --accent-foreground: 0 0% 13%; /* Texto oscuro para acento amarillo */
 
-    /* Dark Sidebar specific colors */
-    --sidebar-background: 218 8% 10%; /* Aún más oscuro para el sidebar: #17191C */
-    --sidebar-foreground: 0 0% 90%;    /* #E6E6E6 */
-    --sidebar-primary: var(--color-primary-rioja-val);
-    --sidebar-primary-foreground: 0 0% 10%;
-    --sidebar-accent: 87 70% 45%;      /* Verde corporativo principal para hover en dark mode */
-    --sidebar-accent-foreground: 0 0% 10%;
-    --sidebar-border: 218 8% 15%;
-    --sidebar-ring: var(--color-primary-rioja-val);
-  }
-}
+        --destructive: 0 84.2% 60.2%; /* Un rojo para errores, ej: #EF4444 */
+        --destructive-foreground: 0 0% 98%;
 
-@layer base {
-  * {
-    @apply border-border;
-  }
-  body {
-    @apply bg-background text-foreground;
-    font-family: var(--font-base); /* Usa la fuente Riojana Regular por defecto */
-    font-size: 1rem; /* 16px base */
-    line-height: 1.5;
-  }
-  input,
-  textarea,
-  select {
-    border-color: hsl(var(--input-border));
-    border-radius: var(--radius-sm); /* Aplicar radio de 4px a inputs */
-  }
-  h1, h2, h3, h4, h5, h6 {
-    font-family: var(--font-slab); /* O --font-condensed según preferencia para títulos */
-  }
-}
+        --border: 216 30% 85%; /* #D4DCE4 */
+        --input: 0 0% 100%; /* Fondo blanco para inputs */
+        --input-border: 216 30% 75%; /* Borde más definido para inputs #B8C3CF */
+        --ring: var(--color-primary-rioja-val);
 
-@layer components {
-  .rioja-container {
-    @apply max-w-7xl mx-auto px-4 md:px-6 lg:px-8 py-6; /* Espaciado según breakpoints y uso general */
-  }
+        /* Radios de Borde */
+        --radius-sm: 0.25rem;  /* 4px */
+        --radius-md: 0.5rem;   /* 8px */
+        --radius-lg: 1rem;     /* 16px */
+        --radius: var(--radius-sm); /* Default radius 4px */
 
-  .page-title {
-    @apply text-2xl font-bold tracking-tight text-primary sm:text-3xl md:text-4xl;
-    font-family: var(--font-condensed); /* Títulos de página con condensada */
-  }
+        /* Fuentes */
+        --font-base: 'Riojana Regular', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        --font-condensed: 'Riojana Condensed', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+        --font-slab: 'Riojana Slab', Georgia, Cambria, 'Times New Roman', Times, serif;
 
-  .section-title {
-    @apply text-xl font-semibold tracking-tight text-secondary sm:text-2xl;
-    font-family: var(--font-slab); /* Títulos de sección con slab */
-  }
+        /* Espaciado (para usar como p-[var(--space-md)], etc.) */
+        --space-xxs: 0.25rem;  /* 4px */
+        --space-xs:  0.5rem;   /* 8px */
+        --space-sm:  0.75rem;  /* 12px */
+        --space-md:  1rem;     /* 16px */
+        --space-lg:  1.5rem;   /* 24px */
+        --space-xl:  2rem;     /* 32px */
+        --space-2xl: 3rem;     /* 48px */
 
-  /* Estilo para tarjetas según especificación */
-  .rioja-card {
-    @apply rounded-[--radius-sm] border bg-card text-card-foreground p-4 md:p-6;
-    box-shadow: 0 2px 4px rgba(0,0,0,0.1); /* --shadow-md */
-    background-color: hsl(220 13% 96%); /* Fondo gris claro para tarjetas */
-  }
-  .dark .rioja-card {
-    background-color: hsl(218 8% 15%);
-  }
+        /* Sombras */
+        --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+        --shadow-md: 0 2px 4px rgba(0,0,0,0.1);
+        --shadow-lg: 0 4px 8px rgba(0,0,0,0.15);
 
+        /* Chart Colors */
+        --chart-1: var(--color-primary-rioja-val);
+        --chart-2: var(--color-accent-rioja-val);
+        --chart-3: var(--color-secondary-rioja-val);
+        --chart-4: 30 80% 55%; /* Naranja */
+        --chart-5: 260 60% 60%; /* Púrpura */
 
-  /* Botones con padding y radio especificado */
-  .rioja-button {
-    @apply px-[0.75rem] py-[0.5rem] rounded-[--radius-sm] font-semibold; /* --space-sm y --space-md approx. */
-  }
-  .rioja-button-primary {
-    @apply bg-primary text-primary-foreground hover:bg-primary/90 rioja-button;
-  }
-  .rioja-button-secondary {
-     @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 rioja-button;
-  }
-   .rioja-button-outline {
-    @apply border border-primary text-primary bg-transparent hover:bg-primary/10 rioja-button;
-  }
+        /* Sidebar specific colors - Alineado con nueva paleta */
+        --sidebar-background: hsl(var(--color-bg-light-val)); /* Fondo claro como base */
+        --sidebar-foreground: hsl(var(--color-text-default-val)); /* Texto por defecto */
+        --sidebar-primary: hsl(var(--color-primary-rioja-val)); /* Azul para elemento activo */
+        --sidebar-primary-foreground: hsl(0 0% 100%);          /* Blanco sobre azul */
+        --sidebar-accent: hsl(203 100% 90%);    /* Azul muy claro para hover/submenú */
+        --sidebar-accent-foreground: hsl(var(--color-primary-rioja-val));         /* Azul para texto sobre azul claro */
+        --sidebar-border: hsl(216 30% 88%);    /* Borde claro: #DDE1E6 */
+        --sidebar-ring: hsl(var(--color-primary-rioja-val));
+      }
 
-  /* Estilo base para tablas responsivas */
-  .rioja-table-responsive-wrapper {
-    @apply overflow-x-auto;
-  }
-  .rioja-table {
-    @apply w-full min-w-[640px]; /* Asegura un ancho mínimo para forzar scroll si es necesario */
-  }
+      .dark {
+        /* Colores base en HSL para Modo Oscuro */
+        --color-bg-dark-val: 0 0% 11.8%; /* Fondo oscuro: #1E1E1E */
+        --color-text-light-val: 0 0% 95%;  /* Texto claro: #F2F2F2 */
+        --color-text-muted-dark-val: 0 0% 65%; /* Texto secundario claro: #A6A6A6 */
 
-  /* Para asegurar zonas táctiles en formularios (ejemplo aplicado a un contenedor de input) */
-  .form-touch-target {
-    @apply min-h-[44px] flex items-center;
-  }
+        /* Mapeo a variables de ShadCN para Dark Mode */
+        --background: var(--color-bg-dark-val);
+        --foreground: var(--color-text-light-val);
 
-}
+        --card: 0 0% 15%; /* Ligeramente más claro que el fondo: #262626 */
+        --card-foreground: var(--color-text-light-val);
+
+        --popover: 0 0% 10%; /* Más oscuro para popovers: #1A1A1A */
+        --popover-foreground: var(--color-text-light-val);
+
+        /* Primario, secundario y acento pueden necesitar ajuste para buen contraste en modo oscuro */
+        --primary: hsl(var(--color-primary-rioja-val)); /* Mantenemos el azul, puede necesitar aclararse si el contraste es bajo */
+        --primary-foreground: hsl(0 0% 100%);
+
+        --secondary: hsl(var(--color-secondary-rioja-val)); /* Mantenemos el rojo */
+        --secondary-foreground: hsl(0 0% 100%);
+
+        --muted: 0 0% 20%; /* #333333 */
+        --muted-foreground: var(--color-text-muted-dark-val);
+
+        --accent: hsl(var(--color-accent-rioja-val)); /* Mantenemos el amarillo */
+        --accent-foreground: 0 0% 13%; /* Texto oscuro para acento amarillo */
+
+        --destructive: 0 70% 55%; /* Rojo más brillante para errores en modo oscuro */
+        --destructive-foreground: 0 0% 98%;
+
+        --border: 0 0% 22%; /* #383838 */
+        --input: 0 0% 18%; /* #2E2E2E */
+        --input-border: 0 0% 28%; /* #474747 */
+        --ring: var(--color-primary-rioja-val); /* Puede ser el mismo azul */
+
+        /* Dark Sidebar specific colors */
+        --sidebar-background: hsl(var(--color-bg-dark-val));
+        --sidebar-foreground: hsl(var(--color-text-light-val));
+        --sidebar-primary: hsl(var(--color-primary-rioja-val));
+        --sidebar-primary-foreground: hsl(0 0% 100%);
+        --sidebar-accent: hsl(203 100% 20%); /* Azul oscuro para hover/submenú */
+        --sidebar-accent-foreground: hsl(0 0% 95%);
+        --sidebar-border: hsl(0 0% 15%); /* #262626 */
+        --sidebar-ring: hsl(var(--color-primary-rioja-val));
+      }
+    }
+
+    @layer base {
+      * {
+        @apply border-border;
+      }
+      body {
+        @apply bg-background text-foreground;
+        font-family: var(--font-base);
+        font-size: var(--font-size-base, 1rem); /* Usa tu variable base */
+        line-height: var(--line-height-base, 1.5);
+      }
+      input,
+      textarea,
+      select {
+        /* border-color: hsl(var(--input-border)); */ /* Tailwind ya maneja input border con la clase 'border-input' */
+        /* border-radius: var(--radius-sm); Ya se aplica con clases de Tailwind como rounded-md que usa --radius */
+      }
+      h1, h2, h3, h4, h5, h6 {
+        font-family: var(--font-slab); /* O --font-condensed según preferencia */
+      }
+    }
+
+    @layer components {
+      .rioja-container {
+        @apply max-w-7xl mx-auto px-[var(--space-md)] md:px-[var(--space-lg)] lg:px-[var(--space-xl)] py-[var(--space-lg)];
+      }
+
+      .page-title {
+        @apply text-3xl font-bold tracking-tight text-primary sm:text-4xl md:text-5xl; /* Usando escala de Tailwind, ajustable */
+        font-family: var(--font-condensed);
+      }
+
+      .section-title {
+        @apply text-xl font-semibold tracking-tight text-secondary sm:text-2xl; /* Usando escala de Tailwind, ajustable */
+        font-family: var(--font-slab);
+      }
+
+      .rioja-card {
+        @apply rounded-[var(--radius-sm)] border bg-card text-card-foreground p-[var(--space-md)] shadow-[var(--shadow-md)];
+        /* Asegúrate que --shadow-md esté definido y mapeado en tailwind.config.ts si no usas shadow-md de Tailwind directamente */
+      }
+      .dark .rioja-card {
+        /* background-color: hsl(var(--card)); ya definido en :root .dark */
+      }
+
+      .stats-card { /* Ejemplo para las tarjetas KPI del dashboard */
+        @apply rioja-card flex flex-col justify-between;
+      }
+      .stats-card-header {
+        @apply flex flex-row items-center justify-between space-y-0 pb-2;
+      }
+      .stats-card-title {
+        @apply text-sm font-medium text-muted-foreground;
+      }
+      .stats-card-value {
+        @apply text-2xl font-bold text-primary;
+      }
+      .stats-card-description {
+         @apply text-xs text-muted-foreground pt-1;
+      }
+
+      .rioja-button {
+        @apply px-[var(--space-md)] py-[var(--space-sm)] rounded-[var(--radius-sm)] font-semibold;
+        /* El font-weight 600 ya está implícito en font-semibold de Tailwind */
+      }
+      .rioja-button-primary {
+        @apply bg-primary text-primary-foreground hover:bg-primary/90 rioja-button;
+      }
+      .rioja-button-secondary {
+         @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 rioja-button;
+      }
+       .rioja-button-outline {
+        @apply border border-primary text-primary bg-transparent hover:bg-primary/10 rioja-button;
+      }
+
+      .rioja-table-responsive-wrapper {
+        @apply overflow-x-auto;
+      }
+      .rioja-table {
+        @apply w-full min-w-[640px];
+      }
+
+      .form-touch-target { /* Para inputs y selects, asegúrate que el contenedor tenga suficiente altura */
+        @apply min-h-[44px] flex items-center;
+      }
+    }
