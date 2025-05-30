@@ -18,6 +18,7 @@ import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import type { UserRole } from '@/types';
 import Link from 'next/link';
 import React, { useState } from 'react';
+import { cn } from '@/lib/utils'; // Added import for cn
 
 // Helper para traducir el rol del usuario
 const translateUserRole = (role: UserRole): string => {
