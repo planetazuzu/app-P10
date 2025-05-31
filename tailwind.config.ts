@@ -47,7 +47,7 @@ export default {
   				DEFAULT: 'hsl(var(--accent))',
   				foreground: 'hsl(var(--accent-foreground))'
   			},
-        emphasis: { // Añadido para el amarillo de acento si blanco es --accent
+        emphasis: {
   				DEFAULT: 'hsl(var(--emphasis))',
   				foreground: 'hsl(var(--emphasis-foreground))'
         },
@@ -85,9 +85,9 @@ export default {
   			sm: 'var(--radius-sm)'  
   		},
       fontFamily: {
-        base: ['var(--font-base)'], // Tailwind añadirá automáticamente los fallbacks sans-serif
-        condensed: ['var(--font-condensed)'], // Usará la pila sans-serif base
-        slab: ['var(--font-slab)'], // Tailwind añadirá automáticamente los fallbacks serif
+        base: ['var(--font-base)'], // Referencia a la variable CSS para Riojana Regular
+        condensed: ['var(--font-condensed)'], // Referencia a la variable CSS para Riojana Condensed
+        slab: ['var(--font-slab)'], // Referencia a la variable CSS para Riojana Slab
       },
       fontSize: { 
         'xs': ['0.75rem', { lineHeight: '1rem' }],     
