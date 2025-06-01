@@ -5,7 +5,7 @@ import type { User, UserFormValues, UserRole } from '@/types';
 const ROLES_FOR_GENERATION: UserRole[] = ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'];
 
 const generatedUserEntries: Record<string, User> = {};
-for (let i = 1; i <= 300; i++) {
+for (let i = 1; i <= 1000; i++) { // Changed from 300 to 1000
   const email = `generated.user.${i}@example.com`;
   generatedUserEntries[email] = {
     id: `user-gen-${i}`,
