@@ -18,6 +18,7 @@ import { es } from 'date-fns/locale';
 const formSchema = z.object({
   trafficConditions: z.string().min(5, { message: 'Las condiciones del tráfico deben tener al menos 5 caracteres.' }).max(200, {message: "Máximo 200 caracteres."}),
   weatherConditions: z.string().min(5, { message: 'Las condiciones climáticas deben tener al menos 5 caracteres.' }).max(200, {message: "Máximo 200 caracteres."}),
+  serviceHistoryNotes: z.string().max(500, {message: "Las notas de historial no deben exceder los 500 caracteres."}).optional(),
 });
 
 type DispatchFormValues = z.infer<typeof formSchema>;
@@ -47,6 +48,7 @@ export function DispatchForm({ onSuggestion, setIsLoading, selectedServicesToPla
     defaultValues: {
       trafficConditions: 'Normal',
       weatherConditions: 'Despejado',
+      serviceHistoryNotes: '',
     },
   });
 
@@ -62,10 +64,12 @@ export function DispatchForm({ onSuggestion, setIsLoading, selectedServicesToPla
 
     try {
       const aiInput: PlanDispatchForBatchInput = {
-        ...values,
         servicesDescription: servicesDescriptionForAI,
-        ambulanceLocations: getAmbulanceLocationsForAI(),
-        vehicleAvailability: getVehicleAvailabilityForAI(),
+        trafficConditions: values.trafficConditions,
+        weatherConditions: values.weatherConditions,
+        ambulanceLocations: await getAmbulanceLocationsForAI(), // Make sure these are awaited if they become async
+        vehicleAvailability: await getVehicleAvailabilityForAI(), // Make sure these are awaited
+        serviceHistoryNotes: values.serviceHistoryNotes || undefined, // Pass if provided, otherwise undefined
       };
       const result = await planDispatchForBatch(aiInput);
       onSuggestion(result);
@@ -117,6 +121,26 @@ export function DispatchForm({ onSuggestion, setIsLoading, selectedServicesToPla
               <FormControl>
                 <Input placeholder="Ej: Despejado, lluvia ligera, nieve intensa" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+        <FormField
+          control={form.control}
+          name="serviceHistoryNotes"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Notas de Historial de Servicio (Opcional)</FormLabel>
+              <FormControl>
+                <Textarea 
+                    placeholder="Ej: Paciente Pérez fue atendido por AMB-001 la semana pasada. Servicio para Martínez suele ser con unidad SVB." 
+                    {...field} 
+                    rows={3}
+                />
+              </FormControl>
+               <FormDescription className="text-xs">
+                Información adicional sobre asignaciones previas o preferencias que la IA deba considerar.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
