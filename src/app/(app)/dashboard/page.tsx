@@ -124,7 +124,7 @@ export default function DashboardPage() {
                <StatsCard 
                 title="Tiempo Medio Respuesta" 
                 value={stats.averageResponseTime}
-                icon={<Icons.Zap className="h-5 w-5 text-muted-foreground" />}
+                icon={<Icons.SmartDispatch className="h-5 w-5 text-muted-foreground" />}
                 description="Últimas 24 horas"
                 {...(canViewSmartDispatch && { link: "/smart-dispatch", linkText: "Optimizar Despacho"})}
                 cardClassName="bg-card"
@@ -156,7 +156,7 @@ export default function DashboardPage() {
                 />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
                 <Bar dataKey="Solicitudes" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Total Solicitudes" />
-                <Bar dataKey="Completadas" fill="hsl(var(--accent))" radius={[4, 4, 0, 0]} name="Solicitudes Completadas" />
+                <Bar dataKey="Completadas" fill="hsl(var(--emphasis))" radius={[4, 4, 0, 0]} name="Solicitudes Completadas" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
