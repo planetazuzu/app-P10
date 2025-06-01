@@ -100,7 +100,9 @@ export default function LoginPage() {
         <CardFooter className="flex-col items-start text-sm text-muted-foreground">
           <p className="font-semibold">Usuarios de demostración disponibles (email):</p>
           <ul className="list-disc list-inside">
-            {Object.keys(MOCK_USERS).map(mockEmail => <li key={mockEmail}>{mockEmail} (cualquier contraseña)</li>)}
+            {Object.keys(MOCK_USERS)
+              .filter(email => !email.startsWith('generated.user.'))
+              .map(mockEmail => <li key={mockEmail}>{mockEmail} (cualquier contraseña)</li>)}
           </ul>
         </CardFooter>
       </Card>
