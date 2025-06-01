@@ -87,7 +87,7 @@ const navItems: NavItem[] = [
           submenu: [
             { title: 'Listar Lotes', href: '/admin/lotes', icon: 'Waypoints', roles: ['admin', 'centroCoordinador'], exactMatch: true },
             { title: 'Crear Lote', href: '/admin/lotes/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
-            { title: 'Planificar Servicios', href: '/admin/services-planning', icon: 'ListChecks', roles: ['admin', 'centroCoordinador'] },
+            { title: 'Planificar Servicios', href: '/admin/services-planning', icon: 'CalendarDays', roles: ['admin', 'centroCoordinador'] },
           ]
         },
         { title: 'Config. Sistema', href: '/admin/system-settings', icon: 'Settings', roles: ['admin', 'centroCoordinador'] },
@@ -224,3 +224,4 @@ export function SidebarNav() {
     </SidebarMenu>
   );
 }
+

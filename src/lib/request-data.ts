@@ -333,6 +333,14 @@ export function getProgrammedTransportRequests(userId: string, userRole: UserRol
   });
 }
 
+export function getAllProgrammedTransportRequests(): Promise<ProgrammedTransportRequest[]> {
+  return new Promise((resolve) => {
+    setTimeout(() => {
+      resolve([...mockProgrammedTransportRequests].sort((a,b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
+    }, 300);
+  });
+}
+
 export function getProgrammedRequestById(id: string): Promise<ProgrammedTransportRequest | undefined> {
    return new Promise((resolve) => {
     setTimeout(() => {
@@ -516,3 +524,4 @@ export async function getAssignmentsForAmbulance(
 
   return assignments;
 }
+
