@@ -1,12 +1,28 @@
 
 import type { User, UserFormValues, UserRole } from '@/types';
 
+// Helper array for assigning roles to generated users
+const ROLES_FOR_GENERATION: UserRole[] = ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'];
+
+const generatedUserEntries: Record<string, User> = {};
+for (let i = 1; i <= 300; i++) {
+  const email = `generated.user.${i}@example.com`;
+  generatedUserEntries[email] = {
+    id: `user-gen-${i}`,
+    email: email,
+    name: `Usuario Generado ${i}`,
+    role: ROLES_FOR_GENERATION[ (i - 1) % ROLES_FOR_GENERATION.length], // Cycle through roles
+    password: 'password123',
+  };
+}
+
 export const MOCK_USERS: Record<string, User> = {
   'admin@gmr.com': { id: 'user-admin', email: 'admin@gmr.com', name: 'Administrador Principal', role: 'admin', password: 'password123' },
   'hospital@gmr.com': { id: 'user-hospital', email: 'hospital@gmr.com', name: 'Personal Hospitalario General', role: 'hospital', password: 'password123' },
   'individual@gmr.com': { id: 'user-individual', email: 'individual@gmr.com', name: 'Paciente Individual', role: 'individual', password: 'password123' },
   'coordinador@gmr.com': { id: 'user-centro-coordinador-01', email: 'coordinador@gmr.com', name: 'Coordinador de Flota', role: 'centroCoordinador', password: 'password123' },
   'vehiculo.AMB101@gmr.com': { id: 'user-vehiculo-AMB101', email: 'vehiculo.AMB101@gmr.com', name: 'Equipo Móvil (AMB101)', role: 'equipoMovil', password: 'password123'},
+  ...generatedUserEntries,
 };
 
 const AUTH_TOKEN_KEY = 'gmrAuthToken';
