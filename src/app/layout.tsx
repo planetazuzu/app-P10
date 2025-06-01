@@ -1,5 +1,5 @@
 
-    import type { Metadata } from 'next';
+    import type { Metadata, Viewport } from 'next';
     import './globals.css';
     import { AuthProvider } from '@/context/auth-context';
     import { Toaster } from "@/components/ui/toaster";
@@ -8,10 +8,14 @@
       title: 'Gestión de Usuarios y Flota',
       description: 'Plataforma para la Gestión de Usuarios y Flotas de Transporte',
       manifest: '/manifest.json',
-      themeColor: '#78BE20', // Verde Corporativo Pantone 368 C
+      // themeColor has been moved to generateViewport
       icons: {
-        icon: '/images/favicon.png', // Actualizado para usar favicon.png
+        icon: '/images/favicon.png',
       },
+    };
+
+    export const viewport: Viewport = {
+      themeColor: '#78BE20', // Verde Corporativo Pantone 368 C
     };
 
     export default function RootLayout({
@@ -21,7 +25,6 @@
     }>) {
       return (
         <html lang="es" suppressHydrationWarning>
-          {/* No intentar cargar 'Riojana' desde Google Fonts, ya que es una fuente específica */}
           <body className="antialiased">
             <AuthProvider>
               {children}
