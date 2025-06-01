@@ -1,13 +1,22 @@
 
 'use client';
 
-import type { Ambulance, AmbulanceType, AmbulanceStatus } from '@/types';
+import type { Ambulance, AmbulanceType, AmbulanceStatus, ParadaRuta } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { X, Users, Package, MapPin, Layers, ShieldAlert, Thermometer, CheckCircle, XCircle, Tool, Clock, Info } from 'lucide-react';
+import { 
+    X, Users, Package, MapPin, Layers, ShieldAlert, Thermometer, CheckCircle, Tool, Info,
+    Clock as StopClock, PlayCircle, User as StopUser, MapPin as StopMapPin, ArrowRight, 
+    AlertTriangle as StopAlert, UserMinus, Loader2
+} from 'lucide-react';
 import Image from 'next/image';
 import { equipmentOptions } from './constants'; // For mapping special equipment IDs to labels
+import { getAssignmentsForAmbulance, type AmbulanceAssignmentDetails } from '@/lib/request-data';
+import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
+import { ScrollArea } from '@/components/ui/scroll-area';
+import React, { useEffect, useState } from 'react';
+
 
 interface AmbulanceCardProps {
   ambulance: Ambulance | null;
@@ -57,14 +66,68 @@ const DetailItem = ({ icon: Icon, label, value, highlight = false }: { icon: Rea
 
 const BooleanDetailItem = ({ icon: Icon, label, value }: { icon: React.ElementType, label: string, value: boolean }) => (
     <div className="flex items-center text-sm py-0.5">
-      {value ? <CheckCircle className="h-4 w-4 mr-2 text-green-600" /> : <XCircle className="h-4 w-4 mr-2 text-red-600" />}
+      {value ? <CheckCircle className="h-4 w-4 mr-2 text-green-600" /> : <X className="h-4 w-4 mr-2 text-red-600" />}
       <span className="text-muted-foreground">{label}:</span>
       <span className="ml-1 font-semibold">{value ? 'Sí' : 'No'}</span>
     </div>
   );
 
+const translateParadaStatusCard = (status: ParadaRuta['estado']): string => {
+  switch (status) {
+    case 'pendiente': return 'Pendiente';
+    case 'enRutaRecogida': return 'En ruta (Recogida)';
+    case 'pacienteRecogido': return 'Paciente Recogido';
+    case 'enDestino': return 'En Destino';
+    case 'finalizado': return 'Finalizado';
+    case 'cancelado': return 'Cancelado';
+    case 'noPresentado': return 'No Presentado';
+    default: return status;
+  }
+};
+const paradaStatusIcons: Record<ParadaRuta['estado'], React.ElementType> = {
+  pendiente: StopClock,
+  enRutaRecogida: PlayCircle,
+  pacienteRecogido: StopUser,
+  enDestino: StopMapPin,
+  finalizado: CheckCircle,
+  cancelado: X,
+  noPresentado: UserMinus,
+};
+
+const paradaStatusColors: Record<ParadaRuta['estado'], string> = {
+  pendiente: 'text-gray-500',
+  enRutaRecogida: 'text-blue-500',
+  pacienteRecogido: 'text-purple-500',
+  enDestino: 'text-teal-500',
+  finalizado: 'text-green-600',
+  cancelado: 'text-red-600',
+  noPresentado: 'text-orange-500',
+};
+
 
 export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
+  const [assignments, setAssignments] = useState<AmbulanceAssignmentDetails[]>([]);
+  const [isLoadingAssignments, setIsLoadingAssignments] = useState(false);
+
+  useEffect(() => {
+    if (ambulance && ambulance.id) {
+      setIsLoadingAssignments(true);
+      getAssignmentsForAmbulance(ambulance.id)
+        .then(data => {
+          setAssignments(data);
+        })
+        .catch(error => {
+          console.error("Error fetching assignments for ambulance:", error);
+          setAssignments([]);
+        })
+        .finally(() => {
+          setIsLoadingAssignments(false);
+        });
+    } else {
+      setAssignments([]);
+    }
+  }, [ambulance]);
+
   if (!ambulance) {
     return null;
   }
@@ -154,6 +217,80 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
         <Button className="w-full mt-4 btn-outline" variant="outline" disabled={ambulance.status !== 'available'}>
           {ambulance.status === 'available' ? 'Despachar esta unidad (simulado)' : `Unidad ${getAmbulanceStatusLabel(ambulance.status).toLowerCase()}`}
         </Button>
+
+        {/* Sección de Servicios Asignados */}
+        <div className="border-t my-3 pt-3">
+          <h4 className="font-semibold text-md text-secondary mb-2">Servicios Asignados Actualmente</h4>
+          {isLoadingAssignments ? (
+            <div className="flex items-center justify-center py-4">
+              <Loader2 className="h-6 w-6 animate-spin text-primary mr-2" />
+              <span>Cargando asignaciones...</span>
+            </div>
+          ) : assignments.length === 0 ? (
+            <p className="text-sm text-muted-foreground text-center py-3">Esta ambulancia no tiene servicios activos asignados.</p>
+          ) : (
+            <Accordion type="single" collapsible className="w-full">
+              {assignments.map((assignment, index) => (
+                <AccordionItem value={`assignment-${index}`} key={`${assignment.type}-${assignment.id}`}>
+                  <AccordionTrigger className="text-sm hover:no-underline">
+                    <div className="flex flex-col text-left w-full">
+                      <span className="font-medium truncate">
+                        {assignment.type === 'direct_request' ? 'Solicitud Urgente' :
+                         assignment.type === 'programmed_request' ? `Solicitud Programada` :
+                         'Lote de Servicios'}
+                        : {assignment.id.substring(0,12)}...
+                      </span>
+                      <span className="text-xs text-muted-foreground truncate">{assignment.description}</span>
+                    </div>
+                  </AccordionTrigger>
+                  <AccordionContent className="px-2 py-1 text-xs">
+                    <p><strong>Estado General:</strong> {assignment.status}</p>
+                    {assignment.patientName && <p><strong>Paciente:</strong> {assignment.patientName}</p>}
+                    {assignment.destination && <p><strong>Destino:</strong> {assignment.destination}</p>}
+                    {assignment.pickupTime && <p><strong>Hora Recogida:</strong> {assignment.pickupTime}</p>}
+
+                    {assignment.type === 'batch' && assignment.services && assignment.services.length > 0 && (
+                      <div className="mt-2">
+                        <h5 className="text-xs font-semibold mb-1 text-muted-foreground">Servicios del Lote ({assignment.services.length}):</h5>
+                        <ScrollArea className="h-[150px] pr-3">
+                          <ul className="space-y-1.5">
+                            {assignment.services.map(service => {
+                              const Icon = paradaStatusIcons[service.stopStatus] || StopAlert;
+                              const color = paradaStatusColors[service.stopStatus] || 'text-gray-500';
+                              return (
+                                <li key={service.serviceId} className="p-1.5 border-l-2 pl-2 text-[11px] leading-tight border-primary/30 bg-muted/30 rounded-r-sm">
+                                  <div className="flex items-center justify-between">
+                                      <span className="font-medium text-secondary-foreground truncate pr-1">#{service.order} {service.patientName}</span>
+                                      <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${color} border-current/50`}>
+                                          <Icon className={`h-2.5 w-2.5 mr-1 ${color}`} />
+                                          {translateParadaStatusCard(service.stopStatus)}
+                                      </Badge>
+                                  </div>
+                                  <div className="text-muted-foreground flex items-center gap-1 truncate">
+                                      <StopMapPin className="h-2.5 w-2.5 shrink-0"/> 
+                                      <span className="truncate">Origen: {service.pickupAddress}</span>
+                                  </div>
+                                  <div className="text-muted-foreground flex items-center gap-1 truncate">
+                                      <ArrowRight className="h-2.5 w-2.5 shrink-0 ml-0.5"/> 
+                                      <span className="truncate">Destino: {service.destinationAddress}</span>
+                                  </div>
+                                  <div className="text-muted-foreground flex items-center gap-1">
+                                     <StopClock className="h-2.5 w-2.5 shrink-0"/> 
+                                     Recogida: {service.pickupTime} {service.appointmentTime && `| Cita: ${service.appointmentTime}`}
+                                  </div>
+                                </li>
+                              );
+                            })}
+                          </ul>
+                        </ScrollArea>
+                      </div>
+                    )}
+                  </AccordionContent>
+                </AccordionItem>
+              ))}
+            </Accordion>
+          )}
+        </div>
       </CardContent>
     </Card>
   );

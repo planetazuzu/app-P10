@@ -1,7 +1,8 @@
 
-import type { AmbulanceRequest, RequestStatus, UserRole, ProgrammedTransportRequest, TipoServicioProgramado, TipoTrasladoProgramado, MedioRequeridoProgramado, EquipamientoEspecialProgramadoId } from '@/types';
+import type { AmbulanceRequest, RequestStatus, UserRole, ProgrammedTransportRequest, TipoServicioProgramado, TipoTrasladoProgramado, MedioRequeridoProgramado, EquipamientoEspecialProgramadoId, ParadaRuta, LoteProgramado } from '@/types';
 import { MOCK_USERS } from './auth'; // Asegúrate de que MOCK_USERS se exporta y está disponible
 import { ALL_TIPOS_SERVICIO_PROGRAMADO, ALL_TIPOS_TRASLADO_PROGRAMADO, ALL_MEDIOS_REQUERIDOS_PROGRAMADO, EQUIPAMIENTO_ESPECIAL_PROGRAMADO_OPTIONS } from '@/types';
+import { mockLotes, mockRutas, mapProgrammedRequestToParada } from './driver-data';
 
 
 const patientDetailsSamples = [
@@ -319,4 +320,123 @@ export function updateProgrammedRequestLoteAssignment(serviceId: string, newLote
       }
     }, 100);
   });
+}
+
+// --- Nueva función para obtener asignaciones de una ambulancia ---
+export interface AmbulanceAssignmentDetails {
+  type: 'direct_request' | 'programmed_request' | 'batch';
+  id: string; // Request ID or Lote ID
+  description: string; // Patient details for direct, Lote name/destination for batch
+  status: string; // Request status or Lote status
+  createdAt?: string; // For requests
+  patientName?: string; // For direct/programmed requests
+  destination?: string; // For direct/programmed requests or batch main destination
+  pickupTime?: string; // For programmed requests or first stop in batch
+  services?: Array<{ // Only for batches
+    serviceId: string;
+    patientName: string;
+    pickupAddress: string;
+    destinationAddress: string;
+    pickupTime: string;
+    appointmentTime?: string;
+    stopStatus: ParadaRuta['estado'];
+    order: number;
+  }>;
+}
+
+export async function getAssignmentsForAmbulance(ambulanceId: string): Promise<AmbulanceAssignmentDetails[]> {
+  const assignments: AmbulanceAssignmentDetails[] = [];
+
+  // 1. Buscar Solicitudes Urgentes/Simples asignadas directamente
+  const directRequests = mockRequests.filter(
+    req => req.assignedAmbulanceId === ambulanceId && req.status !== 'completed' && req.status !== 'cancelled'
+  );
+  directRequests.forEach(req => {
+    assignments.push({
+      type: 'direct_request',
+      id: req.id,
+      description: `Solicitud Urgente: ${req.patientDetails.substring(0,30)}...`,
+      status: req.status, // Este es RequestStatus
+      patientName: req.patientDetails.substring(0, 20) + (req.patientDetails.length > 20 ? '...' : ''),
+      destination: req.location.address,
+      createdAt: req.createdAt,
+    });
+  });
+
+  // 2. Buscar Solicitudes Programadas asignadas directamente (que no estén en un lote aún)
+  const programmedDirectRequests = mockProgrammedTransportRequests.filter(
+    req => req.assignedAmbulanceId === ambulanceId && !req.loteId && req.status !== 'completed' && req.status !== 'cancelled'
+  );
+  programmedDirectRequests.forEach(req => {
+    assignments.push({
+      type: 'programmed_request',
+      id: req.id,
+      description: `Prog: ${req.nombrePaciente} a ${req.destino}`,
+      status: req.status, // Este es RequestStatus
+      patientName: req.nombrePaciente,
+      destination: req.destino,
+      pickupTime: req.horaIda,
+      createdAt: req.createdAt,
+    });
+  });
+
+
+  // 3. Buscar Lotes asignados
+  const assignedLotes = mockLotes.filter(
+    lote => lote.ambulanciaIdAsignada === ambulanceId && lote.estadoLote !== 'completado' && lote.estadoLote !== 'cancelado'
+  );
+
+  for (const lote of assignedLotes) {
+    const ruta = mockRutas.find(r => r.id === lote.rutaCalculadaId);
+    let servicesForBatch: AmbulanceAssignmentDetails['services'] = [];
+
+    if (ruta && ruta.paradas.length > 0) {
+      servicesForBatch = ruta.paradas
+        .sort((a,b) => a.orden - b.orden) 
+        .map(parada => ({
+          serviceId: parada.servicioId,
+          patientName: parada.paciente.nombre,
+          pickupAddress: parada.paciente.direccionOrigen,
+          destinationAddress: mockProgrammedTransportRequests.find(pr => pr.id === parada.servicioId)?.destino || 'Desconocido',
+          pickupTime: parada.horaRecogidaEstimada,
+          appointmentTime: parada.horaConsultaMedica,
+          stopStatus: parada.estado, // Este es ParadaRuta['estado']
+          order: parada.orden,
+      }));
+    } else {
+        const serviciosDelLote = mockProgrammedTransportRequests.filter(req => lote.serviciosIds.includes(req.id));
+        serviciosDelLote.sort((a, b) => (a.horaConsultaMedica || a.horaIda).localeCompare(b.horaConsultaMedica || b.horaIda));
+        servicesForBatch = serviciosDelLote.map((req, index) => {
+            const paradaSimulada = mapProgrammedRequestToParada(req, index + 1);
+            return {
+                serviceId: req.id,
+                patientName: req.nombrePaciente,
+                pickupAddress: req.centroOrigen,
+                destinationAddress: req.destino,
+                pickupTime: paradaSimulada.horaRecogidaEstimada,
+                appointmentTime: req.horaConsultaMedica || req.horaIda,
+                stopStatus: paradaSimulada.estado,
+                order: index + 1,
+            };
+        });
+    }
+
+    assignments.push({
+      type: 'batch',
+      id: lote.id,
+      description: `Lote para: ${lote.destinoPrincipal.nombre}`,
+      status: lote.estadoLote, // Este es LoteProgramado['estadoLote']
+      destination: lote.destinoPrincipal.nombre,
+      services: servicesForBatch,
+      createdAt: lote.createdAt,
+    });
+  }
+  
+   assignments.sort((a, b) => {
+    const dateA = new Date(a.createdAt || 0).getTime();
+    const dateB = new Date(b.createdAt || 0).getTime();
+    return dateB - dateA;
+  });
+
+  return assignments;
 }
