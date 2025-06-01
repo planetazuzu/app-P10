@@ -23,6 +23,7 @@
     }: Readonly<{
       children: React.ReactNode;
     }>) {
+      console.log('Renderizando RootLayout'); // Mensaje de depuración añadido
       return (
         <html lang="es" suppressHydrationWarning>
           <body className="antialiased">
