@@ -8,17 +8,22 @@ import L from 'leaflet';
 import React, { useEffect, useRef } from 'react';
 
 // Fix for default Leaflet icon path issue with Next.js/Webpack
-if (typeof window !== 'undefined' && L.Icon.Default.prototype.options) {
-  // Check if _getIconUrl exists before trying to delete it to prevent errors if already fixed
-  if ((L.Icon.Default.prototype as any)._getIconUrl) {
-    delete (L.Icon.Default.prototype as any)._getIconUrl;
+// Ensure this runs only once per application lifecycle
+if (typeof window !== 'undefined' && !(window as any)._leafletIconPatched) {
+  if (L.Icon.Default.prototype.options) {
+    // Check if _getIconUrl exists before trying to delete it to prevent errors if already fixed
+    if ((L.Icon.Default.prototype as any)._getIconUrl) {
+      delete (L.Icon.Default.prototype as any)._getIconUrl;
+    }
+    L.Icon.Default.mergeOptions({
+      iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
+      iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
+      shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
+    });
   }
-  L.Icon.Default.mergeOptions({
-    iconRetinaUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon-2x.png',
-    iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
-    shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
-  });
+  (window as any)._leafletIconPatched = true;
 }
+
 
 const getAmbulanceStatusLabel = (status: AmbulanceStatus): string => {
   switch (status) {
