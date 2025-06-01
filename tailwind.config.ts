@@ -85,9 +85,9 @@ export default {
   			sm: 'var(--radius-sm)'  
   		},
       fontFamily: {
-        base: ['var(--font-base)'], // Referencia a la variable CSS para Riojana Regular
-        condensed: ['var(--font-condensed)'], // Referencia a la variable CSS para Riojana Condensed
-        slab: ['var(--font-slab)'], // Referencia a la variable CSS para Riojana Slab
+        base: ['var(--font-base)'], // Usa la variable CSS para la pila de fuentes base
+        condensed: ['var(--font-condensed)'], // Usa la variable CSS para la pila de fuentes base (fallback para condensed)
+        slab: ['var(--font-slab)'], // Usa la variable CSS para la pila de fuentes serif (fallback para slab)
       },
       fontSize: { 
         'xs': ['0.75rem', { lineHeight: '1rem' }],     
