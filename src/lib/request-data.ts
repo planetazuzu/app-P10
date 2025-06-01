@@ -1,8 +1,8 @@
 
-import type { AmbulanceRequest, RequestStatus, UserRole, ProgrammedTransportRequest, TipoServicioProgramado, TipoTrasladoProgramado, MedioRequeridoProgramado, EquipamientoEspecialProgramadoId, ParadaRuta, LoteProgramado } from '@/types';
-import { MOCK_USERS } from './auth'; // Asegúrate de que MOCK_USERS se exporta y está disponible
+import type { AmbulanceRequest, RequestStatus, UserRole, ProgrammedTransportRequest, TipoServicioProgramado, TipoTrasladoProgramado, MedioRequeridoProgramado, EquipamientoEspecialProgramadoId, ParadaRuta, LoteProgramado, PacienteLote, DestinoLote, ParadaEstado } from '@/types';
+import { MOCK_USERS } from './auth';
 import { ALL_TIPOS_SERVICIO_PROGRAMADO, ALL_TIPOS_TRASLADO_PROGRAMADO, ALL_MEDIOS_REQUERIDOS_PROGRAMADO, EQUIPAMIENTO_ESPECIAL_PROGRAMADO_OPTIONS } from '@/types';
-import { mockLotes, mockRutas, mapProgrammedRequestToParada } from './driver-data';
+// import { mockLotes, mockRutas, mapProgrammedRequestToParada } from './driver-data'; // Removed to break circular dependency
 
 
 const patientDetailsSamples = [
@@ -47,7 +47,7 @@ const otherSpecificUsers = [
   hospitalUser,
   adminUser,
   centroCoordinadorUser
-].filter(Boolean); // Filtra undefined si alguno no existiera
+].filter(Boolean);
 
 
 export let mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
@@ -60,17 +60,15 @@ export let mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) 
 
   let assignedRequesterId: string;
 
-  if (individualUser && i < 3) { // Primeras 3 solicitudes para el usuario individual
+  if (individualUser && i < 3) {
     assignedRequesterId = individualUser.id;
   } else if (otherSpecificUsers.length > 0 && i < 3 + otherSpecificUsers.length) {
-    // Siguientes N solicitudes para otros usuarios específicos (admin, hospital, coordinador)
     assignedRequesterId = otherSpecificUsers[(i - 3) % otherSpecificUsers.length]!.id;
   } else {
-    // El resto para usuarios aleatorios, asegurando que no sea el individual
     let randomOtherUser = getRandomElement(mockUserValues.filter(u => u.id !== individualUser?.id && otherSpecificUsers.every(su => su!.id !== u.id) ));
-    if (!randomOtherUser && otherSpecificUsers.length > 0) { // Fallback si el filtro deja array vacío
+    if (!randomOtherUser && otherSpecificUsers.length > 0) {
         randomOtherUser = getRandomElement(otherSpecificUsers)!;
-    } else if (!randomOtherUser) { // Fallback si no hay otros usuarios definidos
+    } else if (!randomOtherUser) {
         randomOtherUser = adminUser || hospitalUser || centroCoordinadorUser || mockUserValues[0];
     }
     assignedRequesterId = randomOtherUser.id;
@@ -103,17 +101,15 @@ export function getRequests(userId: string, userRole: UserRole): Promise<Ambulan
       if (userRole === 'individual') {
         userRequestsToReturn = mockRequests.filter(req => req.requesterId === userId);
       } else if (userRole === 'admin' || userRole === 'hospital' || userRole === 'centroCoordinador') {
-        userRequestsToReturn = [...mockRequests]; // Devuelve una copia para evitar mutaciones directas
+        userRequestsToReturn = [...mockRequests];
       } else if (userRole === 'equipoMovil') {
-        userRequestsToReturn = []; // El equipo móvil no ve estas solicitudes directamente
+        userRequestsToReturn = [];
       } else {
-        // Esto no debería suceder con UserRole bien tipado, pero es un fallback
         console.warn(`Rol de usuario no manejado en getRequests: ${userRole}`);
         userRequestsToReturn = [];
       }
-      // Ordenar por fecha de creación descendente
       resolve(userRequestsToReturn.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()));
-    }, 300); // Simular retardo de red
+    }, 300);
   });
 }
 
@@ -134,7 +130,7 @@ export function createRequest(requestData: Omit<AmbulanceRequest, 'id' | 'create
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
-      mockRequests.unshift(newRequest); // Añade al principio para verla primero si se ordena por fecha
+      mockRequests.unshift(newRequest);
       resolve(newRequest);
     }, 300);
   });
@@ -142,15 +138,14 @@ export function createRequest(requestData: Omit<AmbulanceRequest, 'id' | 'create
 
 export function updateSimpleRequest(
   id: string,
-  dataToUpdate: Partial<Omit<AmbulanceRequest, 'id' | 'createdAt' | 'requesterId' | 'assignedAmbulanceId'>> // 'status' puede ser actualizado por otra función
+  dataToUpdate: Partial<Omit<AmbulanceRequest, 'id' | 'createdAt' | 'requesterId' | 'assignedAmbulanceId'>>
 ): Promise<AmbulanceRequest | undefined> {
   return new Promise((resolve) => {
     setTimeout(() => {
       const requestIndex = mockRequests.findIndex(req => req.id === id);
       if (requestIndex > -1) {
         const existingRequest = mockRequests[requestIndex];
-        // Evitar cambiar el status aquí si hay una función dedicada para ello
-        const { status, ...restOfDataToUpdate } = dataToUpdate as any; // any para evitar error de tipo con status
+        const { status, ...restOfDataToUpdate } = dataToUpdate as any;
 
         mockRequests[requestIndex] = {
           ...existingRequest,
@@ -175,7 +170,7 @@ export function updateRequestStatus(id: string, status: RequestStatus, ambulance
                 mockRequests[requestIndex].updatedAt = new Date().toISOString();
                 if (ambulanceId) {
                     mockRequests[requestIndex].assignedAmbulanceId = ambulanceId;
-                } else if (status === 'pending' || status === 'cancelled') { // Opcionalmente limpiar ambulancia asignada
+                } else if (status === 'pending' || status === 'cancelled') {
                     mockRequests[requestIndex].assignedAmbulanceId = undefined;
                 }
                 resolve(mockRequests[requestIndex]);
@@ -188,10 +183,60 @@ export function updateRequestStatus(id: string, status: RequestStatus, ambulance
 
 
 // --- Programmed Transport Requests ---
+
+// Moved from driver-data.ts
+const mockPacientes: Record<string, PacienteLote> = {
+  "pac-001": { id: "pac-001", nombre: "Ana Pérez García", direccionOrigen: "Calle Falsa 123, Logroño", contacto: "600111222", observaciones: "Requiere ayuda para subir escalón.", medioRequerido: "andando" },
+  "pac-002": { id: "pac-002", nombre: "Juan Rodríguez López", direccionOrigen: "Avenida de la Paz 50, Calahorra", medioRequerido: "sillaDeRuedas" },
+  "pac-003": { id: "pac-003", nombre: "María Sánchez Martín", direccionOrigen: "Plaza del Ayuntamiento 1, Haro", contacto: "600333444", observaciones: "Paciente con movilidad reducida.", medioRequerido: "camilla" },
+  "pac-004": { id: "pac-004", nombre: "Carlos Gómez Ruiz", direccionOrigen: "Paseo del Espolón 2, Logroño", medioRequerido: "andando"},
+  "pac-005": { id: "pac-005", nombre: "Laura Martínez Soler", direccionOrigen: "Calle San Agustín 22, Logroño", contacto: "600555666", observaciones: "Alérgica a AINES.", medioRequerido: "andando" },
+  "pac-006": { id: "pac-006", nombre: "Pedro Jiménez Vega", direccionOrigen: "Avenida de Colón 10, Logroño", observaciones: "Traslado post-operatorio, delicado.", medioRequerido: "camilla" },
+  "pac-007": { id: "pac-007", nombre: "Elena Navarro Sanz", direccionOrigen: "Calle del Sol 7, Villamediana de Iregua", contacto: "600777888", medioRequerido: "andando" },
+  "pac-008": { id: "pac-008", nombre: "Roberto Sanz Gil", direccionOrigen: "Avenida Madrid 101, Logroño", observaciones: "Entrada por rampa lateral.", medioRequerido: "sillaDeRuedas"},
+  "pac-009": { id: "pac-009", nombre: "Isabel Torres Pazos", direccionOrigen: "Camino Viejo 4, Alberite", observaciones: "Paciente encamado, requiere 2 técnicos.", medioRequerido: "camilla" },
+  "pac-010": { id: "pac-010", nombre: "David Alonso Marco", direccionOrigen: "Plaza de la Iglesia 1, Lardero", medioRequerido: "andando" },
+};
+
+// Moved from driver-data.ts
+const mockDestinos: Record<string, DestinoLote> = {
+  "dest-hsp": { id: "dest-hsp", nombre: "Hospital San Pedro", direccion: "Calle Piqueras 98, Logroño", detalles: "Consultas Externas" },
+  "dest-hcal": { id: "dest-hcal", nombre: "Hospital de Calahorra", direccion: "Carretera de Logroño s/n, Calahorra", detalles: "Rehabilitación" },
+  "dest-carpa": {id: "dest-carpa", nombre: "CARPA (Centro de Alta Resolución)", direccion: "Av. de la República Argentina, 55, Logroño", detalles: "Consultas varias"},
+};
+
+// Moved from driver-data.ts and adapted
+export const mapProgrammedRequestToParada = (req: ProgrammedTransportRequest, orden: number): ParadaRuta => {
+  const pacienteInfo = mockPacientes[req.patientId!] || {
+    id: req.patientId || req.dniNieSsPaciente,
+    nombre: req.nombrePaciente,
+    direccionOrigen: req.centroOrigen,
+    contacto: undefined,
+    observaciones: req.observacionesMedicasAdicionales,
+    medioRequerido: req.medioRequerido,
+  };
+
+  return {
+    servicioId: req.id,
+    paciente: pacienteInfo,
+    horaConsultaMedica: req.horaConsultaMedica || req.horaIda,
+    horaRecogidaEstimada: `${String(parseInt((req.horaConsultaMedica || req.horaIda).split(':')[0]) -1).padStart(2,'0')}:${(req.horaConsultaMedica || req.horaIda).split(':')[1]}`,
+    horaLlegadaDestinoEstimada: req.horaConsultaMedica || req.horaIda,
+    tiempoTrasladoDesdeAnteriorMin: orden === 1 ? 30 : 15 + Math.floor(Math.random() * 10),
+    orden,
+    estado: (req.status === 'completed' || req.status === 'cancelled') ? req.status : 'pendiente' as ParadaEstado,
+    notasParada: `Destino: ${req.destino}. Necesidades: ${req.necesidadesEspeciales || 'Ninguna'}`
+  };
+};
+
+
 export let mockProgrammedTransportRequests: ProgrammedTransportRequest[] = [];
 
 // Initialize mockProgrammedTransportRequests with some data if it's empty
-if (mockProgrammedTransportRequests.length === 0 && individualUser) {
+// This logic now fully resides in request-data.ts
+(() => {
+    if (mockProgrammedTransportRequests.length > 0) return;
+
     const today = new Date();
     const createDate = (daysOffset: number) => {
         const date = new Date(today);
@@ -201,26 +246,58 @@ if (mockProgrammedTransportRequests.length === 0 && individualUser) {
 
     const programmedRequesters = [
         MOCK_USERS['hospital@gmr.com']?.id || 'user-hospital-fallback',
-        individualUser.id, // Asegurar que el usuario individual tenga solicitudes programadas
+        individualUser?.id || 'user-individual-fallback',
         MOCK_USERS['coordinador@gmr.com']?.id || 'user-coordinador-fallback',
     ];
 
-    const sampleProgrammedRequests: Omit<ProgrammedTransportRequest, 'id' | 'requesterId' | 'createdAt' | 'updatedAt'>[] = [
-        { status: 'pending', nombrePaciente: 'Elena Navarro (Prog)', dniNieSsPaciente: '12345678A', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Domicilio: Calle Falsa 123, Logroño', destino: 'Hospital San Pedro', fechaIda: createDate(1), horaIda: '10:00', horaConsultaMedica: '10:30', medioRequerido: 'sillaDeRuedas', priority: 'low', requesterId: individualUser.id },
-        { status: 'pending', nombrePaciente: 'Roberto Sanz (Prog)', dniNieSsPaciente: '87654321B', tipoServicio: 'rehabilitacion', tipoTraslado: 'soloIda', centroOrigen: 'Centro de Día Sol', destino: 'Domicilio: Avenida de la Paz 50, Calahorra', fechaIda: createDate(1), horaIda: '14:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Necesita ayuda para bajar escalón.', requesterId: programmedRequesters[0] },
-        { status: 'batched', loteId: 'lote-demo-123', nombrePaciente: 'Ana Pérez García (Prog)', dniNieSsPaciente: '11223344C', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Plaza del Ayuntamiento 1, Haro', destino: 'CARPA', fechaIda: createDate(0), horaIda: '09:00', horaConsultaMedica: '09:30', medioRequerido: 'camilla', priority: 'low', requesterId: programmedRequesters[2] },
-        { status: 'pending', nombrePaciente: 'Carlos Gómez Ruiz (Prog)', dniNieSsPaciente: '55667788D', tipoServicio: 'tratamientoContinuado', tipoTraslado: 'idaYVuelta', centroOrigen: 'Hospital de Calahorra', destino: 'Hospital San Pedro - Oncología', fechaIda: createDate(2), horaIda: '11:00', horaConsultaMedica: '11:45', medioRequerido: 'sillaDeRuedas', priority: 'low', equipamientoEspecialRequerido: ['oxigeno'], requesterId: individualUser.id  },
-        { status: 'pending', nombrePaciente: 'Laura Martínez Soler (Prog)', dniNieSsPaciente: '99001122E', tipoServicio: 'alta', tipoTraslado: 'soloIda', centroOrigen: 'Hospital San Pedro - Planta 3', destino: 'Residencia Los Tulipanes', fechaIda: createDate(3), horaIda: '13:00', medioRequerido: 'andando', priority: 'low', observacionesMedicasAdicionales: 'Entregar informe de alta.', requesterId: programmedRequesters[0] },
+    const sampleProgrammedRequestsBase: Omit<ProgrammedTransportRequest, 'id' | 'requesterId' | 'createdAt' | 'updatedAt' | 'status' | 'priority' >[] = [
+        { nombrePaciente: 'Elena Navarro (Prog)', dniNieSsPaciente: '12345678A', tipoServicio: 'consulta', tipoTraslado: 'idaYVuelta', centroOrigen: 'Domicilio: Calle Falsa 123, Logroño', destino: 'Hospital San Pedro', fechaIda: createDate(1), horaIda: '10:00', horaConsultaMedica: '10:30', medioRequerido: 'sillaDeRuedas' },
+        { nombrePaciente: 'Roberto Sanz (Prog)', dniNieSsPaciente: '87654321B', tipoServicio: 'rehabilitacion', tipoTraslado: 'soloIda', centroOrigen: 'Centro de Día Sol', destino: 'Domicilio: Avenida de la Paz 50, Calahorra', fechaIda: createDate(1), horaIda: '14:00', medioRequerido: 'andando', observacionesMedicasAdicionales: 'Necesita ayuda para bajar escalón.' },
+        { nombrePaciente: 'Carlos Gómez Ruiz (Prog)', dniNieSsPaciente: '55667788D', tipoServicio: 'tratamientoContinuado', tipoTraslado: 'idaYVuelta', centroOrigen: 'Hospital de Calahorra', destino: 'Hospital San Pedro - Oncología', fechaIda: createDate(2), horaIda: '11:00', horaConsultaMedica: '11:45', medioRequerido: 'sillaDeRuedas', equipamientoEspecialRequerido: ['oxigeno']},
+        { nombrePaciente: 'Laura Martínez Soler (Prog)', dniNieSsPaciente: '99001122E', tipoServicio: 'alta', tipoTraslado: 'soloIda', centroOrigen: 'Hospital San Pedro - Planta 3', destino: 'Residencia Los Tulipanes', fechaIda: createDate(3), horaIda: '13:00', medioRequerido: 'andando', observacionesMedicasAdicionales: 'Entregar informe de alta.'},
     ];
 
-    mockProgrammedTransportRequests = sampleProgrammedRequests.map((reqBase, index) => ({
+    mockProgrammedTransportRequests = sampleProgrammedRequestsBase.map((reqBase, index) => ({
         ...reqBase,
         id: `prog-req-${String(index + 1).padStart(3, '0')}`,
-        // requesterId is now part of reqBase
+        requesterId: programmedRequesters[index % programmedRequesters.length],
+        status: 'pending',
+        priority: 'low',
         createdAt: new Date(Date.now() - Math.floor(Math.random() * 72 * 60 * 60 * 1000)).toISOString(),
         updatedAt: new Date().toISOString(),
     }));
-}
+
+    // Specifically create/assign services for 'lote-demo-123'
+    const pacienteIdsForLoteDemo = Object.keys(mockPacientes).slice(0, 6); // Take first 6 mock patients
+    pacienteIdsForLoteDemo.forEach((pId, index) => {
+        const serviceForLote: ProgrammedTransportRequest = {
+            id: `prog-req-lote-demo-123-${pId.split('-')[1]}`,
+            requesterId: MOCK_USERS['coordinador@gmr.com']?.id || 'user-coordinador-fallback',
+            status: 'batched',
+            loteId: "lote-demo-123", // Assign to this specific lot
+            createdAt: new Date(Date.now() - Math.floor(Math.random() * 72 * 60 * 60 * 1000)).toISOString(),
+            updatedAt: new Date().toISOString(),
+            nombrePaciente: mockPacientes[pId].nombre,
+            dniNieSsPaciente: `Y0${1234560+index}${String.fromCharCode(65+index)}`, // Example DNI
+            patientId: pId,
+            tipoServicio: 'consulta',
+            tipoTraslado: 'idaYVuelta',
+            centroOrigen: mockPacientes[pId].direccionOrigen,
+            destino: mockDestinos[index % 2 === 0 ? "dest-hsp" : "dest-carpa"].nombre,
+            destinoId: mockDestinos[index % 2 === 0 ? "dest-hsp" : "dest-carpa"].id,
+            fechaIda: today.toISOString().split('T')[0],
+            horaIda: `${String(9 + Math.floor(index / 2)).padStart(2,'0')}:${String((index % 2) * 30).padStart(2,'0')}`,
+            horaConsultaMedica: `${String(9 + Math.floor(index / 2)).padStart(2,'0')}:${String((index % 2) * 30).padStart(2,'0')}`,
+            medioRequerido: mockPacientes[pId].medioRequerido,
+            priority: 'low',
+            observacionesMedicasAdicionales: mockPacientes[pId].observaciones,
+        };
+        // Add if not already present (e.g. if mockProgrammedTransportRequests was already populated by other means)
+        if (!mockProgrammedTransportRequests.find(r => r.id === serviceForLote.id)) {
+            mockProgrammedTransportRequests.push(serviceForLote);
+        }
+    });
+})();
 
 
 export function createProgrammedTransportRequest(
@@ -314,7 +391,7 @@ export function updateProgrammedRequestLoteAssignment(serviceId: string, newLote
         mockProgrammedTransportRequests[serviceIndex].loteId = newLoteId ?? undefined;
         mockProgrammedTransportRequests[serviceIndex].status = newStatus;
         mockProgrammedTransportRequests[serviceIndex].updatedAt = new Date().toISOString();
-        resolve({...mockProgrammedTransportRequests[serviceIndex]}); // Return a copy
+        resolve({...mockProgrammedTransportRequests[serviceIndex]});
       } else {
         resolve(null);
       }
@@ -322,17 +399,16 @@ export function updateProgrammedRequestLoteAssignment(serviceId: string, newLote
   });
 }
 
-// --- Nueva función para obtener asignaciones de una ambulancia ---
 export interface AmbulanceAssignmentDetails {
   type: 'direct_request' | 'programmed_request' | 'batch';
-  id: string; // Request ID or Lote ID
-  description: string; // Patient details for direct, Lote name/destination for batch
-  status: string; // Request status or Lote status
-  createdAt?: string; // For requests
-  patientName?: string; // For direct/programmed requests
-  destination?: string; // For direct/programmed requests or batch main destination
-  pickupTime?: string; // For programmed requests or first stop in batch
-  services?: Array<{ // Only for batches
+  id: string;
+  description: string;
+  status: string;
+  createdAt?: string;
+  patientName?: string;
+  destination?: string;
+  pickupTime?: string;
+  services?: Array<{
     serviceId: string;
     patientName: string;
     pickupAddress: string;
@@ -344,10 +420,13 @@ export interface AmbulanceAssignmentDetails {
   }>;
 }
 
-export async function getAssignmentsForAmbulance(ambulanceId: string): Promise<AmbulanceAssignmentDetails[]> {
+export async function getAssignmentsForAmbulance(
+    ambulanceId: string,
+    allLotes: LoteProgramado[],
+    allRutas: RutaCalculada[]
+): Promise<AmbulanceAssignmentDetails[]> {
   const assignments: AmbulanceAssignmentDetails[] = [];
 
-  // 1. Buscar Solicitudes Urgentes/Simples asignadas directamente
   const directRequests = mockRequests.filter(
     req => req.assignedAmbulanceId === ambulanceId && req.status !== 'completed' && req.status !== 'cancelled'
   );
@@ -356,14 +435,13 @@ export async function getAssignmentsForAmbulance(ambulanceId: string): Promise<A
       type: 'direct_request',
       id: req.id,
       description: `Solicitud Urgente: ${req.patientDetails.substring(0,30)}...`,
-      status: req.status, // Este es RequestStatus
+      status: req.status,
       patientName: req.patientDetails.substring(0, 20) + (req.patientDetails.length > 20 ? '...' : ''),
       destination: req.location.address,
       createdAt: req.createdAt,
     });
   });
 
-  // 2. Buscar Solicitudes Programadas asignadas directamente (que no estén en un lote aún)
   const programmedDirectRequests = mockProgrammedTransportRequests.filter(
     req => req.assignedAmbulanceId === ambulanceId && !req.loteId && req.status !== 'completed' && req.status !== 'cancelled'
   );
@@ -372,7 +450,7 @@ export async function getAssignmentsForAmbulance(ambulanceId: string): Promise<A
       type: 'programmed_request',
       id: req.id,
       description: `Prog: ${req.nombrePaciente} a ${req.destino}`,
-      status: req.status, // Este es RequestStatus
+      status: req.status,
       patientName: req.nombrePaciente,
       destination: req.destino,
       pickupTime: req.horaIda,
@@ -380,19 +458,17 @@ export async function getAssignmentsForAmbulance(ambulanceId: string): Promise<A
     });
   });
 
-
-  // 3. Buscar Lotes asignados
-  const assignedLotes = mockLotes.filter(
+  const assignedLotes = allLotes.filter(
     lote => lote.ambulanciaIdAsignada === ambulanceId && lote.estadoLote !== 'completado' && lote.estadoLote !== 'cancelado'
   );
 
   for (const lote of assignedLotes) {
-    const ruta = mockRutas.find(r => r.id === lote.rutaCalculadaId);
+    const ruta = allRutas.find(r => r.id === lote.rutaCalculadaId);
     let servicesForBatch: AmbulanceAssignmentDetails['services'] = [];
 
     if (ruta && ruta.paradas.length > 0) {
       servicesForBatch = ruta.paradas
-        .sort((a,b) => a.orden - b.orden) 
+        .sort((a,b) => a.orden - b.orden)
         .map(parada => ({
           serviceId: parada.servicioId,
           patientName: parada.paciente.nombre,
@@ -400,14 +476,14 @@ export async function getAssignmentsForAmbulance(ambulanceId: string): Promise<A
           destinationAddress: mockProgrammedTransportRequests.find(pr => pr.id === parada.servicioId)?.destino || 'Desconocido',
           pickupTime: parada.horaRecogidaEstimada,
           appointmentTime: parada.horaConsultaMedica,
-          stopStatus: parada.estado, // Este es ParadaRuta['estado']
+          stopStatus: parada.estado,
           order: parada.orden,
       }));
     } else {
         const serviciosDelLote = mockProgrammedTransportRequests.filter(req => lote.serviciosIds.includes(req.id));
         serviciosDelLote.sort((a, b) => (a.horaConsultaMedica || a.horaIda).localeCompare(b.horaConsultaMedica || b.horaIda));
         servicesForBatch = serviciosDelLote.map((req, index) => {
-            const paradaSimulada = mapProgrammedRequestToParada(req, index + 1);
+            const paradaSimulada = mapProgrammedRequestToParada(req, index + 1); // mapProgrammedRequestToParada is now local or imported from request-data
             return {
                 serviceId: req.id,
                 patientName: req.nombrePaciente,
@@ -425,13 +501,13 @@ export async function getAssignmentsForAmbulance(ambulanceId: string): Promise<A
       type: 'batch',
       id: lote.id,
       description: `Lote para: ${lote.destinoPrincipal.nombre}`,
-      status: lote.estadoLote, // Este es LoteProgramado['estadoLote']
+      status: lote.estadoLote,
       destination: lote.destinoPrincipal.nombre,
       services: servicesForBatch,
       createdAt: lote.createdAt,
     });
   }
-  
+
    assignments.sort((a, b) => {
     const dateA = new Date(a.createdAt || 0).getTime();
     const dateB = new Date(b.createdAt || 0).getTime();

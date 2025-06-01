@@ -1,8 +1,9 @@
 
-import type { LoteProgramado, RutaCalculada, ParadaRuta, PacienteLote, DestinoLote, ProgrammedTransportRequest, ParadaEstado, MedioRequeridoProgramado, LoteCreateFormValues, AmbulanceType, AmbulanceStatus } from '@/types';
-import { mockProgrammedTransportRequests, getProgrammedRequestsByLoteId } from './request-data';
+import type { AmbulanceType, AmbulanceStatus } from '@/types'; // Added AmbulanceType, AmbulanceStatus
+import type { LoteProgramado, RutaCalculada, ParadaRuta, PacienteLote, DestinoLote, ProgrammedTransportRequest, ParadaEstado, MedioRequeridoProgramado, LoteCreateFormValues } from '@/types';
+import { mockProgrammedTransportRequests, getProgrammedRequestsByLoteId, mapProgrammedRequestToParada as mapReqToParadaUtil } from './request-data'; // Import mapProgrammedRequestToParada
 
-// Local fallback for mock data, as fallbackMockAmbulances is no longer exported from ambulance-data.ts
+// Local fallback for mock data
 const localSimpleMockAmbulances: {
   id: string;
   name: string;
@@ -20,7 +21,7 @@ const localSimpleMockAmbulances: {
   specialEquipment:string[];
 }[] = [
   {
-    id: 'mock-alfa-101', // Mock ID
+    id: 'mock-alfa-101',
     name: 'Alfa 101',
     type: "Convencional",
     status: "available",
@@ -37,140 +38,50 @@ const localSimpleMockAmbulances: {
   }
 ];
 
+// mockPacientes and mockDestinos are now defined in request-data.ts
+// mapProgrammedRequestToParada is now imported from request-data.ts
 
-// Mock Data - Expandiendo a 10+ pacientes
-const mockPacientes: Record<string, PacienteLote> = {
-  "pac-001": { id: "pac-001", nombre: "Ana Pérez García", direccionOrigen: "Calle Falsa 123, Logroño", contacto: "600111222", observaciones: "Requiere ayuda para subir escalón.", medioRequerido: "andando" },
-  "pac-002": { id: "pac-002", nombre: "Juan Rodríguez López", direccionOrigen: "Avenida de la Paz 50, Calahorra", medioRequerido: "sillaDeRuedas" },
-  "pac-003": { id: "pac-003", nombre: "María Sánchez Martín", direccionOrigen: "Plaza del Ayuntamiento 1, Haro", contacto: "600333444", observaciones: "Paciente con movilidad reducida.", medioRequerido: "camilla" },
-  "pac-004": { id: "pac-004", nombre: "Carlos Gómez Ruiz", direccionOrigen: "Paseo del Espolón 2, Logroño", medioRequerido: "andando"},
-  "pac-005": { id: "pac-005", nombre: "Laura Martínez Soler", direccionOrigen: "Calle San Agustín 22, Logroño", contacto: "600555666", observaciones: "Alérgica a AINES.", medioRequerido: "andando" },
-  "pac-006": { id: "pac-006", nombre: "Pedro Jiménez Vega", direccionOrigen: "Avenida de Colón 10, Logroño", observaciones: "Traslado post-operatorio, delicado.", medioRequerido: "camilla" },
-  "pac-007": { id: "pac-007", nombre: "Elena Navarro Sanz", direccionOrigen: "Calle del Sol 7, Villamediana de Iregua", contacto: "600777888", medioRequerido: "andando" },
-  "pac-008": { id: "pac-008", nombre: "Roberto Sanz Gil", direccionOrigen: "Avenida Madrid 101, Logroño", observaciones: "Entrada por rampa lateral.", medioRequerido: "sillaDeRuedas"},
-  "pac-009": { id: "pac-009", nombre: "Isabel Torres Pazos", direccionOrigen: "Camino Viejo 4, Alberite", observaciones: "Paciente encamado, requiere 2 técnicos.", medioRequerido: "camilla" },
-  "pac-010": { id: "pac-010", nombre: "David Alonso Marco", direccionOrigen: "Plaza de la Iglesia 1, Lardero", medioRequerido: "andando" },
+
+// Use the imported (and now correctly located) mapProgrammedRequestToParada
+const buildParadasForRoute = (lote: LoteProgramado): ParadaRuta[] => {
+    const serviciosDelLote = mockProgrammedTransportRequests.filter(req => lote.serviciosIds.includes(req.id));
+    serviciosDelLote.sort((a, b) => (a.horaConsultaMedica || a.horaIda).localeCompare(b.horaConsultaMedica || b.horaIda));
+    return serviciosDelLote.map((req, index) => mapReqToParadaUtil(req, index + 1)); // Use imported mapper
 };
 
-const mockDestinos: Record<string, DestinoLote> = {
-  "dest-hsp": { id: "dest-hsp", nombre: "Hospital San Pedro", direccion: "Calle Piqueras 98, Logroño", detalles: "Consultas Externas" },
-  "dest-hcal": { id: "dest-hcal", nombre: "Hospital de Calahorra", direccion: "Carretera de Logroño s/n, Calahorra", detalles: "Rehabilitación" },
-  "dest-carpa": {id: "dest-carpa", nombre: "CARPA (Centro de Alta Resolución)", direccion: "Av. de la República Argentina, 55, Logroño", detalles: "Consultas varias"},
-};
+// Derive initialLoteDemo123ServiceIds from the already populated mockProgrammedTransportRequests
+const initialLoteDemo123ServiceIds = mockProgrammedTransportRequests
+    .filter(r => r.loteId === "lote-demo-123")
+    .map(r => r.id);
 
-// This function ensures mockProgrammedTransportRequests is populated if empty
-// This is called from request-data.ts now.
-// We will ensure the lote-demo-123 has its services correctly referenced here.
-
-let initialLoteDemo123ServiceIds: string[] = [];
-
-if (mockProgrammedTransportRequests.length > 0) {
-    // Filter services that are initially meant for lote-demo-123
-    // (This assumes some services in mockProgrammedTransportRequests are pre-assigned to 'lote-demo-123')
-    initialLoteDemo123ServiceIds = mockProgrammedTransportRequests
-        .filter(r => r.loteId === "lote-demo-123")
-        .map(r => r.id);
-
-    // If no services are pre-assigned to lote-demo-123, but we have at least 10 patients,
-    // assign the first few to it for demonstration purposes.
-    if (initialLoteDemo123ServiceIds.length === 0 && Object.keys(mockPacientes).length >= 10) {
-        const pacienteIds = Object.keys(mockPacientes);
-        const today = new Date().toISOString().split('T')[0];
-
-        const createMockRequestForLote = (pId: string, index: number): ProgrammedTransportRequest => ({
-            id: `prog-req-lote-demo-123-${pId.split('-')[1]}`,
-            requesterId: 'user-centro-coordinador-01',
-            status: 'batched',
-            loteId: "lote-demo-123",
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString(),
-            nombrePaciente: mockPacientes[pId].nombre,
-            dniNieSsPaciente: `Y0${1234560+index}${String.fromCharCode(65+index)}`,
-            patientId: pId,
-            tipoServicio: 'consulta',
-            tipoTraslado: 'idaYVuelta',
-            centroOrigen: mockPacientes[pId].direccionOrigen,
-            destino: mockDestinos[index % 2 === 0 ? "dest-hsp" : "dest-carpa"].nombre,
-            destinoId: mockDestinos[index % 2 === 0 ? "dest-hsp" : "dest-carpa"].id,
-            fechaIda: today,
-            horaIda: `${String(9 + Math.floor(index / 2)).padStart(2,'0')}:${String((index % 2) * 30).padStart(2,'0')}`,
-            horaConsultaMedica: `${String(9 + Math.floor(index / 2)).padStart(2,'0')}:${String((index % 2) * 30).padStart(2,'0')}`,
-            medioRequerido: mockPacientes[pId].medioRequerido,
-            priority: 'low',
-            observacionesMedicasAdicionales: mockPacientes[pId].observaciones,
-        });
-
-        // Ensure at least a few services are part of lote-demo-123 initially
-        const servicesToAssign = pacienteIds.slice(0, 6); // Example: assign first 6 patients
-        servicesToAssign.forEach((pId, index) => {
-            const existingReqIndex = mockProgrammedTransportRequests.findIndex(r => r.patientId === pId && r.fechaIda === today);
-            if (existingReqIndex === -1) { // Only add if not already present for today for this patient
-                const newReq = createMockRequestForLote(pId, index);
-                mockProgrammedTransportRequests.push(newReq);
-                initialLoteDemo123ServiceIds.push(newReq.id);
-            } else { // If exists, ensure it's part of this lot
-                mockProgrammedTransportRequests[existingReqIndex].loteId = "lote-demo-123";
-                mockProgrammedTransportRequests[existingReqIndex].status = "batched";
-                if(!initialLoteDemo123ServiceIds.includes(mockProgrammedTransportRequests[existingReqIndex].id)){
-                    initialLoteDemo123ServiceIds.push(mockProgrammedTransportRequests[existingReqIndex].id);
-                }
-            }
-        });
-    }
-}
-
-// Helper function to map ProgrammedTransportRequest to ParadaRuta
-export const mapProgrammedRequestToParada = (req: ProgrammedTransportRequest, orden: number): ParadaRuta => {
-  const pacienteInfo = mockPacientes[req.patientId!] || {
-    id: req.patientId || req.dniNieSsPaciente,
-    nombre: req.nombrePaciente,
-    direccionOrigen: req.centroOrigen,
-    contacto: undefined, // Populate if available
-    observaciones: req.observacionesMedicasAdicionales,
-    medioRequerido: req.medioRequerido,
-  };
-
-  return {
-    servicioId: req.id,
-    paciente: pacienteInfo,
-    horaConsultaMedica: req.horaConsultaMedica || req.horaIda,
-    // Estimations would be part of a more complex route optimization logic
-    horaRecogidaEstimada: `${String(parseInt((req.horaConsultaMedica || req.horaIda).split(':')[0]) -1).padStart(2,'0')}:${(req.horaConsultaMedica || req.horaIda).split(':')[1]}`, // Simplistic estimation
-    horaLlegadaDestinoEstimada: req.horaConsultaMedica || req.horaIda, // Simplistic estimation
-    tiempoTrasladoDesdeAnteriorMin: orden === 1 ? 30 : 15 + Math.floor(Math.random() * 10), // Simplistic estimation
-    orden,
-    estado: (req.status === 'completed' || req.status === 'cancelled') ? req.status : 'pendiente' as ParadaEstado,
-    notasParada: `Destino: ${req.destino}. Necesidades: ${req.necesidadesEspeciales || 'Ninguna'}`
-  };
-};
 
 export let mockRutas: RutaCalculada[] = [
   {
     id: "ruta-lote-demo-123",
     loteId: "lote-demo-123",
-    horaSalidaBaseEstimada: "07:30", // Adjusted
-    duracionTotalEstimadaMin: 0, // Will be calculated
-    distanciaTotalEstimadaKm: 0, // Will be calculated
+    horaSalidaBaseEstimada: "07:30",
+    duracionTotalEstimadaMin: 0,
+    distanciaTotalEstimadaKm: 0,
     optimizadaEn: new Date(Date.now() - 3600000 * 2).toISOString(),
-    paradas: [] // Will be populated by getRutaCalculadaByLoteIdMock based on lote's services
+    paradas: []
   },
-  // ... other mock routes if needed
 ];
-
-// Function to build/rebuild paradas for a route based on lote.serviciosIds
-const buildParadasForRoute = (lote: LoteProgramado): ParadaRuta[] => {
-    const serviciosDelLote = mockProgrammedTransportRequests.filter(req => lote.serviciosIds.includes(req.id));
-    serviciosDelLote.sort((a, b) => (a.horaConsultaMedica || a.horaIda).localeCompare(b.horaConsultaMedica || b.horaIda));
-    return serviciosDelLote.map((req, index) => mapProgrammedRequestToParada(req, index + 1));
-};
-
 
 export let mockLotes: LoteProgramado[] = [
   {
     id: "lote-demo-123",
     fechaServicio: new Date().toISOString().split('T')[0],
-    destinoPrincipal: mockDestinos["dest-hsp"],
-    serviciosIds: initialLoteDemo123ServiceIds, // Use the dynamically generated IDs
+    // Use mockDestinos from request-data.ts if needed, or ensure it's defined locally or not needed for this part.
+    // For simplicity, if mockDestinos was used here, it might need to be imported if it remains in request-data.ts,
+    // or this part of mockLotes might need to be initialized after request-data.ts is fully loaded.
+    // Let's assume mockDestinos is available via import or this part is simplified.
+    // For now, this mock lote only needs `initialLoteDemo123ServiceIds`.
+    // The `destinoPrincipal` should be derived from data now in `request-data.ts`.
+    // To fully break the cycle, `mockDestinos` should be passed or defined in a common place.
+    // For now, this will likely cause a new error if `mockDestinos` isn't available.
+    // Let's hardcode for now to ensure this file initializes.
+    destinoPrincipal: { id: "dest-hsp", nombre: "Hospital San Pedro", direccion: "Calle Piqueras 98, Logroño", detalles: "Consultas Externas" }, // Hardcoded for now
+    serviciosIds: initialLoteDemo123ServiceIds,
     estadoLote: 'asignado',
     equipoMovilUserIdAsignado: 'user-vehiculo-AMB101',
     ambulanciaIdAsignada: localSimpleMockAmbulances.find(a => a.name.includes("Alfa 101"))?.id || "amb-1001",
@@ -181,20 +92,30 @@ export let mockLotes: LoteProgramado[] = [
   },
   {
     id: "lote-empty-789",
-    fechaServicio: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0], // Two days from now
-    destinoPrincipal: mockDestinos["dest-hcal"],
-    serviciosIds: [], // Initially empty
+    fechaServicio: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
+    destinoPrincipal: { id: "dest-hcal", nombre: "Hospital de Calahorra", direccion: "Carretera de Logroño s/n, Calahorra", detalles: "Rehabilitación" }, // Hardcoded
+    serviciosIds: [],
     estadoLote: 'pendienteCalculo',
     createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
     updatedAt: new Date().toISOString(),
     notasLote: "Lote nuevo, pendiente de asignación de servicios."
   }
 ];
+// Populate paradas for mockRutas after mockLotes is defined
+mockRutas.forEach(ruta => {
+    const lote = mockLotes.find(l => l.id === ruta.loteId);
+    if (lote) {
+        ruta.paradas = buildParadasForRoute(lote);
+        ruta.duracionTotalEstimadaMin = ruta.paradas.reduce((sum, parada) => sum + parada.tiempoTrasladoDesdeAnteriorMin + 20, 0);
+        ruta.distanciaTotalEstimadaKm = ruta.paradas.length * 15;
+    }
+});
+
 
 export const getLotesMock = (): Promise<LoteProgramado[]> => {
   return new Promise((resolve) => {
     setTimeout(() => {
-      resolve([...mockLotes]); // Return a copy
+      resolve([...mockLotes]);
     }, 300);
   });
 };
@@ -204,7 +125,7 @@ export const getLoteByIdMock = (loteId: string): Promise<LoteProgramado | null> 
   return new Promise((resolve) => {
     setTimeout(() => {
       const lote = mockLotes.find(l => l.id === loteId);
-      resolve(lote ? {...lote} : null); // Return a copy
+      resolve(lote ? {...lote} : null);
     }, 300);
   });
 };
@@ -221,18 +142,16 @@ export const getRutaCalculadaByLoteIdMock = (loteId: string, rutaId?: string): P
       let ruta = mockRutas.find(r => r.loteId === loteId && (!rutaId || r.id === rutaId));
 
       if (ruta) {
-        // Rebuild paradas based on current lote.serviciosIds
         ruta.paradas = buildParadasForRoute(lote);
-        // Recalculate total duration and distance (simplified)
-        ruta.duracionTotalEstimadaMin = ruta.paradas.reduce((sum, parada) => sum + parada.tiempoTrasladoDesdeAnteriorMin + 20, 0); // 20 min per stop + travel
-        ruta.distanciaTotalEstimadaKm = ruta.paradas.length * 15; // 15km per stop average
-        resolve({...ruta}); // Return a copy
-      } else if (lote.rutaCalculadaId) { // If lote has a rutaCalculadaId but it's not in mockRutas, try to create one
+        ruta.duracionTotalEstimadaMin = ruta.paradas.reduce((sum, parada) => sum + parada.tiempoTrasladoDesdeAnteriorMin + 20, 0);
+        ruta.distanciaTotalEstimadaKm = ruta.paradas.length * 15;
+        resolve({...ruta});
+      } else if (lote.rutaCalculadaId) {
         const newRoute: RutaCalculada = {
             id: lote.rutaCalculadaId,
             loteId: lote.id,
             paradas: buildParadasForRoute(lote),
-            horaSalidaBaseEstimada: "08:00", // Default
+            horaSalidaBaseEstimada: "08:00",
             duracionTotalEstimadaMin: 0,
             distanciaTotalEstimadaKm: 0,
             optimizadaEn: new Date().toISOString(),
@@ -262,7 +181,7 @@ export const updateParadaEstadoMock = (loteId: string, servicioId: string, newSt
             if (newStatus === 'pacienteRecogido') ruta.paradas[paradaIndex].horaRealSalidaRecogida = now;
             if (newStatus === 'enDestino') ruta.paradas[paradaIndex].horaRealLlegadaDestino = now;
 
-            resolve({...ruta.paradas[paradaIndex]}); // Return a copy
+            resolve({...ruta.paradas[paradaIndex]});
             return;
           }
         }
@@ -288,7 +207,7 @@ export const createLoteMock = (
         updatedAt: new Date().toISOString(),
       };
       mockLotes.push(newLote);
-      resolve({...newLote}); // Return a copy
+      resolve({...newLote});
     }, 500);
   });
 };
@@ -310,19 +229,17 @@ export const createLoteWithServicesMock = (
             direccion: loteDetails.destinoPrincipalDireccion,
         },
         serviciosIds: serviceIds,
-        estadoLote: 'calculado', // Start as calculated, then assign ambulance will make it 'asignado'
-        // ambulanciaIdAsignada: ambulanceId, // This should be set in a separate step or by a different logic
+        estadoLote: 'calculado',
         notasLote: loteDetails.notasLote,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
-      // Create a basic route for this new lot
       const newRoute: RutaCalculada = {
         id: `ruta-${newLote.id}`,
         loteId: newLote.id,
-        paradas: buildParadasForRoute(newLote), // Build paradas from the serviceIds
-        horaSalidaBaseEstimada: "08:00", // Default
+        paradas: buildParadasForRoute(newLote),
+        horaSalidaBaseEstimada: "08:00",
         duracionTotalEstimadaMin: 0,
         distanciaTotalEstimadaKm: 0,
         optimizadaEn: new Date().toISOString(),
@@ -334,14 +251,13 @@ export const createLoteWithServicesMock = (
       mockLotes.push(newLote);
       mockRutas.push(newRoute);
 
-      // Update the assigned services
       mockProgrammedTransportRequests.forEach(req => {
         if (serviceIds.includes(req.id)) {
           req.loteId = newLote.id;
           req.status = 'batched';
         }
       });
-      resolve({...newLote}); // Return a copy
+      resolve({...newLote});
     }, 500);
   });
 };
@@ -351,11 +267,10 @@ export const updateLoteServiciosMock = (loteId: string, newServiceIds: string[])
     setTimeout(() => {
       const loteIndex = mockLotes.findIndex(l => l.id === loteId);
       if (loteIndex > -1) {
-        mockLotes[loteIndex].serviciosIds = [...newServiceIds]; // Ensure it's a new array
+        mockLotes[loteIndex].serviciosIds = [...newServiceIds];
         mockLotes[loteIndex].updatedAt = new Date().toISOString();
-        mockLotes[loteIndex].estadoLote = 'modificado'; // Mark as modified, needs re-optimization/re-assignment
+        mockLotes[loteIndex].estadoLote = 'modificado';
 
-        // Invalidate or update route: for simplicity, we'll assume re-optimization is needed
         const rutaIndex = mockRutas.findIndex(r => r.loteId === loteId);
         if (rutaIndex > -1) {
             mockRutas[rutaIndex].paradas = buildParadasForRoute(mockLotes[loteIndex]);
@@ -371,5 +286,3 @@ export const updateLoteServiciosMock = (loteId: string, newServiceIds: string[])
     }, 250);
   });
 };
-
-    

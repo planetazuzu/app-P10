@@ -1,18 +1,19 @@
 
 'use client';
 
-import type { Ambulance, AmbulanceType, AmbulanceStatus, ParadaRuta } from '@/types';
+import type { Ambulance, AmbulanceType, AmbulanceStatus, ParadaRuta, LoteProgramado, RutaCalculada } from '@/types';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { 
+import {
     X, Users, Package, MapPin, Layers, ShieldAlert, Thermometer, CheckCircle, Tool, Info,
-    Clock as StopClock, PlayCircle, User as StopUser, MapPin as StopMapPin, ArrowRight, 
+    Clock as StopClock, PlayCircle, User as StopUser, MapPin as StopMapPin, ArrowRight,
     AlertTriangle as StopAlert, UserMinus, Loader2
 } from 'lucide-react';
 import Image from 'next/image';
-import { equipmentOptions } from './constants'; // For mapping special equipment IDs to labels
+import { equipmentOptions } from './constants';
 import { getAssignmentsForAmbulance, type AmbulanceAssignmentDetails } from '@/lib/request-data';
+import { getLotesMock, getRutaCalculadaByLoteIdMock } from '@/lib/driver-data'; // Import functions to get lotes and rutas
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import React, { useEffect, useState } from 'react';
@@ -112,7 +113,12 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
   useEffect(() => {
     if (ambulance && ambulance.id) {
       setIsLoadingAssignments(true);
-      getAssignmentsForAmbulance(ambulance.id)
+      // Fetch all necessary data before calling getAssignmentsForAmbulance
+      Promise.all([getLotesMock(), Promise.all(mockLotes.map(l => getRutaCalculadaByLoteIdMock(l.id, l.rutaCalculadaId)))])
+        .then(([allLotes, allRutas]) => {
+          const validRutas = allRutas.filter(r => r !== null) as RutaCalculada[];
+          return getAssignmentsForAmbulance(ambulance.id, allLotes, validRutas);
+        })
         .then(data => {
           setAssignments(data);
         })
@@ -218,7 +224,6 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
           {ambulance.status === 'available' ? 'Despachar esta unidad (simulado)' : `Unidad ${getAmbulanceStatusLabel(ambulance.status).toLowerCase()}`}
         </Button>
 
-        {/* Sección de Servicios Asignados */}
         <div className="border-t my-3 pt-3">
           <h4 className="font-semibold text-md text-secondary mb-2">Servicios Asignados Actualmente</h4>
           {isLoadingAssignments ? (
