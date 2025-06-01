@@ -10,7 +10,8 @@ import React, { useEffect, useRef } from 'react';
 // Fix for default Leaflet icon path issue with Next.js/Webpack
 // Ensure this runs only once per application lifecycle
 if (typeof window !== 'undefined' && !(window as any)._leafletIconPatched) {
-  if (L.Icon.Default.prototype.options) {
+  // Add stricter checks for L.Icon.Default and its prototype
+  if (L.Icon.Default && L.Icon.Default.prototype && L.Icon.Default.prototype.options) {
     // Check if _getIconUrl exists before trying to delete it to prevent errors if already fixed
     if ((L.Icon.Default.prototype as any)._getIconUrl) {
       delete (L.Icon.Default.prototype as any)._getIconUrl;
@@ -20,6 +21,8 @@ if (typeof window !== 'undefined' && !(window as any)._leafletIconPatched) {
       iconUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-icon.png',
       shadowUrl: 'https://unpkg.com/leaflet@1.9.4/dist/images/marker-shadow.png',
     });
+  } else {
+    console.warn("Leaflet L.Icon.Default.prototype.options not available for patching. Skipping icon patch.");
   }
   (window as any)._leafletIconPatched = true;
 }
