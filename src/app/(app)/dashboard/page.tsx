@@ -105,7 +105,7 @@ export default function DashboardPage() {
             <StatsCard 
               title="Solicitudes Pendientes" 
               value={stats.pendingRequests}
-              icon={<Icons.FileText className="h-5 w-5 text-muted-foreground" />}
+              icon={<Icons.RequestManagement className="h-5 w-5 text-muted-foreground" />}
               description="Prioridad alta: 3"
               {...(canViewRequestManagement && { link: "/request-management", linkText: "Gestionar Solicitudes"})}
               cardClassName="bg-card"
