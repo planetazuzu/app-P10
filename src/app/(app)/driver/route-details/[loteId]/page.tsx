@@ -20,7 +20,6 @@ import { es } from 'date-fns/locale';
 import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
 import { Progress } from '@/components/ui/progress';
 
-// --- Helper Functions (Duplicated from original DriverBatchViewPage for now, consider moving to utils) ---
 const translateParadaStatus = (status: ParadaRuta['estado']): string => {
   switch (status) {
     case 'pendiente': return 'Pendiente';
@@ -34,18 +33,20 @@ const translateParadaStatus = (status: ParadaRuta['estado']): string => {
   }
 };
 
-const getStatusBadgeVariant = (status: ParadaRuta['estado']) => {
+// Updated badge styles for ParadaRuta status
+const getStatusBadgeClasses = (status: ParadaRuta['estado']) => {
   switch (status) {
-    case 'pendiente': return 'bg-gray-400 hover:bg-gray-500';
-    case 'enRutaRecogida': return 'bg-blue-500 hover:bg-blue-600';
-    case 'pacienteRecogido': return 'bg-purple-500 hover:bg-purple-600';
-    case 'enDestino': return 'bg-teal-500 hover:bg-teal-600';
-    case 'finalizado': return 'bg-green-500 hover:bg-green-600';
-    case 'cancelado': return 'bg-red-500 hover:bg-red-600';
-    case 'noPresentado': return 'bg-orange-500 hover:bg-orange-600';
-    default: return 'bg-slate-500 hover:bg-slate-600';
+    case 'pendiente': return 'bg-gray-300 text-gray-800';
+    case 'enRutaRecogida': return 'bg-blue-100 text-blue-700';
+    case 'pacienteRecogido': return 'bg-yellow-100 text-yellow-800';
+    case 'enDestino': return 'bg-green-100 text-green-700';
+    case 'finalizado': return 'bg-green-700 text-white';
+    case 'cancelado': return 'bg-red-100 text-red-800';
+    case 'noPresentado': return 'bg-red-100 text-red-800'; // Using same as cancelled for example
+    default: return 'bg-gray-400 text-white'; // Fallback
   }
 };
+
 
 const translateMedioRequerido = (medio: MedioRequeridoProgramado): string => {
     switch (medio) {
@@ -56,7 +57,6 @@ const translateMedioRequerido = (medio: MedioRequeridoProgramado): string => {
     }
 };
 
-// --- ParadaCard Component (Duplicated for now, consider moving to a shared component) ---
 const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus: (servicioId: string, newStatus: ParadaRuta['estado']) => void; isCurrent: boolean, isLoteCompleted: boolean }> = ({ parada, loteId, onUpdateStatus, isCurrent, isLoteCompleted }) => {
   const { toast } = useToast();
   
@@ -72,14 +72,14 @@ const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus:
   const isActionable = ['pendiente', 'enRutaRecogida', 'pacienteRecogido', 'enDestino'].includes(parada.estado) && !isLoteCompleted;
 
   return (
-    <Card className={`mb-4 ${isCurrent && !isLoteCompleted ? 'border-primary ring-2 ring-primary shadow-lg' : (isLoteCompleted ? 'opacity-60' : 'opacity-80 hover:opacity-100')}`}>
+    <Card className={`mb-4 rioja-card ${isCurrent && !isLoteCompleted ? 'border-primary ring-2 ring-primary shadow-lg' : (isLoteCompleted ? 'opacity-60' : 'opacity-80 hover:opacity-100')}`}>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
             <CardTitle className="text-lg text-secondary">Parada {parada.orden}: {parada.paciente.nombre}</CardTitle>
             <CardDescription>Servicio ID: {parada.servicioId} | Cita: {parada.horaConsultaMedica}</CardDescription>
           </div>
-          <Badge className={`${getStatusBadgeVariant(parada.estado)} text-white text-xs`}>{translateParadaStatus(parada.estado)}</Badge>
+          <Badge className={`${getStatusBadgeClasses(parada.estado)} text-xs font-semibold border`}>{translateParadaStatus(parada.estado)}</Badge>
         </div>
       </CardHeader>
       <CardContent className="text-sm space-y-2">
@@ -88,14 +88,14 @@ const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus:
         {parada.paciente.contacto && <div className="flex items-center"><User className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Contacto:</strong> {parada.paciente.contacto}</div>}
         <div className="flex items-center"><BriefcaseMedical className="w-4 h-4 mr-2 text-muted-foreground" /> <strong>Medio Requerido:</strong> {translateMedioRequerido(parada.paciente.medioRequerido)}</div>
         {parada.paciente.observaciones && <p className="text-xs text-muted-foreground pl-6"><Info className="inline h-3 w-3 mr-1"/>Observaciones Paciente: {parada.paciente.observaciones}</p>}
-        {parada.notasParada && <p className="text-xs text-yellow-700 bg-yellow-100 p-1 rounded pl-6"><Info className="inline h-3 w-3 mr-1"/>Notas Parada: {parada.notasParada}</p>}
+        {parada.notasParada && <p className="text-xs text-yellow-700 bg-yellow-100 p-1 rounded-lg pl-6"><Info className="inline h-3 w-3 mr-1"/>Notas Parada: {parada.notasParada}</p>}
 
         {isActionable && isCurrent && (
           <div className="pt-3 border-t mt-3 flex flex-wrap gap-2">
             {canStart && <Button size="sm" onClick={() => handleStatusChange('enRutaRecogida')} className="btn-primary"><PlayCircle className="mr-1"/> Iniciar Ruta a Recogida</Button>}
-            {canPickup && <Button size="sm" onClick={() => handleStatusChange('pacienteRecogido')} className="bg-purple-600 hover:bg-purple-700 text-white"><User className="mr-1"/> Paciente Recogido</Button>}
-            {canCompleteLeg && <Button size="sm" onClick={() => handleStatusChange('enDestino')} className="bg-teal-600 hover:bg-teal-700 text-white"><ChevronsRight className="mr-1"/> En Destino</Button>}
-            {canFinalize && <Button size="sm" onClick={() => handleStatusChange('finalizado')} className="bg-green-600 hover:bg-green-700 text-white"><CheckCircle className="mr-1"/> Finalizar Servicio</Button>}
+            {canPickup && <Button size="sm" onClick={() => handleStatusChange('pacienteRecogido')} className="bg-accent text-accent-foreground hover:bg-accent/90"><User className="mr-1"/> Paciente Recogido</Button>}
+            {canCompleteLeg && <Button size="sm" onClick={() => handleStatusChange('enDestino')} className="bg-emphasis text-emphasis-foreground hover:bg-emphasis/90"><ChevronsRight className="mr-1"/> En Destino</Button>}
+            {canFinalize && <Button size="sm" onClick={() => handleStatusChange('finalizado')} className="bg-secondary text-secondary-foreground hover:bg-secondary/90"><CheckCircle className="mr-1"/> Finalizar Servicio</Button>}
             <DropdownMenuStatus parada={parada} onStatusChange={handleStatusChange} isLoteCompleted={isLoteCompleted}/>
           </div>
         )}
@@ -108,7 +108,7 @@ const DropdownMenuStatus: React.FC<{ parada: ParadaRuta; onStatusChange: (newSta
   const nonSequentialStates: ParadaRuta['estado'][] = ['noPresentado', 'cancelado'];
   const isFinalState = ['finalizado', 'cancelado', 'noPresentado'].includes(parada.estado) || isLoteCompleted;
 
-  if (isFinalState) return null; // No mostrar el menú si la parada o el lote están en estado final.
+  if (isFinalState) return null; 
 
   return (
      <DropdownMenu>
@@ -132,7 +132,6 @@ const DropdownMenuStatus: React.FC<{ parada: ParadaRuta; onStatusChange: (newSta
     </DropdownMenu>
   );
 };
-// --- End of Duplicated Components/Helpers ---
 
 export default function RouteDetailsPage() {
   const router = useRouter();
@@ -147,7 +146,7 @@ export default function RouteDetailsPage() {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    if (!authIsLoading && user && user.role !== 'equipoMovil') {
+    if (!authIsLoading && user && user.role !== 'ambulancia') {
       toast({
         title: 'Acceso Denegado',
         description: 'No tiene permisos para acceder a esta sección.',
@@ -157,7 +156,7 @@ export default function RouteDetailsPage() {
       return;
     }
 
-    if (user && user.role === 'equipoMovil' && loteId) {
+    if (user && user.role === 'ambulancia' && loteId) {
       const fetchData = async () => {
         setIsLoading(true);
         setError(null);
@@ -199,12 +198,9 @@ export default function RouteDetailsPage() {
 
   const handleUpdateParadaStatus = async (servicioId: string, newStatus: ParadaRuta['estado']) => {
       if (!ruta || !lote) return;
-      // No establecer isLoading a true aquí para evitar que toda la UI parpadee.
-      // La actualización individual de la parada debería ser suficiente.
       try {
           const updatedParada = await updateParadaEstadoMock(lote.id, servicioId, newStatus);
           if (updatedParada) {
-              // Actualizar estado local de la ruta
               setRuta(prevRuta => {
                   if (!prevRuta) return null;
                   return {
@@ -212,11 +208,11 @@ export default function RouteDetailsPage() {
                       paradas: prevRuta.paradas.map(p => p.servicioId === servicioId ? updatedParada : p)
                   };
               });
-              // Volver a cargar el lote para obtener su estado actualizado (ej. 'completado')
               const updatedLote = await getLoteByIdMock(lote.id, user?.id);
               if (updatedLote) {
+                  const previousLoteState = lote.estadoLote;
                   setLote(updatedLote);
-                  if (updatedLote.estadoLote === 'completado' && lote.estadoLote !== 'completado') {
+                  if (updatedLote.estadoLote === 'completado' && previousLoteState !== 'completado') {
                       toast({
                           title: "¡Lote Completado!",
                           description: "Todos los servicios de este lote han finalizado.",
@@ -246,7 +242,7 @@ export default function RouteDetailsPage() {
   if (error) {
     return (
       <div className="rioja-container">
-        <Alert variant="destructive" className="max-w-xl mx-auto">
+        <Alert variant="destructive" className="max-w-xl mx-auto rioja-card">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>Error al Cargar Detalles de Ruta</AlertTitle>
           <AlertDescription>{error}</AlertDescription>
@@ -263,7 +259,7 @@ export default function RouteDetailsPage() {
   if (!lote || !ruta) {
     return (
       <div className="rioja-container">
-        <Alert className="max-w-xl mx-auto">
+        <Alert className="max-w-xl mx-auto rioja-card">
           <AlertTriangle className="h-4 w-4" />
           <AlertTitle>No Hay Datos de Ruta</AlertTitle>
           <AlertDescription>No se encontró información para la ruta de este lote. Contacte con el administrador.</AlertDescription>
@@ -294,13 +290,13 @@ export default function RouteDetailsPage() {
             </Button>
           </Link>
           <div>
-            <h1 className="page-title flex items-center gap-2"><ListOrdered className="h-8 w-8 text-primary"/>Paradas de la Ruta</h1>
+            <h1 className="page-title flex items-center gap-2"><ListOrdered className="h-7 w-7 text-primary"/>Mis Paradas de Hoy</h1>
             <p className="text-sm text-muted-foreground">Lote ID: {lote.id.substring(0,12)}... | Fecha: {format(parseISO(lote.fechaServicio + 'T00:00:00'), "PPP", { locale: es })}</p>
           </div>
         </div>
       </div>
       
-      <Card className="mb-6">
+      <Card className="mb-6 rioja-card">
         <CardHeader>
             <CardTitle className="text-lg text-secondary">Progreso de la Ruta</CardTitle>
         </CardHeader>
@@ -312,18 +308,17 @@ export default function RouteDetailsPage() {
       </Card>
 
       {isLoteCompleted && (
-         <Alert variant="default" className="mb-6 bg-green-50 border-green-500 text-green-700">
-            <PartyPopper className="h-5 w-5 text-green-600" />
+         <Alert variant="default" className="mb-6 bg-green-100 border-green-700 text-green-700 rioja-card">
+            <PartyPopper className="h-5 w-5 text-green-700" />
             <AlertTitle className="font-semibold">¡Lote Completado!</AlertTitle>
             <AlertDescription>
                 Todos los servicios de este lote han sido finalizados. Buen trabajo.
-                Puede volver al resumen del lote o al panel principal.
             </AlertDescription>
         </Alert>
       )}
 
       {serviciosProgramados.length > 0 ? (
-        <ScrollArea className="h-[calc(100vh-26rem)] pr-3"> {/* Ajustar altura según sea necesario */}
+        <ScrollArea className="h-[calc(100vh-26rem)] pr-3"> 
           {serviciosProgramados.map((parada, index) => (
             <ParadaCard 
                 key={parada.servicioId} 
@@ -336,7 +331,7 @@ export default function RouteDetailsPage() {
           ))}
         </ScrollArea>
       ) : (
-        <Card className="py-12">
+        <Card className="py-12 rioja-card">
             <CardContent className="text-center text-muted-foreground">
                 <ListOrdered className="mx-auto h-12 w-12 opacity-50 mb-4" />
                 <p className="text-lg font-medium">No hay servicios programados en esta ruta.</p>
@@ -347,5 +342,3 @@ export default function RouteDetailsPage() {
     </div>
   );
 }
-
-    

@@ -51,13 +51,14 @@ const getAmbulanceStatusLabel = (status: AmbulanceStatus): string => {
     }
 };
 
+// Updated status badge classes according to new visual guidelines
 const getStatusBadgeVariantClass = (status: AmbulanceStatus) => {
     switch (status) {
-        case 'available': return 'bg-primary text-primary-foreground'; // Verde corporativo
-        case 'busy': return 'bg-accent text-accent-foreground'; // Amarillo de acento
-        case 'maintenance': return 'bg-orange-500 text-white'; // Naranja para mantenimiento
-        case 'unavailable': return 'bg-destructive text-destructive-foreground'; // Rojo corporativo
-        default: return 'bg-secondary text-secondary-foreground'; // Gris corporativo
+        case 'available': return 'bg-green-100 text-green-700'; // Verde claro
+        case 'busy': return 'bg-blue-100 text-blue-700'; // Azul (En ruta)
+        case 'maintenance': return 'bg-yellow-100 text-yellow-800'; // Amarillo alerta
+        case 'unavailable': return 'bg-red-100 text-red-800'; // Rojo suave
+        default: return 'bg-gray-300 text-gray-800'; // Gris (Pendiente)
     }
 }
 
@@ -150,19 +151,19 @@ export default function ManageAmbulancesPage() {
         <div className="rioja-container">
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <Skeleton className="h-9 w-9 rounded-sm" /> {/* Radio 4px */}
+                    <Skeleton className="h-9 w-9 rounded-lg" /> 
                     <Skeleton className="h-10 w-64" />
                 </div>
-                <Skeleton className="h-10 w-36 rounded-sm" /> {/* Radio 4px */}
+                <Skeleton className="h-10 w-36 rounded-lg" /> 
             </div>
             <Card className="rioja-card">
                 <CardHeader className="p-0 mb-4">
                     <Skeleton className="h-8 w-1/4 mb-2" />
                     <Skeleton className="h-6 w-1/2 mb-4" />
                      <div className="mt-4 flex flex-col sm:flex-row gap-2">
-                        <Skeleton className="h-10 flex-grow rounded-sm" /> {/* Radio 4px */}
-                        <Skeleton className="h-10 w-full sm:w-[180px] rounded-sm" /> {/* Radio 4px */}
-                        <Skeleton className="h-10 w-full sm:w-[180px] rounded-sm" /> {/* Radio 4px */}
+                        <Skeleton className="h-10 flex-grow rounded-lg" /> 
+                        <Skeleton className="h-10 w-full sm:w-[180px] rounded-lg" /> 
+                        <Skeleton className="h-10 w-full sm:w-[180px] rounded-lg" /> 
                     </div>
                 </CardHeader>
                 <CardContent className="p-0">
@@ -188,17 +189,23 @@ export default function ManageAmbulancesPage() {
 
   return (
     <div className="rioja-container">
+       <div className="flex items-center justify-between mb-6">
+        <Breadcrumbs items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Gestión de Ambulancias' }
+        ]} />
+      </div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
             <Link href="/admin" passHref>
-                <Button variant="outline" size="icon" className="h-9 w-9 rioja-button-outline">
+                <Button variant="outline" size="icon" className="h-9 w-9">
                     <Icons.ArrowLeft className="h-5 w-5" />
                 </Button>
             </Link>
             <h1 className="page-title">Gestionar Ambulancias</h1>
         </div>
         <Link href="/admin/ambulances/new" passHref>
-          <Button className="rioja-button-primary">
+          <Button className="btn-primary">
             <Icons.PlusCircle className="mr-2 h-4 w-4" /> Añadir Nueva
           </Button>
         </Link>
@@ -278,7 +285,7 @@ export default function ManageAmbulancesPage() {
                         )}
                       </TableCell>
                       <TableCell>
-                        <Badge className={`${getStatusBadgeVariantClass(ambulance.status)} text-xs`}>
+                        <Badge className={`${getStatusBadgeVariantClass(ambulance.status)} text-xs border`}>
                           {getAmbulanceStatusLabel(ambulance.status)}
                         </Badge>
                       </TableCell>
@@ -312,7 +319,7 @@ export default function ManageAmbulancesPage() {
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel onClick={() => { setAmbulanceToDeleteId(null); setAmbulanceToDeleteName(null); }}>Cancelar</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground rioja-button">
+            <AlertDialogAction onClick={handleDelete} className="bg-destructive hover:bg-destructive/90 text-destructive-foreground">
               Eliminar Ambulancia
             </AlertDialogAction>
           </AlertDialogFooter>

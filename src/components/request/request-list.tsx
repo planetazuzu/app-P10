@@ -22,39 +22,32 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import Link from 'next/link';
 
-
-interface RequestListProps {
-  requests: AmbulanceRequest[]; 
-  userRole: UserRole;
-  currentUserId?: string; // Pass current user ID for edit authorization
-  onUpdateRequestStatus: (requestId: string, status: RequestStatus) => void;
-  onViewDetails: (requestId: string) => void; 
-}
-
-const STATUS_COLORS: Record<RequestStatus, string> = {
-  pending: 'bg-yellow-500 hover:bg-yellow-600',
-  dispatched: 'bg-blue-500 hover:bg-blue-600',
-  'on-scene': 'bg-indigo-500 hover:bg-indigo-600',
-  transporting: 'bg-purple-500 hover:bg-purple-600',
-  completed: 'bg-green-500 hover:bg-green-600',
-  cancelled: 'bg-gray-500 hover:bg-gray-600',
-  batched: 'bg-cyan-500 hover:bg-cyan-600',
+// Updated badge styles according to new visual guidelines
+const STATUS_BADGE_CLASSES: Record<RequestStatus, string> = {
+  pending: 'bg-gray-300 text-gray-800',
+  dispatched: 'bg-blue-100 text-blue-700', // En ruta (azul)
+  'on-scene': 'bg-yellow-100 text-yellow-800', // Paciente recogido (amarillo) - Mapped 'on-scene' for example
+  transporting: 'bg-green-100 text-green-700', // En destino (verde claro) - Mapped 'transporting' for example
+  completed: 'bg-green-700 text-white', // Finalizado (verde oscuro)
+  cancelled: 'bg-red-100 text-red-800', // Cancelado (rojo)
+  batched: 'bg-cyan-100 text-cyan-700', // Example for 'batched', can be adjusted
 };
 
+
 const PRIORITY_STYLES: Record<'high' | 'medium' | 'low', string> = {
-    high: "text-red-600 font-semibold",
-    medium: "text-orange-500 font-medium",
-    low: "text-green-600",
+    high: "text-destructive font-semibold", // Rojo suave
+    medium: "text-accent font-medium", // Amarillo alerta
+    low: "text-secondary", // Verde claro/acción
 };
 
 const translateRequestStatus = (status: RequestStatus): string => {
   switch (status) {
     case 'pending': return 'Pendiente';
-    case 'dispatched': return 'Despachada';
-    case 'on-scene': return 'En el Lugar';
-    case 'transporting': return 'Transportando';
-    case 'completed': return 'Completada';
-    case 'cancelled': return 'Cancelada';
+    case 'dispatched': return 'En Ruta'; // Matching "En ruta: azul"
+    case 'on-scene': return 'Paciente Recogido'; // Matching "Paciente recogido: amarillo"
+    case 'transporting': return 'En Destino'; // Matching "En destino: verde claro"
+    case 'completed': return 'Finalizado';
+    case 'cancelled': return 'Cancelado'; // Could also be "No Presentado"
     case 'batched': return 'En Lote';
     default: return status;
   }
@@ -62,11 +55,19 @@ const translateRequestStatus = (status: RequestStatus): string => {
 
 const translatePriority = (priority: 'high' | 'medium' | 'low'): string => {
     switch (priority) {
-        case 'high': return 'Alta (Urgente)';
+        case 'high': return 'Alta';
         case 'medium': return 'Media';
-        case 'low': return 'Baja (Programado)';
+        case 'low': return 'Baja';
         default: return priority;
     }
+}
+
+interface RequestListProps {
+  requests: AmbulanceRequest[]; 
+  userRole: UserRole;
+  currentUserId?: string; 
+  onUpdateRequestStatus: (requestId: string, status: RequestStatus) => void;
+  onViewDetails: (requestId: string) => void; 
 }
 
 export function RequestList({ requests, userRole, currentUserId, onUpdateRequestStatus, onViewDetails }: RequestListProps) {
@@ -142,7 +143,7 @@ export function RequestList({ requests, userRole, currentUserId, onUpdateRequest
                 </SelectTrigger>
                 <SelectContent>
                     <SelectItem value="all">Todos los Estados</SelectItem>
-                    {Object.keys(STATUS_COLORS).map(s => <SelectItem key={s} value={s}>{translateRequestStatus(s as RequestStatus)}</SelectItem>)}
+                    {Object.keys(STATUS_BADGE_CLASSES).map(s => <SelectItem key={s} value={s}>{translateRequestStatus(s as RequestStatus)}</SelectItem>)}
                 </SelectContent>
             </Select>
         </div>
@@ -189,7 +190,7 @@ export function RequestList({ requests, userRole, currentUserId, onUpdateRequest
                     </span>
                 </TableCell>
                 <TableCell>
-                  <Badge className={`${STATUS_COLORS[request.status]} text-white`}>
+                  <Badge className={`${STATUS_BADGE_CLASSES[request.status]} text-xs font-semibold`}>
                     {translateRequestStatus(request.status)}
                   </Badge>
                 </TableCell>
@@ -207,7 +208,7 @@ export function RequestList({ requests, userRole, currentUserId, onUpdateRequest
                       <DropdownMenuItem onClick={() => onViewDetails(request.id)} className="cursor-pointer">
                         <Eye className="mr-2 h-4 w-4" /> Ver Detalles
                       </DropdownMenuItem>
-                      {canEditRequest(request) && request.status !== 'completed' && request.status !== 'cancelled' && ( // Only allow editing non-finalized requests
+                      {canEditRequest(request) && request.status !== 'completed' && request.status !== 'cancelled' && ( 
                         <DropdownMenuItem asChild className="cursor-pointer">
                            <Link href={`/request-management/${request.id}/edit`}>
                               <Edit3 className="mr-2 h-4 w-4" /> Editar
@@ -218,7 +219,7 @@ export function RequestList({ requests, userRole, currentUserId, onUpdateRequest
                         <>
                           <DropdownMenuSeparator />
                           <DropdownMenuLabel>Actualizar Estado</DropdownMenuLabel>
-                          {Object.keys(STATUS_COLORS).filter(s => s !== request.status && s !== 'batched').map(newStatus => ( 
+                          {Object.keys(STATUS_BADGE_CLASSES).filter(s => s !== request.status && s !== 'batched').map(newStatus => ( 
                             <DropdownMenuItem key={newStatus} onClick={() => onUpdateRequestStatus(request.id, newStatus as RequestStatus)} className="cursor-pointer">
                               Marcar como {translateRequestStatus(newStatus as RequestStatus)}
                             </DropdownMenuItem>

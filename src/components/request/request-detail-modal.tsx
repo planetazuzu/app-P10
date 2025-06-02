@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { AmbulanceRequest } from '@/types';
+import type { AmbulanceRequest, RequestStatus } from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -25,28 +25,29 @@ interface RequestDetailModalProps {
   onClose: () => void;
 }
 
-const STATUS_COLORS: Record<AmbulanceRequest['status'], string> = {
-  pending: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-  dispatched: 'bg-blue-100 text-blue-700 border-blue-300',
-  'on-scene': 'bg-indigo-100 text-indigo-700 border-indigo-300',
-  transporting: 'bg-purple-100 text-purple-700 border-purple-300',
-  completed: 'bg-green-100 text-green-700 border-green-300',
-  cancelled: 'bg-gray-100 text-gray-700 border-gray-300',
-  batched: 'bg-cyan-100 text-cyan-700 border-cyan-300',
+// Updated badge styles
+const STATUS_BADGE_CLASSES_MODAL: Record<RequestStatus, string> = {
+  pending: 'bg-gray-300 text-gray-800',
+  dispatched: 'bg-blue-100 text-blue-700',
+  'on-scene': 'bg-yellow-100 text-yellow-800',
+  transporting: 'bg-green-100 text-green-700',
+  completed: 'bg-green-700 text-white',
+  cancelled: 'bg-red-100 text-red-800',
+  batched: 'bg-cyan-100 text-cyan-700', // Or another color
 };
 
 const PRIORITY_STYLES: Record<AmbulanceRequest['priority'], string> = {
-    high: "text-red-600 font-semibold",
-    medium: "text-orange-500 font-medium",
-    low: "text-green-600",
+    high: "text-destructive font-semibold", // Rojo suave
+    medium: "text-accent font-medium",    // Amarillo alerta
+    low: "text-secondary",               // Verde claro/acción
 };
 
 const translateRequestStatus = (status: AmbulanceRequest['status']): string => {
   switch (status) {
     case 'pending': return 'Pendiente';
-    case 'dispatched': return 'Despachada';
-    case 'on-scene': return 'En el Lugar';
-    case 'transporting': return 'Transportando';
+    case 'dispatched': return 'En Ruta';
+    case 'on-scene': return 'Paciente Recogido';
+    case 'transporting': return 'En Destino';
     case 'completed': return 'Completada';
     case 'cancelled': return 'Cancelada';
     case 'batched': return 'En Lote Programado';
@@ -56,9 +57,9 @@ const translateRequestStatus = (status: AmbulanceRequest['status']): string => {
 
 const translatePriority = (priority: AmbulanceRequest['priority']): string => {
     switch (priority) {
-        case 'high': return 'Alta (Urgente)';
+        case 'high': return 'Alta';
         case 'medium': return 'Media';
-        case 'low': return 'Baja (Programado)';
+        case 'low': return 'Baja';
         default: return priority;
     }
 }
@@ -104,7 +105,7 @@ export function RequestDetailModal({ request, isOpen, onClose }: RequestDetailMo
                     </span>
                 }/>
                 <DetailItem icon={Edit} label="Estado" value={
-                     <Badge variant="outline" className={`${STATUS_COLORS[request.status]} text-xs px-2.5 py-1`}>
+                     <Badge className={`${STATUS_BADGE_CLASSES_MODAL[request.status]} text-xs font-semibold border px-2.5 py-0.5`}>
                         {translateRequestStatus(request.status)}
                     </Badge>
                 }/>

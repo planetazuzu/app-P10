@@ -5,7 +5,7 @@ import type { Ambulance, AmbulanceType, AmbulanceStatus, ParadaRuta, LoteProgram
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Icons } from '@/components/icons'; // Import Icons
+import { Icons } from '@/components/icons'; 
 import {
     Users, Package, MapPin, Layers, ShieldAlert, Thermometer, CheckCircle, Tool, Info,
     Clock as StopClock, PlayCircle, User as StopUser, MapPin as StopMapPin, ArrowRight,
@@ -18,7 +18,7 @@ import { getLotesMock, getRutaCalculadaByLoteIdMock } from '@/lib/driver-data';
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from '@/components/ui/accordion';
 import { ScrollArea } from '@/components/ui/scroll-area';
 import React, { useEffect, useState } from 'react';
-import Link from 'next/link'; // Import Link for navigation
+import Link from 'next/link';
 
 interface AmbulanceCardProps {
   ambulance: Ambulance | null;
@@ -48,13 +48,14 @@ const getAmbulanceStatusLabel = (status: AmbulanceStatus): string => {
     }
 };
 
+// Updated status badge classes according to new visual guidelines
 const getStatusBadgeVariant = (status: AmbulanceStatus) => {
     switch (status) {
-        case 'available': return 'bg-green-100 text-green-700 border-green-300';
-        case 'busy': return 'bg-yellow-100 text-yellow-700 border-yellow-300';
-        case 'maintenance': return 'bg-orange-100 text-orange-700 border-orange-300';
-        case 'unavailable': return 'bg-red-100 text-red-700 border-red-300';
-        default: return 'bg-gray-100 text-gray-700 border-gray-300';
+        case 'available': return 'bg-green-100 text-green-700 border-green-300'; // Verde claro (como "En destino")
+        case 'busy': return 'bg-blue-100 text-blue-700 border-blue-300'; // Azul (como "En ruta")
+        case 'maintenance': return 'bg-yellow-100 text-yellow-800 border-yellow-300'; // Amarillo alerta
+        case 'unavailable': return 'bg-red-100 text-red-800 border-red-300'; // Rojo suave
+        default: return 'bg-gray-300 text-gray-800 border-gray-400'; // Gris (como "Pendiente")
     }
 }
 
@@ -96,15 +97,17 @@ const paradaStatusIcons: Record<ParadaRuta['estado'], React.ElementType> = {
   noPresentado: UserMinus,
 };
 
-const paradaStatusColors: Record<ParadaRuta['estado'], string> = {
-  pendiente: 'text-gray-500',
-  enRutaRecogida: 'text-blue-500',
-  pacienteRecogido: 'text-purple-500',
-  enDestino: 'text-teal-500',
-  finalizado: 'text-green-600',
-  cancelado: 'text-red-600',
-  noPresentado: 'text-orange-500',
+// Updated badge classes for ParadaRuta statuses
+const paradaStatusBadgeClasses: Record<ParadaRuta['estado'], string> = {
+  pendiente: 'bg-gray-300 text-gray-800',
+  enRutaRecogida: 'bg-blue-100 text-blue-700',
+  pacienteRecogido: 'bg-yellow-100 text-yellow-800',
+  enDestino: 'bg-green-100 text-green-700',
+  finalizado: 'bg-green-700 text-white',
+  cancelado: 'bg-red-100 text-red-800',
+  noPresentado: 'bg-red-100 text-red-800', // Using same as cancelled for this example
 };
+
 
 const NavigateButton = ({ address }: { address: string | undefined }) => {
   if (!address) return null;
@@ -156,7 +159,7 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
     .join(', ');
 
   return (
-    <Card className="shadow-lg max-h-[calc(100vh-10rem)] overflow-y-auto">
+    <Card className="shadow-lg max-h-[calc(100vh-10rem)] overflow-y-auto rioja-card">
       <CardHeader className="relative bg-muted/30">
         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={onClose}>
           <Icons.UserX className="h-4 w-4" />
@@ -166,7 +169,7 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
         <CardDescription>ID: {ambulance.id} - Matrícula: {ambulance.licensePlate}</CardDescription>
       </CardHeader>
       <CardContent className="p-4 space-y-3">
-        <div className="w-full h-32 md:h-40 bg-muted rounded-md overflow-hidden relative mb-3">
+        <div className="w-full h-32 md:h-40 bg-muted rounded-lg overflow-hidden relative mb-3">
             <Image
                 src={`https://placehold.co/600x400.png?text=${ambulance.model}`}
                 alt={`${ambulance.model} - ${getAmbulanceTypeLabel(ambulance.type)}`}
@@ -183,8 +186,7 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
                 <p className="font-medium text-muted-foreground flex items-center text-sm mt-1">
                     <ShieldAlert className="h-4 w-4 mr-2 text-primary" />Estado:
                     <Badge
-                    variant={'outline'}
-                    className={`ml-2 text-xs ${getStatusBadgeVariant(ambulance.status)}`}
+                    className={`ml-2 text-xs ${getStatusBadgeVariant(ambulance.status)} border`}
                     >
                     {getAmbulanceStatusLabel(ambulance.status)}
                     </Badge>
@@ -228,11 +230,11 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
              <>
                 <div className="border-t my-3"></div>
                 <h4 className="font-semibold text-md text-secondary mb-1">Notas Internas</h4>
-                <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded">{ambulance.notes}</p>
+                <p className="text-sm text-muted-foreground bg-muted/50 p-2 rounded-lg">{ambulance.notes}</p>
             </>
         )}
         
-        <Button className="w-full mt-4 btn-outline" variant="outline" disabled={ambulance.status !== 'available'}>
+        <Button className="w-full mt-4 btn-primary" disabled={ambulance.status !== 'available'}>
           {ambulance.status === 'available' ? 'Despachar esta unidad (simulado)' : `Unidad ${getAmbulanceStatusLabel(ambulance.status).toLowerCase()}`}
         </Button>
 
@@ -276,15 +278,14 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
                           <ul className="space-y-1.5">
                             {assignment.services.map(service => {
                               const Icon = paradaStatusIcons[service.stopStatus] || StopAlert;
-                              const color = paradaStatusColors[service.stopStatus] || 'text-gray-500';
                               return (
-                                <li key={service.serviceId} className="p-1.5 border-l-2 pl-2 text-[11px] leading-tight border-primary/30 bg-muted/30 rounded-r-sm">
+                                <li key={service.serviceId} className="p-1.5 border-l-2 pl-2 text-[11px] leading-tight border-primary/30 bg-muted/30 rounded-r-lg">
                                   <div className="flex items-center justify-between">
                                       <span className="font-medium text-secondary-foreground truncate pr-1">
-                                        #{service.order} {service.patientName} (ID: {service.serviceId.substring(0,8)}...)
+                                        ID Traslado: {service.serviceId.substring(0,8)}... ({service.patientName})
                                       </span>
-                                      <Badge variant="outline" className={`text-[10px] px-1.5 py-0.5 ${color} border-current/50`}>
-                                          <Icon className={`h-2.5 w-2.5 mr-1 ${color}`} />
+                                      <Badge className={`${paradaStatusBadgeClasses[service.stopStatus]} text-xs font-semibold border`}>
+                                          <Icon className={`h-2.5 w-2.5 mr-1`} />
                                           {translateParadaStatusCard(service.stopStatus)}
                                       </Badge>
                                   </div>

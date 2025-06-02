@@ -20,17 +20,19 @@ import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
 import { ProgrammedRequestDetailModal } from '@/components/request/programmed-request-detail-modal';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
 const PROGRAMMED_STATUS_OPTIONS: RequestStatus[] = ['pending', 'batched', 'transporting', 'completed', 'cancelled'];
 
-const STATUS_COLORS: Record<RequestStatus, string> = {
-  pending: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-  dispatched: 'bg-blue-100 text-blue-700 border-blue-300', // Not typical for programmed, but included for consistency
-  'on-scene': 'bg-indigo-100 text-indigo-700 border-indigo-300', // Not typical for programmed
-  transporting: 'bg-purple-100 text-purple-700 border-purple-300',
-  completed: 'bg-green-100 text-green-700 border-green-300',
-  cancelled: 'bg-gray-100 text-gray-700 border-gray-300',
-  batched: 'bg-cyan-100 text-cyan-700 border-cyan-300',
+// Updated status badge classes
+const STATUS_BADGE_CLASSES: Record<RequestStatus, string> = {
+  pending: 'bg-gray-300 text-gray-800',
+  dispatched: 'bg-blue-100 text-blue-700',
+  'on-scene': 'bg-yellow-100 text-yellow-800',
+  transporting: 'bg-green-100 text-green-700',
+  completed: 'bg-green-700 text-white',
+  cancelled: 'bg-red-100 text-red-800',
+  batched: 'bg-cyan-100 text-cyan-700', // Or another color for 'batched' if needed
 };
 
 const translateProgrammedRequestStatus = (status: RequestStatus): string => {
@@ -40,7 +42,7 @@ const translateProgrammedRequestStatus = (status: RequestStatus): string => {
     case 'transporting': return 'Transportando';
     case 'completed': return 'Completado';
     case 'cancelled': return 'Cancelado';
-    default: return status; // Fallback for other statuses if they appear
+    default: return status; 
   }
 };
 
@@ -101,7 +103,7 @@ export default function ServicesPlanningPage() {
     try {
       const updated = await apiUpdateProgrammedRequestStatus(serviceId, newStatus);
       if (updated) {
-        await fetchServices(); // Re-fetch to get the most current list
+        await fetchServices(); 
          if (selectedService && selectedService.id === serviceId) {
           const freshModalData = await getProgrammedRequestById(serviceId);
           setSelectedService(freshModalData || null);
@@ -162,6 +164,13 @@ export default function ServicesPlanningPage() {
 
   return (
     <div className="rioja-container">
+      <div className="mb-6">
+        <Breadcrumbs items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Gestión de Lotes', href: '/admin/lotes' },
+            { label: 'Planificación de Servicios' }
+        ]} />
+      </div>
       <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
           <Link href="/admin/lotes" passHref>
@@ -185,7 +194,7 @@ export default function ServicesPlanningPage() {
         </div>
       </div>
 
-      <Card>
+      <Card className="rioja-card">
         <CardHeader>
           <CardTitle className="section-title">Listado de Servicios Programados</CardTitle>
           <CardDescription>Ver, filtrar y gestionar todos los servicios de transporte programado.</CardDescription>
@@ -258,13 +267,13 @@ export default function ServicesPlanningPage() {
                       </TableCell>
                       <TableCell className="text-xs">{translateMedioRequerido(service.medioRequerido)}</TableCell>
                       <TableCell>
-                        <Badge variant="outline" className={`${STATUS_COLORS[service.status]} text-xs px-2 py-0.5`}>
+                        <Badge className={`${STATUS_BADGE_CLASSES[service.status]} text-xs font-semibold border px-2.5 py-0.5`}>
                           {translateProgrammedRequestStatus(service.status)}
                         </Badge>
                       </TableCell>
                        <TableCell className="text-xs">
                         {service.loteId ? (
-                          <Link href={`/admin/lotes/${service.loteId}`} className="text-blue-600 hover:underline">
+                          <Link href={`/admin/lotes/${service.loteId}`} className="text-emphasis hover:underline">
                             {service.loteId.substring(0,8)}...
                           </Link>
                         ) : (
@@ -286,7 +295,6 @@ export default function ServicesPlanningPage() {
                             </DropdownMenuItem>
                             { (service.status === 'pending' || service.status === 'batched') && (
                                 <DropdownMenuItem asChild className="cursor-pointer">
-                                    {/* Enlazar a una futura página de edición específica para programados */}
                                     <Link href={`/request-management/programmed/${service.id}/edit`}>
                                         <Edit3 className="mr-2 h-4 w-4" /> Editar
                                     </Link>

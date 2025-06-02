@@ -16,6 +16,8 @@ import { useAuth } from '@/hooks/use-auth';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
 import { Skeleton } from '@/components/ui/skeleton';
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+
 
 const getLoteStatusLabel = (status: LoteProgramado['estadoLote']): string => {
   switch (status) {
@@ -30,22 +32,21 @@ const getLoteStatusLabel = (status: LoteProgramado['estadoLote']): string => {
   }
 };
 
-const getLoteStatusBadgeVariant = (status: LoteProgramado['estadoLote']) => {
+// Updated Lote Status Badge Styles
+const getLoteStatusBadgeClasses = (status: LoteProgramado['estadoLote']) => {
   switch (status) {
-    case 'asignado':
-    case 'enCurso':
-      return 'bg-blue-500 hover:bg-blue-600';
-    case 'completado':
-      return 'bg-green-500 hover:bg-green-600';
-    case 'cancelado':
-      return 'bg-red-500 hover:bg-red-600';
+    case 'asignado': return 'bg-blue-100 text-blue-700'; // Azul (En ruta)
+    case 'enCurso': return 'bg-yellow-100 text-yellow-800'; // Amarillo (Paciente recogido)
+    case 'completado': return 'bg-green-700 text-white'; // Verde oscuro (Finalizado)
+    case 'cancelado': return 'bg-red-100 text-red-800'; // Rojo suave (Cancelado)
     case 'pendienteCalculo':
     case 'calculado':
     case 'modificado':
     default:
-      return 'bg-yellow-500 hover:bg-yellow-600';
+      return 'bg-gray-300 text-gray-800'; // Gris (Pendiente)
   }
 };
+
 
 export default function ManageLotesPage() {
   const [lotes, setLotes] = useState<LoteProgramado[]>([]);
@@ -97,14 +98,17 @@ export default function ManageLotesPage() {
   if (isLoading) {
      return (
         <div className="rioja-container">
+             <div className="flex items-center justify-between mb-6">
+                <Skeleton className="h-6 w-1/2 mb-2" />
+            </div>
             <div className="flex items-center justify-between mb-6">
                 <div className="flex items-center gap-3">
-                    <Skeleton className="h-9 w-9 rounded-md" />
+                    <Skeleton className="h-9 w-9 rounded-lg" />
                     <Skeleton className="h-10 w-64" />
                 </div>
-                <Skeleton className="h-10 w-40 rounded-md" />
+                <Skeleton className="h-10 w-40 rounded-lg" />
             </div>
-            <Card>
+            <Card className="rioja-card">
                 <CardHeader>
                     <Skeleton className="h-8 w-1/4 mb-2" />
                     <Skeleton className="h-6 w-1/2" />
@@ -133,6 +137,12 @@ export default function ManageLotesPage() {
   return (
     <div className="rioja-container">
       <div className="flex items-center justify-between mb-6">
+        <Breadcrumbs items={[
+            { label: 'Admin', href: '/admin' },
+            { label: 'Gestión de Lotes y Rutas' }
+        ]} />
+      </div>
+      <div className="flex items-center justify-between mb-6">
         <div className="flex items-center gap-3">
             <Link href="/admin" passHref>
                 <Button variant="outline" size="icon" className="h-9 w-9">
@@ -148,7 +158,7 @@ export default function ManageLotesPage() {
         </Link>
       </div>
 
-      <Card>
+      <Card className="rioja-card">
         <CardHeader>
           <CardTitle className="section-title">Listado de Lotes Programados</CardTitle>
           <CardDescription>Ver, gestionar y optimizar lotes de servicios de transporte programado.</CardDescription>
@@ -179,7 +189,7 @@ export default function ManageLotesPage() {
                       <TableCell className="text-center">{lote.serviciosIds.length}</TableCell>
                       <TableCell>{getAmbulanceName(lote)}</TableCell>
                       <TableCell>
-                        <Badge className={`${getLoteStatusBadgeVariant(lote.estadoLote)} text-white text-xs`}>
+                        <Badge className={`${getLoteStatusBadgeClasses(lote.estadoLote)} text-xs font-semibold border`}>
                           {getLoteStatusLabel(lote.estadoLote)}
                         </Badge>
                       </TableCell>

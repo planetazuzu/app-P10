@@ -1,7 +1,7 @@
 
 'use client';
 
-import type { ProgrammedTransportRequest } from '@/types';
+import type { ProgrammedTransportRequest, RequestStatus } from '@/types';
 import {
   Dialog,
   DialogContent,
@@ -25,29 +25,32 @@ interface ProgrammedRequestDetailModalProps {
   onClose: () => void;
 }
 
-const STATUS_COLORS_PROG: Record<ProgrammedTransportRequest['status'], string> = {
-  pending: 'bg-yellow-100 text-yellow-700 border-yellow-300',
-  dispatched: 'bg-blue-100 text-blue-700 border-blue-300', // Not typical for programmed
-  'on-scene': 'bg-indigo-100 text-indigo-700 border-indigo-300', // Not typical for programmed
-  transporting: 'bg-purple-100 text-purple-700 border-purple-300',
-  completed: 'bg-green-100 text-green-700 border-green-300',
-  cancelled: 'bg-gray-100 text-gray-700 border-gray-300',
-  batched: 'bg-cyan-100 text-cyan-700 border-cyan-300',
+// Updated badge styles for ProgrammedRequest status
+const STATUS_BADGE_CLASSES_PROG: Record<ProgrammedTransportRequest['status'], string> = {
+  pending: 'bg-gray-300 text-gray-800',
+  dispatched: 'bg-blue-100 text-blue-700', // En ruta
+  'on-scene': 'bg-yellow-100 text-yellow-800', // Paciente recogido
+  transporting: 'bg-green-100 text-green-700', // En destino
+  completed: 'bg-green-700 text-white', // Finalizado
+  cancelled: 'bg-red-100 text-red-800', // Cancelado
+  batched: 'bg-cyan-100 text-cyan-700', // Batched
 };
 
 const PRIORITY_STYLES_PROG: Record<ProgrammedTransportRequest['priority'], string> = {
-    high: "text-red-600 font-semibold", // Should not happen for programmed
-    medium: "text-orange-500 font-medium",
-    low: "text-green-600",
+    high: "text-destructive font-semibold", // Rojo suave
+    medium: "text-accent font-medium", // Amarillo alerta
+    low: "text-secondary", // Verde claro/acción
 };
 
 const translateProgrammedRequestStatusModal = (status: ProgrammedTransportRequest['status']): string => {
   switch (status) {
     case 'pending': return 'Pendiente';
     case 'batched': return 'En Lote';
-    case 'transporting': return 'Transportando';
+    case 'transporting': return 'Transportando'; // Note: this might need alignment with ParadaRuta statuses
     case 'completed': return 'Completado';
     case 'cancelled': return 'Cancelado';
+    case 'dispatched': return 'Despachado'; // (e.g. lote asignado a ambulancia)
+    case 'on-scene': return 'En el lugar'; // (e.g. ambulancia llegó a recogida)
     default: return status;
   }
 };
@@ -139,13 +142,13 @@ export function ProgrammedRequestDetailModal({ request, isOpen, onClose }: Progr
                     </span>
                 }/>
                 <DetailItemModal icon={Edit} label="Estado" value={
-                     <Badge variant="outline" className={`${STATUS_COLORS_PROG[request.status]} text-xs px-2.5 py-1`}>
+                     <Badge className={`${STATUS_BADGE_CLASSES_PROG[request.status]} text-xs font-semibold border px-2.5 py-0.5`}>
                         {translateProgrammedRequestStatusModal(request.status)}
                     </Badge>
                 }/>
                  {request.loteId && (
                      <DetailItemModal icon={Link2} label="Lote Asignado" value={
-                        <Link href={`/admin/lotes/${request.loteId}`} className="text-blue-600 hover:underline" onClick={onClose}>
+                        <Link href={`/admin/lotes/${request.loteId}`} className="text-emphasis hover:underline" onClick={onClose}>
                             {request.loteId}
                         </Link>
                      } />
@@ -186,4 +189,3 @@ export function ProgrammedRequestDetailModal({ request, isOpen, onClose }: Progr
     </Dialog>
   );
 }
-
