@@ -77,28 +77,14 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground">
-      {/* Header Section */}
-      <header className="bg-card border-b border-border">
-        <div className="container mx-auto flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
-          <Link href="/" passHref>
-            <Icons.Logo className="h-7 w-7 text-primary" data-ai-hint="logo company"/>
-          </Link>
-          <div className="flex items-center gap-2">
-            <Button variant="outline" onClick={() => document.getElementById('email')?.focus()}>
-              Iniciar Sesión
-            </Button>
-            <Button variant="default" disabled> {/* Assuming 'default' is the green primary button */}
-              Registrarse
-            </Button>
-          </div>
-        </div>
-      </header>
-
-      {/* Main Content */}
-      <main className="flex flex-grow items-center justify-center py-12 px-4 sm:px-6 lg:px-8">
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
+      {/* Main Content - Centered */}
+      <main className="flex flex-grow items-center justify-center py-12 px-4 sm:px-6 lg:px-8 w-full">
         <Card className="w-full max-w-md shadow-xl">
-          <CardHeader className="text-left">
+          <CardHeader className="text-center"> {/* Centered header content */}
+            <Link href="/" passHref className="mx-auto mb-4">
+                <Icons.Logo className="h-10 w-10 text-primary" data-ai-hint="logo company"/>
+            </Link>
             <CardTitle className="text-2xl font-bold text-secondary">Iniciar sesión</CardTitle>
             <CardDescription>Ingresa tus credenciales para acceder a AmbulLink</CardDescription>
           </CardHeader>
@@ -148,7 +134,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex-col items-start pt-6 mt-6 border-t">
             <p className="text-xs text-muted-foreground mb-3">Cuentas de prueba (usar contraseña: 123456)</p>
-            <div className="grid grid-cols-2 gap-3 w-full">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full"> {/* Changed to 1 column on small screens */}
               {demoAccounts.map(acc => (
                 <Button 
                   key={acc.email} 
