@@ -73,9 +73,9 @@ export default function DashboardPage() {
     }
     if (user.role === 'ambulancia') {
       return {
-        assignedServices: stats.assignedServices || 5, // Example
-        nextStopTime: stats.nextStopTime || '10:30 AM',
-        activeRouteId: stats.activeRouteId || 'lote-demo-123',
+        assignedServices: 5, // Simulated value
+        nextStopTime: '10:30 AM', // Simulated value
+        activeRouteId: 'lote-demo-123', // Simulated value for navigation
       };
     }
     // Default for admin, hospital, centroCoordinador
