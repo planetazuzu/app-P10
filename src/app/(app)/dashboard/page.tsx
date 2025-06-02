@@ -1,6 +1,7 @@
 
 'use client';
 
+import React from 'react'; // Added React import
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
