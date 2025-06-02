@@ -76,12 +76,12 @@ export function AppSidebar() {
       <SidebarFooter className="p-4 border-t border-sidebar-border group-data-[collapsible=icon]:p-2">
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
            <Avatar className="h-8 w-8 border-2 border-primary"> {/* Active green border for avatar */}
-            <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name} data-ai-hint="profile avatar" />
+            <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name} data-ai-hint="profile avatar"/>
             <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground font-semibold">{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground">{user.name}</span>
-            <span className="text-xs text-sidebar-foreground/70">{translateUserRole(user.role)}</span>
+            {/* Rol del usuario eliminado de aquí */}
           </div>
           <Button 
             variant="ghost" 
@@ -98,3 +98,4 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
+
