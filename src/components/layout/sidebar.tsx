@@ -38,7 +38,7 @@ export function AppSidebar() {
           {/* El div del logo y texto se oculta cuando la barra está colapsada en modo icono */}
           <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden cursor-pointer">
             {/* Icons.Logo component removed from here */}
-            <div className="flex flex-col">
+            <div className="flex flex-col text-center"> {/* Added text-center */}
               <h1 className="font-bold text-md text-sidebar-foreground leading-tight">P10</h1>
               <h1 className="font-bold text-md text-sidebar-foreground leading-tight">Gestión Flota</h1>
             </div>
