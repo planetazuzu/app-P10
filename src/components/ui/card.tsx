@@ -10,7 +10,7 @@ const Card = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "rounded-lg border bg-card text-card-foreground shadow-sm", // Use rounded-lg (0.75rem) and shadow-sm
+      "rounded-md border bg-card text-card-foreground shadow-sm", // Use rounded-md (6px) and shadow-sm
       className
     )}
     {...props}
@@ -24,7 +24,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-[var(--space-md)]", className)} // Use --space-md for padding (p-4)
+    className={cn("flex flex-col space-y-1.5 p-[var(--space-lg)]", className)} // Use --space-lg for padding (p-6 in new theme)
     {...props}
   />
 ))
@@ -37,7 +37,7 @@ const CardTitle = React.forwardRef<
   <h3 
     ref={ref}
     className={cn(
-      "text-lg font-semibold leading-none tracking-tight", // text-lg (18px) font-semibold
+      "text-xl font-bold leading-none tracking-tight text-secondary", // text-xl (20px), font-bold, color secondary (dark blue/grey)
       className
     )}
     {...props}
@@ -51,7 +51,7 @@ const CardDescription = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <p 
     ref={ref}
-    className={cn("text-sm text-muted-foreground", className)} // text-sm text-muted-foreground (maps to Gris medio)
+    className={cn("text-sm text-muted-foreground", className)}
     {...props}
   />
 ))
@@ -61,7 +61,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-[var(--space-md)] pt-0", className)} {...props} /> // Use --space-md for padding (p-4)
+  <div ref={ref} className={cn("p-[var(--space-lg)] pt-0", className)} {...props} />
 ))
 CardContent.displayName = "CardContent"
 
@@ -71,7 +71,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-[var(--space-md)] pt-0", className)} // Use --space-md for padding (p-4)
+    className={cn("flex items-center p-[var(--space-lg)] pt-0", className)}
     {...props}
   />
 ))

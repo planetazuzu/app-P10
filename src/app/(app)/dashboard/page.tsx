@@ -7,27 +7,42 @@ import { Icons } from '@/components/icons';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
+import { Clock, CheckCircle, AlertTriangle, Users, Ambulance, Waypoints, Settings as SettingsIcon } from 'lucide-react'; // Explicit icons for KPIs
 
-// Componente de tarjeta KPI adaptado para usar la nueva clase rioja-card
-const StatsCard = ({ title, value, icon, description, link, linkText, cardClassName }: { title: string, value: string | number, icon: React.ReactNode, description?: string, link?: string, linkText?: string, cardClassName?: string }) => (
-  <Card className={`rioja-card ${cardClassName || ''}`}> {/* Aplicar clase rioja-card */}
-    <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2 p-0 mb-2">
-      <CardTitle className="text-sm font-medium text-secondary">{title}</CardTitle>
-      {icon}
-    </CardHeader>
-    <CardContent className="p-0">
-      <div className="text-2xl font-bold text-primary">{value}</div>
-      {description && <p className="text-xs text-muted-foreground pt-1">{description}</p>}
-      {link && linkText && (
-        <Link href={link} passHref>
-          <Button variant="link" className="px-0 pt-2 text-sm text-primary hover:text-primary/80">
-            {linkText}
-          </Button>
-        </Link>
-      )}
-    </CardContent>
+
+// Componente de tarjeta KPI adaptado para el nuevo diseño
+const KpiCard = ({ title, value, description, icon, iconColor }: { title: string, value: string | number, description?: string, icon: React.ReactNode, iconColor?: string }) => (
+  <Card className="rioja-card p-4 flex flex-col justify-between"> {/* Adjusted padding for KPI cards */}
+    <div>
+      <div className="flex flex-row items-center justify-between space-y-0 pb-1">
+        <h3 className="kpi-title">{title}</h3>
+        {React.cloneElement(icon as React.ReactElement, { className: `h-5 w-5 ${iconColor || 'text-muted-foreground'}` })}
+      </div>
+      <div className="kpi-value">{value}</div>
+    </div>
+    {description && <p className="kpi-description pt-1">{description}</p>}
   </Card>
 );
+
+// Tarjeta de acción rápida adaptada
+const ActionCard = ({ title, description, link, linkText, buttonVariant = "default" as "default" | "outline" }: { title: string, description: string, link: string, linkText: string, buttonVariant?: "default" | "outline" }) => (
+  <Card className="rioja-card p-6 flex flex-col"> {/* Generous padding for action cards */}
+    <CardHeader className="p-0 mb-3">
+      <CardTitle className="section-title">{title}</CardTitle>
+    </CardHeader>
+    <CardContent className="p-0 flex-grow">
+      <p className="text-sm text-muted-foreground mb-4">{description}</p>
+    </CardContent>
+    <div className="mt-auto pt-3"> {/* Pushes button to bottom */}
+      <Link href={link} passHref>
+        <Button variant={buttonVariant} className="w-full"> 
+          {linkText}
+        </Button>
+      </Link>
+    </div>
+  </Card>
+);
+
 
 // Datos de ejemplo para el gráfico de barras
 const barChartData = [
@@ -46,100 +61,165 @@ export default function DashboardPage() {
     return <p>Cargando datos del usuario...</p>;
   }
 
-  const stats = {
-    activeAmbulances: 15,
-    pendingRequests: 8,
-    activeUsers: 120,
-    averageResponseTime: '12 min',
-    servicesTodayForEquipoMovil: 5,
-    individualPendingRequests: 1,
-    individualInProgressRequests: 0,
+  // Simulate dynamic data based on user for KPIs
+  const getKpiStats = () => {
+    if (user.role === 'individual') {
+      return {
+        pendingRequests: 1,
+        inProgressRequests: 0,
+        completedRequests: 3,
+      };
+    }
+    if (user.role === 'ambulancia') {
+      return {
+        assignedServices: 5, // Example
+        nextStopTime: '10:30 AM',
+        activeRouteId: 'LOTE-ABC-123',
+      };
+    }
+    // Default for admin, hospital, centroCoordinador
+    return {
+      pendingRequests: 8,
+      inProgressRequests: 4,
+      completedRequests: 125,
+      activeAmbulances: 15,
+      activeUsers: 120, // Only for admin/coord
+    };
   };
+  const stats = getKpiStats();
 
-  const canViewAmbulanceTracking = ['admin', 'hospital', 'centroCoordinador'].includes(user.role);
-  const canViewSmartDispatch = ['admin', 'hospital', 'centroCoordinador'].includes(user.role);
-  const canViewRequestManagement = ['admin', 'hospital', 'individual', 'centroCoordinador'].includes(user.role);
-  const isEquipoMovil = user.role === 'equipoMovil';
+
   const isAdminOrCoordinator = ['admin', 'centroCoordinador'].includes(user.role);
-  const isIndividual = user.role === 'individual';
+  const isProviderRole = ['admin', 'centroCoordinador', 'hospital'].includes(user.role);
+
 
   return (
     <div>
-      <h1 className="page-title mb-6">¡Bienvenido, {user.name}!</h1>
+      <div className="flex justify-between items-center mb-6">
+        <h1 className="page-title">Dashboard</h1>
+        <p className="text-muted-foreground">Bienvenido, {user.name}</p>
+      </div>
       
-      {isIndividual ? (
-        <div className="grid gap-4 md:grid-cols-2 mb-6">
-          <StatsCard
-            title="Estado de Mis Solicitudes"
-            value={`${stats.individualPendingRequests} Pendiente(s), ${stats.individualInProgressRequests} En Curso`}
-            icon={<Icons.ListChecks className="h-5 w-5 text-muted-foreground" />}
-            description="Revisa el estado de tus transportes solicitados."
-            link="/request-management"
-            linkText="Ver Mis Solicitudes"
-            cardClassName="bg-card" // Asegura fondo gris claro de tarjeta
-          />
-        </div>
-      ) : isEquipoMovil ? (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatsCard
-                title="Servicios de Hoy"
-                value={stats.servicesTodayForEquipoMovil}
-                icon={<Icons.MapIcon className="h-5 w-5 text-muted-foreground" />}
-                description="Ruta asignada"
-                link="/driver/batch-view/lote-demo-123" 
+      {/* KPI Section */}
+      <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
+        <KpiCard
+          title="Solicitudes Pendientes"
+          value={stats.pendingRequests}
+          description="Esperando asignación"
+          icon={<Clock />}
+          iconColor="text-yellow-500"
+        />
+        <KpiCard
+          title="En Proceso"
+          value={stats.inProgressRequests}
+          description="Asignadas y en ruta"
+          icon={<Icons.SmartDispatch />} // Using Zap for "in process"
+          iconColor="text-blue-500"
+        />
+        <KpiCard
+          title="Completadas"
+          value={stats.completedRequests}
+          description="Finalizadas correctamente"
+          icon={<CheckCircle />}
+          iconColor="text-green-500"
+        />
+        {isProviderRole && !isAdminOrCoordinator && ( // Specific for Hospital
+             <KpiCard
+                title="Ambulancias Activas"
+                value={stats.activeAmbulances || 0}
+                description="Disponibles o en servicio"
+                icon={<Ambulance />}
+                iconColor="text-primary"
+            />
+        )}
+      </div>
+
+      {/* Action Cards Section */}
+      <div className="grid gap-6 md:grid-cols-2 lg:grid-cols-3 mb-6">
+        {(user.role === 'individual' || isProviderRole) && (
+            <ActionCard 
+                title="Nueva Solicitud"
+                description="Crear una nueva solicitud de transporte sanitario."
+                link="/request-management/new-programmed" // Default to programmed for general new request
+                linkText="Crear Solicitud"
+                buttonVariant="default" // Green button
+            />
+        )}
+         {(user.role === 'individual' || isProviderRole) && (
+            <ActionCard 
+                title="Solicitudes"
+                description="Ver y gestionar todas las solicitudes de transporte."
+                link="/request-management"
+                linkText="Ver Solicitudes"
+                buttonVariant="outline" // White button
+            />
+        )}
+        <ActionCard 
+            title="Mensajes"
+            description="Comunícate con los usuarios y el centro coordinador."
+            link="/messages"
+            linkText="Ver Mensajes"
+            buttonVariant="outline"
+        />
+        {isAdminOrCoordinator && (
+            <>
+            <ActionCard
+                title="Usuarios"
+                description="Gestionar los usuarios del sistema y sus roles."
+                link="/admin/user-management"
+                linkText="Gestionar Usuarios"
+                buttonVariant="outline"
+            />
+            <ActionCard
+                title="Ambulancias"
+                description="Gestionar la flota de vehículos disponibles."
+                link="/admin/ambulances"
+                linkText="Gestionar Ambulancias"
+                buttonVariant="outline"
+            />
+            <ActionCard
+                title="Lotes y Rutas"
+                description="Crear, asignar y optimizar lotes de servicios."
+                link="/admin/lotes"
+                linkText="Gestionar Lotes"
+                buttonVariant="outline"
+            />
+            </>
+        )}
+         {user.role === 'ambulancia' && (
+            <ActionCard 
+                title="Mi Ruta de Hoy"
+                description="Ver detalles y gestionar las paradas de tu ruta asignada."
+                link={`/driver/batch-view/${stats.activeRouteId || 'lote-demo-123'}`}
                 linkText="Ver Mi Ruta"
-                cardClassName="bg-card"
+                buttonVariant="default"
             />
-        </div>
-      ) : (
-        // Vista para Admin, Hospital, CentroCoordinador
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-4 mb-6">
-            <StatsCard 
-              title="Ambulancias Activas" 
-              value={stats.activeAmbulances}
-              icon={<Icons.Ambulance className="h-5 w-5 text-muted-foreground" />}
-              description="+2 desde la última hora"
-              {...(canViewAmbulanceTracking && { link: "/ambulance-tracking", linkText: "Ver Mapa"})}
-              cardClassName="bg-card"
-            />
-            <StatsCard 
-              title="Solicitudes Pendientes" 
-              value={stats.pendingRequests}
-              icon={<Icons.RequestManagement className="h-5 w-5 text-muted-foreground" />}
-              description="Prioridad alta: 3"
-              {...(canViewRequestManagement && { link: "/request-management", linkText: "Gestionar Solicitudes"})}
-              cardClassName="bg-card"
-            />
-            {isAdminOrCoordinator && (
-                <StatsCard 
-                    title="Usuarios Activos" 
-                    value={stats.activeUsers}
-                    icon={<Icons.Users className="h-5 w-5 text-muted-foreground" />}
-                    description="En todos los roles"
-                    {...(user.role === 'admin' && { link: "/admin/user-management", linkText: "Gestionar Usuarios"})}
-                    cardClassName="bg-card"
-                />
-            )}
-            {user.role === 'admin' && (
-               <StatsCard 
-                title="Tiempo Medio Respuesta" 
-                value={stats.averageResponseTime}
-                icon={<Icons.SmartDispatch className="h-5 w-5 text-muted-foreground" />}
-                description="Últimas 24 horas"
-                {...(canViewSmartDispatch && { link: "/smart-dispatch", linkText: "Optimizar Despacho"})}
-                cardClassName="bg-card"
-                />
-            )}
-        </div>
+        )}
+      </div>
+
+
+      {/* Solicitudes Recientes Section (Simplified) */}
+      { (isProviderRole || user.role === 'individual') && (
+      <Card className="rioja-card">
+        <CardHeader>
+          <CardTitle className="section-title">Solicitudes Recientes</CardTitle>
+        </CardHeader>
+        <CardContent className="text-center py-8">
+          <p className="text-muted-foreground mb-4">No hay solicitudes recientes para mostrar. (Simulado)</p>
+          <Link href="/request-management" passHref>
+            <Button variant="outline">Ver todas las solicitudes</Button>
+          </Link>
+        </CardContent>
+      </Card>
       )}
 
-      {/* Sección de Gráfico de Barras */}
-      {!isIndividual && !isEquipoMovil && (
-        <Card className="rioja-card mb-6">
-          <CardHeader className="p-0 mb-3">
-            <CardTitle className="section-title">Rendimiento de Solicitudes (Últimos 6 Meses)</CardTitle>
+      {/* Bar Chart - Kept for Admin/Coordinator roles */}
+      {isAdminOrCoordinator && (
+        <Card className="rioja-card mt-6">
+          <CardHeader>
+            <CardTitle className="section-title">Rendimiento (Últimos 6 Meses)</CardTitle>
           </CardHeader>
-          <CardContent className="p-0 h-[300px]">
+          <CardContent className="h-[300px] p-0">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart data={barChartData} margin={{ top: 5, right: 20, left: -20, bottom: 5 }}>
                 <CartesianGrid strokeDasharray="3 3" stroke="hsl(var(--border))" />
@@ -149,61 +229,17 @@ export default function DashboardPage() {
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     borderColor: 'hsl(var(--border))',
-                    borderRadius: 'var(--radius-sm)',
+                    borderRadius: 'var(--radius-sm)', // Consistent radius
                   }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }}
-                  itemStyle={{ color: 'hsl(var(--foreground))' }}
+                  labelStyle={{ color: 'hsl(var(--foreground))' }} // Ensure text visibility
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}  // Ensure text visibility
                 />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
-                <Bar dataKey="Solicitudes" fill="hsl(var(--primary))" radius={[4, 4, 0, 0]} name="Total Solicitudes" />
-                <Bar dataKey="Completadas" fill="hsl(var(--emphasis))" radius={[4, 4, 0, 0]} name="Solicitudes Completadas" />
+                <Bar dataKey="Solicitudes" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Total Solicitudes" />
+                <Bar dataKey="Completadas" fill="hsl(var(--secondary))" radius={[3, 3, 0, 0]} name="Solicitudes Completadas" />
               </BarChart>
             </ResponsiveContainer>
           </CardContent>
-        </Card>
-      )}
-
-      <Card className="rioja-card"> {/* Aplicar clase rioja-card */}
-        <CardHeader className="p-0 mb-3">
-          <CardTitle className="section-title">Acciones Rápidas</CardTitle>
-        </CardHeader>
-        <CardContent className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3 p-0">
-          { isEquipoMovil && (
-             <Link href="/driver/batch-view/lote-demo-123" passHref>
-                <Button className="w-full rioja-button-primary">Ver Mi Ruta de Hoy</Button>
-            </Link>
-          )}
-          { (isIndividual || user.role === 'hospital' || isAdminOrCoordinator) && (
-            <Link href="/request-management/new-programmed" passHref> {/* Cambiado a nueva solicitud programada como ejemplo */}
-              <Button className="w-full rioja-button-primary">Crear Nueva Solicitud</Button>
-            </Link>
-          )}
-          { canViewAmbulanceTracking && !isIndividual && (
-             <Link href="/ambulance-tracking" passHref>
-                <Button className="w-full rioja-button-secondary">Seguimiento de Ambulancias</Button>
-            </Link>
-          )}
-          { canViewSmartDispatch && !isIndividual && (
-             <Link href="/smart-dispatch" passHref>
-                <Button className="w-full rioja-button-outline">Despacho Inteligente IA</Button>
-            </Link>
-          )}
-           { isAdminOrCoordinator && (
-             <Link href="/admin" passHref>
-                <Button className="w-full rioja-button-primary" variant="default">Panel de Administración</Button>
-            </Link>
-          )}
-        </CardContent>
-      </Card>
-
-      {!isIndividual && (
-        <Card className="rioja-card mt-6"> {/* Aplicar clase rioja-card */}
-            <CardHeader className="p-0 mb-3">
-            <CardTitle className="section-title">Actividad Reciente</CardTitle>
-            </CardHeader>
-            <CardContent className="p-0">
-            <p className="text-muted-foreground">No hay actividad reciente para mostrar.</p>
-            </CardContent>
         </Card>
       )}
     </div>

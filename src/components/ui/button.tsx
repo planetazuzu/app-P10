@@ -6,25 +6,25 @@ import { cva, type VariantProps } from "class-variance-authority"
 import { cn } from "@/lib/utils"
 
 const buttonVariants = cva(
-  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-lg text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
+  "inline-flex items-center justify-center gap-2 whitespace-nowrap rounded-md text-sm font-semibold ring-offset-background transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 disabled:pointer-events-none disabled:opacity-50 [&_svg]:pointer-events-none [&_svg]:size-4 [&_svg]:shrink-0",
   {
     variants: {
       variant: {
-        default: "bg-primary text-primary-foreground hover:bg-primary/90 uppercase shadow-md", // Added uppercase and shadow-md
+        default: "bg-primary text-primary-foreground hover:bg-primary/90 shadow-sm", // Primary is now green, text is dark
         destructive:
           "bg-destructive text-destructive-foreground hover:bg-destructive/90",
-        outline:
-          "border border-primary text-primary bg-transparent hover:bg-primary/10", 
-        secondary:
+        outline: // For secondary buttons (white bg, light border, dark text)
+          "border border-border bg-card text-foreground hover:bg-muted/50", 
+        secondary: // This can be the dark blue/grey button if needed, or a lighter variant
           "bg-secondary text-secondary-foreground hover:bg-secondary/80",
-        ghost: "hover:bg-accent hover:text-accent-foreground",
+        ghost: "hover:bg-accent hover:text-accent-foreground", // Accent is yellow
         link: "text-primary underline-offset-4 hover:underline",
       },
       size: {
         default: "h-auto px-[var(--space-md)] py-[var(--space-sm)]", 
-        sm: "h-auto rounded-lg px-[var(--space-sm)] py-1", 
-        lg: "h-auto rounded-lg px-[var(--space-lg)] py-3", 
-        icon: "h-10 w-10 rounded-lg", 
+        sm: "h-auto rounded-md px-[var(--space-sm)] py-1", 
+        lg: "h-auto rounded-md px-[var(--space-lg)] py-3", 
+        icon: "h-10 w-10 rounded-md", 
       },
     },
     defaultVariants: {

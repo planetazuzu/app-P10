@@ -18,9 +18,8 @@ import { SidebarTrigger, useSidebar } from '@/components/ui/sidebar';
 import type { UserRole } from '@/types';
 import Link from 'next/link';
 import React, { useState } from 'react';
-import { cn } from '@/lib/utils'; // Added import for cn
+import { cn } from '@/lib/utils';
 
-// Helper para traducir el rol del usuario
 const translateUserRole = (role: UserRole): string => {
   switch (role) {
     case 'admin':
@@ -31,8 +30,8 @@ const translateUserRole = (role: UserRole): string => {
       return 'Usuario Individual';
     case 'centroCoordinador':
       return 'Centro Coordinador';
-    case 'equipoMovil':
-      return 'Equipo Móvil';
+    case 'ambulancia': // Updated from equipoMovil
+      return 'Ambulancia';
     default:
       return role;
   }
@@ -76,18 +75,18 @@ export function Header() {
       .split(' ')
       .map((n) => n[0])
       .join('')
-      .toUpperCase();
+      .toUpperCase() || 'U'; // Fallback initial
   };
 
   return (
-    <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+    <header className="sticky top-0 z-40 w-full border-b bg-card text-card-foreground shadow-sm"> {/* Header bg is now white/card */}
       <div className="container flex h-16 items-center justify-between px-4 sm:px-6 lg:px-8">
         <div className="flex items-center gap-2">
-          {isMobile && <SidebarTrigger />}
+          {isMobile && <SidebarTrigger className="text-secondary hover:bg-muted/50" />} {/* Icon color for trigger */}
           <div className="flex items-center gap-2">
-            <Icons.Logo className="h-8 w-8" /> 
-            <span className="hidden font-bold text-secondary sm:inline-block text-lg">
-              Gestión de Usuarios y Flota
+            {/* Sidebar trigger is part of sidebar, icon might be inside sidebar header */}
+            <span className="font-bold text-secondary sm:inline-block text-lg"> {/* System title color */}
+              Sistema de Gestión de Ambulancias
             </span>
           </div>
         </div>
@@ -96,7 +95,7 @@ export function Header() {
           <div className="flex items-center gap-3">
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
-                <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full">
+                <Button variant="ghost" size="icon" className="relative h-9 w-9 rounded-full text-secondary hover:bg-muted/50"> {/* Icon color */}
                   <Icons.Bell className="h-5 w-5" />
                   {unreadCount > 0 && (
                     <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-destructive text-[10px] font-bold text-destructive-foreground">
@@ -114,18 +113,17 @@ export function Header() {
                 <DropdownMenuSeparator />
                 <DropdownMenuGroup>
                   {notifications.length === 0 && <DropdownMenuItem disabled>No tiene notificaciones.</DropdownMenuItem>}
-                  {notifications.slice(0, 5).map(notif => ( // Show max 5 notifications
+                  {notifications.slice(0, 5).map(notif => ( 
                     <DropdownMenuItem key={notif.id} 
                       className={cn("flex items-start gap-2.5 p-2.5 cursor-pointer hover:bg-accent focus:bg-accent", !notif.read && "bg-primary/5")}
                       onSelect={(e) => {
-                        e.preventDefault(); // Prevent closing menu if it's a link
+                        e.preventDefault(); 
                         handleMarkAsRead(notif.id);
-                        // If notif.link, router.push(notif.link) could be added here
                       }}
                     >
                       <div className="flex-shrink-0 mt-0.5">{React.cloneElement(notif.icon as React.ReactElement, { className: "h-5 w-5"})}</div>
                       <div className="flex-1">
-                        <p className={cn("text-sm font-medium", !notif.read && "font-semibold")}>{notif.title}</p>
+                        <p className={cn("text-sm font-medium", !notif.read && "font-semibold text-primary")}>{notif.title}</p> {/* Highlight unread title */}
                         <p className="text-xs text-muted-foreground">{notif.description}</p>
                         <p className="text-xs text-muted-foreground/70 mt-0.5">{notif.time}</p>
                       </div>
@@ -144,31 +142,30 @@ export function Header() {
               </DropdownMenuContent>
             </DropdownMenu>
 
-
             <div className="text-right hidden md:block">
-              <p className="font-semibold text-sm text-foreground">{user.name}</p>
+              <p className="font-semibold text-sm text-secondary">{user.name}</p> {/* User name color */}
               <p className="text-xs text-muted-foreground">{translateUserRole(user.role)}</p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full">
-                  <Avatar className="h-10 w-10 border-2 border-primary">
-                    <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name} data-ai-hint="profile avatar" />
-                    <AvatarFallback>{getInitials(user.name)}</AvatarFallback>
+                  <Avatar className="h-9 w-9 border-2 border-primary"> {/* Avatar border with new primary green */}
+                    <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name} data-ai-hint="profile avatar"/>
+                    <AvatarFallback className="bg-muted text-secondary font-semibold">{getInitials(user.name)}</AvatarFallback> {/* Fallback style */}
                   </Avatar>
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-56" align="end" forceMount>
                 <DropdownMenuLabel className="font-normal">
                   <div className="flex flex-col space-y-1">
-                    <p className="text-sm font-medium leading-none">{user.name}</p>
+                    <p className="text-sm font-medium leading-none text-secondary">{user.name}</p> {/* User name color */}
                     <p className="text-xs leading-none text-muted-foreground">
                       {user.email}
                     </p>
                   </div>
                 </DropdownMenuLabel>
                 <DropdownMenuSeparator />
-                <DropdownMenuItem onClick={logout} className="cursor-pointer">
+                <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive hover:!bg-destructive/10 hover:!text-destructive"> {/* Destructive color for logout */}
                   <Icons.Logout className="mr-2 h-4 w-4" />
                   Cerrar Sesión
                 </DropdownMenuItem>

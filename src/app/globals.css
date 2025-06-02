@@ -2,62 +2,67 @@
     @tailwind components;
     @tailwind utilities;
 
-    /* Declaraciones @font-face eliminadas para Riojana */
-
     @layer base {
       :root {
-        /* New Visual Guidelines - Global Medic Response */
-        --color-primary-val: 150 100% 20%;   /* Verde institucional: #006633 */
-        --color-secondary-val: 120 39% 49%;  /* Verde claro/acción: #4CAF50 */
-        --color-accent-val: 45 100% 51%;     /* Amarillo alerta: #FFC107 */
-        --color-destructive-val: 1 79% 55%;   /* Rojo suave: #E53935 */
+        /* New Visual Design - Based on Image */
+        --color-primary-val: 96 70% 45%;      /* Bright Green (Active items, primary buttons): #84CC16 approx */
+        --color-secondary-val: 216 25% 25%;   /* Dark Slate Blue/Grey (Headings, secondary text): #2C3A47 approx */
+        --color-accent-val: 45 100% 51%;      /* Yellow (Keep for alerts/accents if not overridden): #FFC107 */
+        --color-destructive-val: 1 79% 55%;    /* Soft Red: #E53935 */
         
-        --color-bg-val: 0 0% 96%;            /* Gris muy claro (Fondo general): #F5F5F5 */
-        --color-text-default-val: 0 0% 13%;   /* Gris oscuro (Texto principal): #212121 */
-        --color-text-muted-val: 0 0% 38%;     /* Gris medio (Texto secundario): #616161 */
+        --color-bg-val: 210 17% 98%;             /* Very Light Grey (Main Background): #F9FAFB */
+        --color-text-default-val: 220 20% 15%;   /* Very Dark Grey/Almost Black (Primary Text): #1F2937 */
+        --color-text-muted-val: 215 16% 47%;    /* Medium Grey (Secondary/Muted Text): #6B7280 */
         
-        --color-card-bg-val: 0 0% 100%;      /* Blanco puro (Fondo tarjetas): #FFFFFF */
-        --color-info-secondary-val: 207 90% 54%; /* Azul sanitario claro (Info secundaria): #2196F3 */
+        --color-card-bg-val: 0 0% 100%;           /* White (Card Backgrounds): #FFFFFF */
 
-        /* Modo Claro - Derived from new guidelines */
-        --background: var(--color-bg-val);                     /* #F5F5F5 */
-        --foreground: var(--color-text-default-val);           /* #212121 */
-
-        --card: var(--color-card-bg-val);                      /* #FFFFFF */
-        --card-foreground: var(--color-text-default-val);      /* #212121 */
-
-        --popover: var(--color-card-bg-val);                   /* #FFFFFF */
-        --popover-foreground: var(--color-text-default-val);   /* #212121 */
-
-        --primary: var(--color-primary-val);                   /* #006633 */
-        --primary-foreground: 0 0% 100%;                       /* Blanco */
-
-        --secondary: var(--color-secondary-val);               /* #4CAF50 */
-        --secondary-foreground: 0 0% 100%;                     /* Blanco */
-
-        --muted: 0 0% 92%; /* Slightly darker than background for muted areas */
-        --muted-foreground: var(--color-text-muted-val);       /* #616161 */
-
-        --accent: var(--color-accent-val);                     /* #FFC107 (Amarillo) */
-        --accent-foreground: var(--color-text-default-val);    /* Gris oscuro for text on Amarillo */
+        /* Sidebar Specific Colors */
+        --sidebar-bg-val: 216 25% 17%;           /* Dark Slate Blue/Grey (Sidebar BG): #1F2A38 */
+        --sidebar-fg-val: 215 14% 92%;           /* Light Grey (Sidebar Text): #E5E7EB */
+        --sidebar-active-bg-val: var(--color-primary-val); /* Bright Green (Sidebar Active BG) */
+        --sidebar-active-fg-val: 216 25% 17%;   /* Dark Text for Active Green BG */
+        --sidebar-border-val: 216 25% 22%;      /* Slightly lighter than sidebar-bg for borders */
         
-        --emphasis: var(--color-info-secondary-val);           /* #2196F3 (Azul) */
-        --emphasis-foreground: 0 0% 100%;                      /* Blanco for text on Azul */
+        --color-info-secondary-val: 207 90% 54%;  /* Blue (Keep for info if needed): #2196F3 */
 
-        --destructive: var(--color-destructive-val);           /* #E53935 (Rojo) */
-        --destructive-foreground: 0 0% 100%;                   /* Blanco */
+        /* ShadCN UI Theme Mapping */
+        --background: var(--color-bg-val);                     
+        --foreground: var(--color-text-default-val);           
 
-        --border: 0 0% 88%; /* HSL from #E0E0E0, a light gray for borders */
-        --input: var(--color-card-bg-val);                     /* #FFFFFF (Blanco para fondo de input) */
-        --input-border: 0 0% 80%; /* HSL from #CCCCCC, for input borders */
-        --ring: var(--color-primary-val);                      /* Verde institucional for focus rings */
+        --card: var(--color-card-bg-val);                      
+        --card-foreground: var(--color-text-default-val);      
+
+        --popover: var(--color-card-bg-val);                  
+        --popover-foreground: var(--color-text-default-val);   
+
+        --primary: var(--color-primary-val);                   
+        --primary-foreground: var(--sidebar-active-fg-val); /* Dark text on green buttons */
+
+        --secondary: var(--color-secondary-val);               
+        --secondary-foreground: var(--sidebar-fg-val); /* Light text on dark blue buttons */
+
+        --muted: 220 15% 96%; /* Light muted gray for subtle backgrounds: #F3F4F6 */
+        --muted-foreground: var(--color-text-muted-val);       
+
+        --accent: var(--color-accent-val);                     
+        --accent-foreground: 220 20% 15%;    
+        
+        --emphasis: var(--color-info-secondary-val);          
+        --emphasis-foreground: 0 0% 100%;                     
+
+        --destructive: var(--color-destructive-val);           
+        --destructive-foreground: 0 0% 100%;                   
+
+        --border: 220 13% 91%; /* Light Grey Border: #E5E7EB */
+        --input: var(--color-card-bg-val);                     
+        --input-border: 220 13% 88%; /* Slightly darker border for inputs: #D1D5DB */
+        --ring: var(--color-primary-val);                      
 
         --radius-sm: 0.25rem;  /* 4px */
-        --radius-md: 0.5rem;   /* 8px */
-        --radius-lg: 0.75rem;  /* 12px - "rounded-xl" effect */
-        --radius: var(--radius-md); /* Default radius for general elements */
+        --radius-md: 0.375rem; /* 6px (for rounded-md, common in new design) */
+        --radius-lg: 0.5rem;   /* 8px (for rounded-lg, if needed) */
+        --radius: var(--radius-md);
 
-        /* Fuentes: Prefer Inter/Roboto, then system */
         --font-base: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
         --font-condensed: Inter, Roboto, system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", "Helvetica Neue", Arial, "Noto Sans", sans-serif;
         --font-slab: Georgia, Cambria, "Times New Roman", Times, serif;
@@ -65,14 +70,14 @@
         --space-xxs: 0.25rem;  /* 4px */
         --space-xs:  0.5rem;   /* 8px */
         --space-sm:  0.75rem;  /* 12px */
-        --space-md:  1rem;     /* 16px */
-        --space-lg:  1.5rem;   /* 24px */
+        --space-md:  1rem;     /* 16px (p-4) */
+        --space-lg:  1.5rem;   /* 24px (p-6) */
         --space-xl:  2rem;     /* 32px */
         --space-2xl: 3rem;     /* 48px */
 
-        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.05);
-        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1);
-        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.1), 0 4px 6px -4px rgb(0 0 0 / 0.1);
+        --shadow-sm: 0 1px 2px 0 rgb(0 0 0 / 0.03); /* Softer shadow */
+        --shadow-md: 0 4px 6px -1px rgb(0 0 0 / 0.05), 0 2px 4px -2px rgb(0 0 0 / 0.05); /* Softer shadow */
+        --shadow-lg: 0 10px 15px -3px rgb(0 0 0 / 0.05), 0 4px 6px -4px rgb(0 0 0 / 0.05); /* Softer shadow */
 
         --chart-1: var(--primary);
         --chart-2: var(--secondary);
@@ -80,22 +85,34 @@
         --chart-4: var(--emphasis);
         --chart-5: hsl(var(--destructive));
 
-        --sidebar-background: hsl(var(--background));
-        --sidebar-foreground: hsl(var(--foreground));
-        --sidebar-primary: hsl(var(--primary)); 
-        --sidebar-primary-foreground: hsl(var(--primary-foreground));          
-        --sidebar-accent: hsl(var(--primary) / 0.1); /* Light primary for accent */
-        --sidebar-accent-foreground: hsl(var(--primary));         
-        --sidebar-border: hsl(var(--border));    
-        --sidebar-ring: hsl(var(--ring));
+        /* Sidebar variables for ShadCN UI */
+        --sidebar-background: var(--sidebar-bg-val);
+        --sidebar-foreground: var(--sidebar-fg-val);
+        --sidebar-primary: var(--sidebar-active-bg-val); 
+        --sidebar-primary-foreground: var(--sidebar-active-fg-val);          
+        --sidebar-accent: hsl(var(--sidebar-bg-val) / 0.8); /* Slightly lighter bg for hover */
+        --sidebar-accent-foreground: var(--sidebar-fg-val);         
+        --sidebar-border: var(--sidebar-border-val);    
+        --sidebar-ring: var(--ring);
       }
 
       .dark {
-        /* Dark Mode Palette - Adjust as needed for contrast with new base */
-        --color-bg-dark-val: 0 0% 10%;             /* Very Dark Grey, e.g. #1A1A1A */
-        --color-text-light-val: 0 0% 96%;          /* Gris muy claro for text on dark */
-        --color-text-muted-dark-val: 0 0% 60%;     /* Lighter grey for muted text on dark */
-        --color-card-bg-dark-val: 0 0% 13%;        /* Dark Grey for cards, e.g. #212121 */
+        /* Dark Mode Palette - Needs adjustment to match new theme's intent */
+        --color-primary-val: 96 70% 50%;      /* Bright Green (Adjusted for dark) */
+        --color-secondary-val: 216 25% 75%;   /* Lighter Slate Blue/Grey Text */
+        --color-accent-val: 45 100% 55%;      /* Yellow (Adjusted for dark) */
+        
+        --color-bg-dark-val: 220 20% 10%;             /* Very Dark Grey: #111827 */
+        --color-text-light-val: 220 17% 93%;          /* Light Grey Text: #E5E7EB */
+        --color-text-muted-dark-val: 220 15% 65%;     /* Medium Grey Muted Text: #9CA3AF */
+        --color-card-bg-dark-val: 220 20% 13%;        /* Darker Grey for cards: #171E2B */
+
+        /* Sidebar Specific Colors - Dark Mode */
+        --sidebar-bg-val: 216 25% 13%;           /* Even Darker Sidebar BG for dark mode */
+        --sidebar-fg-val: 215 14% 85%;           /* Lighter Grey Sidebar Text */
+        --sidebar-active-bg-val: var(--color-primary-val);
+        --sidebar-active-fg-val: 220 20% 10%;   /* Very Dark Text for Active Green BG */
+        --sidebar-border-val: 216 25% 18%;      
 
 
         --background: var(--color-bg-dark-val);
@@ -107,37 +124,38 @@
         --popover: var(--color-card-bg-dark-val);
         --popover-foreground: var(--color-text-light-val);
 
-        --primary: var(--color-primary-val); /* Keep primary color consistent */
-        --primary-foreground: 0 0% 100%;
+        --primary: var(--color-primary-val);
+        --primary-foreground: var(--sidebar-active-fg-val);
 
-        --secondary: var(--color-secondary-val); /* Keep secondary color consistent */
-        --secondary-foreground: 0 0% 100%;
+        --secondary: var(--color-secondary-val);
+        --secondary-foreground: var(--color-text-light-val);
 
-        --muted: 0 0% 18%; /* Darker muted background */
+        --muted: 220 15% 18%; 
         --muted-foreground: var(--color-text-muted-dark-val);
 
-        --accent: var(--color-accent-val); /* Keep accent (Amarillo) */
-        --accent-foreground: var(--color-text-default-val); /* Dark text on Amarillo */
+        --accent: var(--color-accent-val); 
+        --accent-foreground: 220 20% 10%; 
         
-        --emphasis: var(--color-info-secondary-val); /* Keep emphasis (Azul) */
-        --emphasis-foreground: 0 0% 100%; /* White text on Azul */
+        --emphasis: var(--color-info-secondary-val); 
+        --emphasis-foreground: 0 0% 100%; 
 
-        --destructive: var(--color-destructive-val); /* Keep destructive (Rojo) */
+        --destructive: var(--color-destructive-val); 
         --destructive-foreground: 0 0% 100%;
 
-        --border: 0 0% 20%;
+        --border: 220 13% 25%; /* Darker border */
         --input: var(--color-card-bg-dark-val);
-        --input-border: 0 0% 25%;
+        --input-border: 220 13% 30%;
         --ring: var(--color-primary-val); 
 
-        --sidebar-background: hsl(var(--background));
-        --sidebar-foreground: hsl(var(--foreground));
-        --sidebar-primary: hsl(var(--primary));
-        --sidebar-primary-foreground: hsl(var(--primary-foreground));
-        --sidebar-accent: hsl(var(--primary) / 0.2); /* Slightly stronger accent for dark */
-        --sidebar-accent-foreground: hsl(var(--primary-foreground));
-        --sidebar-border: hsl(var(--border)); 
-        --sidebar-ring: hsl(var(--ring));
+        /* Sidebar variables for ShadCN UI - Dark Mode */
+        --sidebar-background: var(--sidebar-bg-val);
+        --sidebar-foreground: var(--sidebar-fg-val);
+        --sidebar-primary: var(--sidebar-active-bg-val);
+        --sidebar-primary-foreground: var(--sidebar-active-fg-val);
+        --sidebar-accent: hsl(var(--sidebar-bg-val) / 0.8);
+        --sidebar-accent-foreground: var(--sidebar-fg-val);
+        --sidebar-border: var(--sidebar-border-val); 
+        --sidebar-ring: var(--ring);
       }
     }
 
@@ -148,11 +166,10 @@
       body {
         @apply bg-background text-foreground;
         font-family: var(--font-base);
-        font-size: 1rem; /* Corresponds to text-base (16px) */
+        font-size: 1rem; 
         line-height: 1.5;
       }
       h1, h2, h3, h4, h5, h6 {
-        /* Ensure headings use the base font stack if Inter/Roboto are preferred for all text */
         font-family: var(--font-base); 
       }
     }
@@ -163,48 +180,52 @@
       }
 
       .page-title {
-        /* Título principal: 24px o text-2xl font-bold */
-        @apply text-2xl font-bold tracking-tight text-primary;
+        /* Corresponds to "Dashboard" title in image */
+        @apply text-3xl font-bold tracking-tight text-secondary; /* Using secondary for the dark blue/grey */
         font-family: var(--font-base); 
       }
 
       .section-title {
-        /* Subtítulo/sección: 18px o text-lg font-semibold */
-        @apply text-lg font-semibold tracking-tight text-secondary; 
+        /* Corresponds to "Nueva Solicitud", "Usuarios" in image cards */
+        @apply text-xl font-bold text-secondary; /* Using secondary for dark blue/grey */
         font-family: var(--font-base);
       }
+      
+      .kpi-title {
+         /* Corresponds to "Solicitudes Pendientes" in image KPI cards */
+        @apply text-sm font-medium text-muted-foreground;
+      }
+      .kpi-value {
+         /* Corresponds to "0" in image KPI cards */
+        @apply text-3xl font-bold text-secondary; /* Using secondary for dark blue/grey */
+      }
+      .kpi-description {
+         /* Corresponds to "Esperando asignación" in image KPI cards */
+        @apply text-xs text-muted-foreground;
+      }
+
 
       .rioja-card {
-        @apply rounded-lg border bg-card text-card-foreground p-[var(--space-md)] shadow-sm; /* rounded-lg (0.75rem), shadow-sm */
+        @apply rounded-md border bg-card text-card-foreground p-[var(--space-lg)] shadow-sm; /* rounded-md (6px), p-6 for generous padding */
       }
 
       .stats-card { 
-        @apply rioja-card flex flex-col justify-between;
+        @apply rioja-card flex flex-col justify-between p-[var(--space-md)]; /* Smaller padding for KPI cards */
       }
-      .stats-card-header {
-        @apply flex flex-row items-center justify-between space-y-0 pb-2;
-      }
-      .stats-card-title {
-        @apply text-sm font-medium text-muted-foreground;
-      }
-      .stats-card-value {
-        @apply text-2xl font-bold text-primary;
-      }
-      .stats-card-description {
-         /* Texto auxiliar: 14px o text-sm text-gray-500 (text-muted-foreground maps to this) */
-         @apply text-sm text-muted-foreground pt-1;
-      }
+      /* KPI card specific styles are now handled by .kpi-title, .kpi-value, .kpi-description */
 
+      /* Button styles will primarily be driven by components/ui/button.tsx variants */
+      /* These .rioja-button-* classes can be deprecated or used for very specific overrides if needed */
       .rioja-button {
-        @apply px-[var(--space-md)] py-[var(--space-sm)] rounded-lg font-semibold; /* rounded-lg (0.75rem) */
+        @apply px-[var(--space-md)] py-[var(--space-sm)] rounded-md font-semibold; /* rounded-md (6px) */
       }
-      .rioja-button-primary {
-        @apply bg-primary text-primary-foreground hover:bg-primary/90 rioja-button uppercase shadow-md; /* Added uppercase and shadow-md */
+      .rioja-button-primary { /* Green button */
+        @apply bg-primary text-primary-foreground hover:bg-primary/90 rioja-button shadow-sm;
       }
-      .rioja-button-secondary {
-         @apply bg-secondary text-secondary-foreground hover:bg-secondary/90 rioja-button;
+      .rioja-button-secondary { /* White button with border */
+         @apply bg-card text-foreground border border-border hover:bg-muted/50 rioja-button;
       }
-       .rioja-button-outline {
+       .rioja-button-outline { /* Transparent button with primary border (less used in new design) */
         @apply border border-primary text-primary bg-transparent hover:bg-primary/10 rioja-button;
       }
 
@@ -220,3 +241,4 @@
       }
     }
     
+
