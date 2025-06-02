@@ -13,10 +13,12 @@ import { Card, CardHeader, CardTitle, CardContent, CardDescription } from '@/com
 import { ScrollArea } from '@/components/ui/scroll-area';
 import { Badge } from '@/components/ui/badge';
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
-import { Loader2, AlertTriangle, MapPin, Clock, User, ChevronsRight, CheckCircle, PlayCircle, PauseCircle, SkipForward, Ban, HelpCircle, UserX, Info, BriefcaseMedical, ArrowLeft, ListOrdered } from 'lucide-react';
+import { Loader2, AlertTriangle, MapPin, Clock, User, ChevronsRight, CheckCircle, PlayCircle, PauseCircle, SkipForward, Ban, HelpCircle, UserX, Info, BriefcaseMedical, ArrowLeft, ListOrdered, PartyPopper } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
+import { DropdownMenu, DropdownMenuTrigger, DropdownMenuContent, DropdownMenuItem } from '@/components/ui/dropdown-menu';
+import { Progress } from '@/components/ui/progress';
 
 // --- Helper Functions (Duplicated from original DriverBatchViewPage for now, consider moving to utils) ---
 const translateParadaStatus = (status: ParadaRuta['estado']): string => {
@@ -55,7 +57,7 @@ const translateMedioRequerido = (medio: MedioRequeridoProgramado): string => {
 };
 
 // --- ParadaCard Component (Duplicated for now, consider moving to a shared component) ---
-const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus: (servicioId: string, newStatus: ParadaRuta['estado']) => void; isCurrent: boolean }> = ({ parada, loteId, onUpdateStatus, isCurrent }) => {
+const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus: (servicioId: string, newStatus: ParadaRuta['estado']) => void; isCurrent: boolean, isLoteCompleted: boolean }> = ({ parada, loteId, onUpdateStatus, isCurrent, isLoteCompleted }) => {
   const { toast } = useToast();
   
   const handleStatusChange = (newStatus: ParadaRuta['estado']) => {
@@ -67,10 +69,10 @@ const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus:
   const canPickup = parada.estado === 'enRutaRecogida';
   const canCompleteLeg = parada.estado === 'pacienteRecogido';
   const canFinalize = parada.estado === 'enDestino';
-  const isActionable = ['pendiente', 'enRutaRecogida', 'pacienteRecogido', 'enDestino'].includes(parada.estado);
+  const isActionable = ['pendiente', 'enRutaRecogida', 'pacienteRecogido', 'enDestino'].includes(parada.estado) && !isLoteCompleted;
 
   return (
-    <Card className={`mb-4 ${isCurrent ? 'border-primary ring-2 ring-primary shadow-lg' : 'opacity-80 hover:opacity-100'}`}>
+    <Card className={`mb-4 ${isCurrent && !isLoteCompleted ? 'border-primary ring-2 ring-primary shadow-lg' : (isLoteCompleted ? 'opacity-60' : 'opacity-80 hover:opacity-100')}`}>
       <CardHeader className="pb-3">
         <div className="flex justify-between items-start">
           <div>
@@ -94,7 +96,7 @@ const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus:
             {canPickup && <Button size="sm" onClick={() => handleStatusChange('pacienteRecogido')} className="bg-purple-600 hover:bg-purple-700 text-white"><User className="mr-1"/> Paciente Recogido</Button>}
             {canCompleteLeg && <Button size="sm" onClick={() => handleStatusChange('enDestino')} className="bg-teal-600 hover:bg-teal-700 text-white"><ChevronsRight className="mr-1"/> En Destino</Button>}
             {canFinalize && <Button size="sm" onClick={() => handleStatusChange('finalizado')} className="bg-green-600 hover:bg-green-700 text-white"><CheckCircle className="mr-1"/> Finalizar Servicio</Button>}
-            <DropdownMenuStatus parada={parada} onStatusChange={handleStatusChange} />
+            <DropdownMenuStatus parada={parada} onStatusChange={handleStatusChange} isLoteCompleted={isLoteCompleted}/>
           </div>
         )}
       </CardContent>
@@ -102,34 +104,32 @@ const ParadaCard: React.FC<{ parada: ParadaRuta; loteId: string; onUpdateStatus:
   );
 };
 
-const DropdownMenuStatus: React.FC<{ parada: ParadaRuta; onStatusChange: (newStatus: ParadaRuta['estado']) => void }> = ({ parada, onStatusChange }) => {
+const DropdownMenuStatus: React.FC<{ parada: ParadaRuta; onStatusChange: (newStatus: ParadaRuta['estado']) => void; isLoteCompleted: boolean }> = ({ parada, onStatusChange, isLoteCompleted }) => {
   const nonSequentialStates: ParadaRuta['estado'][] = ['noPresentado', 'cancelado'];
-  const isFinalState = ['finalizado', 'cancelado', 'noPresentado'].includes(parada.estado);
+  const isFinalState = ['finalizado', 'cancelado', 'noPresentado'].includes(parada.estado) || isLoteCompleted;
+
+  if (isFinalState) return null; // No mostrar el menú si la parada o el lote están en estado final.
 
   return (
-    <details className="relative group" {...(isFinalState ? { open: false } : {})}>
-        <summary className="list-none">
-            <Button variant="outline" size="sm" disabled={isFinalState} aria-expanded={!isFinalState && undefined}>
+     <DropdownMenu>
+        <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm">
                 Otras Acciones <HelpCircle className="ml-1 w-4 h-4"/>
             </Button>
-        </summary>
-        {!isFinalState && (
-            <div className="absolute z-10 mt-1 right-0 bg-card border rounded shadow-lg p-2 space-y-1 hidden group-open:block w-48">
-                {nonSequentialStates.map(status => (
-                    <Button
-                        key={status}
-                        variant="ghost"
-                        size="sm"
-                        className="w-full justify-start text-xs"
-                        onClick={() => onStatusChange(status)}
-                    >
-                        {status === 'noPresentado' ? <UserX className="mr-2 h-3.5 w-3.5"/> : <Ban className="mr-2 h-3.5 w-3.5"/>}
-                        Marcar como {translateParadaStatus(status)}
-                    </Button>
-                ))}
-            </div>
-        )}
-    </details>
+        </DropdownMenuTrigger>
+        <DropdownMenuContent>
+            {nonSequentialStates.map(status => (
+                <DropdownMenuItem
+                    key={status}
+                    className="text-xs cursor-pointer"
+                    onSelect={() => onStatusChange(status)}
+                >
+                    {status === 'noPresentado' ? <UserX className="mr-2 h-3.5 w-3.5"/> : <Ban className="mr-2 h-3.5 w-3.5"/>}
+                    Marcar como {translateParadaStatus(status)}
+                </DropdownMenuItem>
+            ))}
+        </DropdownMenuContent>
+    </DropdownMenu>
   );
 };
 // --- End of Duplicated Components/Helpers ---
@@ -199,10 +199,12 @@ export default function RouteDetailsPage() {
 
   const handleUpdateParadaStatus = async (servicioId: string, newStatus: ParadaRuta['estado']) => {
       if (!ruta || !lote) return;
-      setIsLoading(true); 
+      // No establecer isLoading a true aquí para evitar que toda la UI parpadee.
+      // La actualización individual de la parada debería ser suficiente.
       try {
           const updatedParada = await updateParadaEstadoMock(lote.id, servicioId, newStatus);
           if (updatedParada) {
+              // Actualizar estado local de la ruta
               setRuta(prevRuta => {
                   if (!prevRuta) return null;
                   return {
@@ -210,14 +212,25 @@ export default function RouteDetailsPage() {
                       paradas: prevRuta.paradas.map(p => p.servicioId === servicioId ? updatedParada : p)
                   };
               });
+              // Volver a cargar el lote para obtener su estado actualizado (ej. 'completado')
+              const updatedLote = await getLoteByIdMock(lote.id, user?.id);
+              if (updatedLote) {
+                  setLote(updatedLote);
+                  if (updatedLote.estadoLote === 'completado' && lote.estadoLote !== 'completado') {
+                      toast({
+                          title: "¡Lote Completado!",
+                          description: "Todos los servicios de este lote han finalizado.",
+                          className: "bg-green-100 border-green-500 text-green-700",
+                          duration: 5000,
+                      });
+                  }
+              }
           } else {
               toast({ title: "Error", description: "No se pudo actualizar el estado de la parada.", variant: "destructive" });
           }
       } catch (e) {
           console.error("Error updating parada status:", e);
           toast({ title: "Error de Red", description: "Fallo al comunicar la actualización.", variant: "destructive" });
-      } finally {
-          setIsLoading(false);
       }
   };
 
@@ -269,6 +282,7 @@ export default function RouteDetailsPage() {
   const totalServicios = serviciosProgramados.length;
   const serviciosFinalizados = serviciosProgramados.filter(p => p.estado === 'finalizado').length;
   const progreso = totalServicios > 0 ? (serviciosFinalizados / totalServicios) * 100 : 0;
+  const isLoteCompleted = lote.estadoLote === 'completado';
 
   return (
     <div className="rioja-container">
@@ -291,19 +305,25 @@ export default function RouteDetailsPage() {
             <CardTitle className="text-lg text-secondary">Progreso de la Ruta</CardTitle>
         </CardHeader>
         <CardContent className="flex items-center gap-4">
-            <div className="relative h-4 w-full bg-muted rounded-full overflow-hidden">
-                <div 
-                    className="absolute top-0 left-0 h-full bg-primary transition-all duration-500 ease-out" 
-                    style={{ width: `${progreso}%`}}
-                />
-            </div>
+            <Progress value={progreso} className="h-3"/>
             <span className="text-sm font-semibold text-primary">{Math.round(progreso)}% Completado</span>
             <span className="text-sm text-muted-foreground">({serviciosFinalizados} de {totalServicios} paradas)</span>
         </CardContent>
       </Card>
 
+      {isLoteCompleted && (
+         <Alert variant="default" className="mb-6 bg-green-50 border-green-500 text-green-700">
+            <PartyPopper className="h-5 w-5 text-green-600" />
+            <AlertTitle className="font-semibold">¡Lote Completado!</AlertTitle>
+            <AlertDescription>
+                Todos los servicios de este lote han sido finalizados. Buen trabajo.
+                Puede volver al resumen del lote o al panel principal.
+            </AlertDescription>
+        </Alert>
+      )}
+
       {serviciosProgramados.length > 0 ? (
-        <ScrollArea className="h-[calc(100vh-22rem)] pr-3"> {/* Ajustar altura según sea necesario */}
+        <ScrollArea className="h-[calc(100vh-26rem)] pr-3"> {/* Ajustar altura según sea necesario */}
           {serviciosProgramados.map((parada, index) => (
             <ParadaCard 
                 key={parada.servicioId} 
@@ -311,6 +331,7 @@ export default function RouteDetailsPage() {
                 loteId={lote.id} 
                 onUpdateStatus={handleUpdateParadaStatus} 
                 isCurrent={index === currentStopIndex}
+                isLoteCompleted={isLoteCompleted}
             />
           ))}
         </ScrollArea>
@@ -327,3 +348,4 @@ export default function RouteDetailsPage() {
   );
 }
 
+    

@@ -3,6 +3,7 @@ import type { AmbulanceType, AmbulanceStatus } from '@/types'; // Added Ambulanc
 import type { LoteProgramado, RutaCalculada, ParadaRuta, PacienteLote, DestinoLote, ProgrammedTransportRequest, ParadaEstado, MedioRequeridoProgramado, LoteCreateFormValues } from '@/types';
 import { mockProgrammedTransportRequests, getProgrammedRequestsByLoteId, mapProgrammedRequestToParada as mapReqToParadaUtil } from './request-data'; // Import mapProgrammedRequestToParada
 
+
 // Local fallback for mock data
 const localSimpleMockAmbulances: {
   id: string;
@@ -38,18 +39,13 @@ const localSimpleMockAmbulances: {
   }
 ];
 
-// mockPacientes and mockDestinos are now defined in request-data.ts
-// mapProgrammedRequestToParada is now imported from request-data.ts
 
-
-// Use the imported (and now correctly located) mapProgrammedRequestToParada
 const buildParadasForRoute = (lote: LoteProgramado): ParadaRuta[] => {
     const serviciosDelLote = mockProgrammedTransportRequests.filter(req => lote.serviciosIds.includes(req.id));
     serviciosDelLote.sort((a, b) => (a.horaConsultaMedica || a.horaIda).localeCompare(b.horaConsultaMedica || b.horaIda));
-    return serviciosDelLote.map((req, index) => mapReqToParadaUtil(req, index + 1)); // Use imported mapper
+    return serviciosDelLote.map((req, index) => mapReqToParadaUtil(req, index + 1));
 };
 
-// Derive initialLoteDemo123ServiceIds from the already populated mockProgrammedTransportRequests
 const initialLoteDemo123ServiceIds = mockProgrammedTransportRequests
     .filter(r => r.loteId === "lote-demo-123")
     .map(r => r.id);
@@ -71,16 +67,7 @@ export let mockLotes: LoteProgramado[] = [
   {
     id: "lote-demo-123",
     fechaServicio: new Date().toISOString().split('T')[0],
-    // Use mockDestinos from request-data.ts if needed, or ensure it's defined locally or not needed for this part.
-    // For simplicity, if mockDestinos was used here, it might need to be imported if it remains in request-data.ts,
-    // or this part of mockLotes might need to be initialized after request-data.ts is fully loaded.
-    // Let's assume mockDestinos is available via import or this part is simplified.
-    // For now, this mock lote only needs `initialLoteDemo123ServiceIds`.
-    // The `destinoPrincipal` should be derived from data now in `request-data.ts`.
-    // To fully break the cycle, `mockDestinos` should be passed or defined in a common place.
-    // For now, this will likely cause a new error if `mockDestinos` isn't available.
-    // Let's hardcode for now to ensure this file initializes.
-    destinoPrincipal: { id: "dest-hsp", nombre: "Hospital San Pedro", direccion: "Calle Piqueras 98, Logroño", detalles: "Consultas Externas" }, // Hardcoded for now
+    destinoPrincipal: { id: "dest-hsp", nombre: "Hospital San Pedro", direccion: "Calle Piqueras 98, Logroño", detalles: "Consultas Externas" },
     serviciosIds: initialLoteDemo123ServiceIds,
     estadoLote: 'asignado',
     equipoMovilUserIdAsignado: 'user-vehiculo-AMB101',
@@ -93,7 +80,7 @@ export let mockLotes: LoteProgramado[] = [
   {
     id: "lote-empty-789",
     fechaServicio: new Date(Date.now() + 86400000 * 2).toISOString().split('T')[0],
-    destinoPrincipal: { id: "dest-hcal", nombre: "Hospital de Calahorra", direccion: "Carretera de Logroño s/n, Calahorra", detalles: "Rehabilitación" }, // Hardcoded
+    destinoPrincipal: { id: "dest-hcal", nombre: "Hospital de Calahorra", direccion: "Carretera de Logroño s/n, Calahorra", detalles: "Rehabilitación" },
     serviciosIds: [],
     estadoLote: 'pendienteCalculo',
     createdAt: new Date(Date.now() - 86400000 * 1).toISOString(),
@@ -101,7 +88,7 @@ export let mockLotes: LoteProgramado[] = [
     notasLote: "Lote nuevo, pendiente de asignación de servicios."
   }
 ];
-// Populate paradas for mockRutas after mockLotes is defined
+
 mockRutas.forEach(ruta => {
     const lote = mockLotes.find(l => l.id === ruta.loteId);
     if (lote) {
@@ -121,11 +108,21 @@ export const getLotesMock = (): Promise<LoteProgramado[]> => {
 };
 
 
-export const getLoteByIdMock = (loteId: string): Promise<LoteProgramado | null> => {
+export const getLoteByIdMock = (loteId: string, equipoMovilUserId?: string): Promise<LoteProgramado | null> => {
   return new Promise((resolve) => {
     setTimeout(() => {
       const lote = mockLotes.find(l => l.id === loteId);
-      resolve(lote ? {...lote} : null);
+      if (lote) {
+        if (equipoMovilUserId && lote.equipoMovilUserIdAsignado !== equipoMovilUserId) {
+          console.warn(`Lote ${loteId} no está asignado al equipo móvil ${equipoMovilUserId}. Asignado a: ${lote.equipoMovilUserIdAsignado}`);
+          resolve(null);
+        } else {
+          resolve({...lote});
+        }
+      } else {
+        console.warn(`Lote con ID ${loteId} no encontrado en getLoteByIdMock.`);
+        resolve(null);
+      }
     }, 300);
   });
 };
@@ -135,6 +132,7 @@ export const getRutaCalculadaByLoteIdMock = (loteId: string, rutaId?: string): P
     setTimeout(() => {
       const lote = mockLotes.find(l => l.id === loteId);
       if (!lote) {
+        console.warn(`Lote con ID ${loteId} no encontrado al intentar obtener ruta calculada.`);
         resolve(null);
         return;
       }
@@ -142,26 +140,29 @@ export const getRutaCalculadaByLoteIdMock = (loteId: string, rutaId?: string): P
       let ruta = mockRutas.find(r => r.loteId === loteId && (!rutaId || r.id === rutaId));
 
       if (ruta) {
+        // Siempre reconstruir paradas para reflejar el estado actual de los ProgrammedTransportRequest
         ruta.paradas = buildParadasForRoute(lote);
         ruta.duracionTotalEstimadaMin = ruta.paradas.reduce((sum, parada) => sum + parada.tiempoTrasladoDesdeAnteriorMin + 20, 0);
-        ruta.distanciaTotalEstimadaKm = ruta.paradas.length * 15;
+        ruta.distanciaTotalEstimadaKm = ruta.paradas.length * 15; // Simplificación
         resolve({...ruta});
       } else if (lote.rutaCalculadaId) {
+        console.log(`No se encontró ruta existente para lote ${loteId} con rutaCalculadaId ${lote.rutaCalculadaId}. Creando una nueva ruta simulada.`);
         const newRoute: RutaCalculada = {
             id: lote.rutaCalculadaId,
             loteId: lote.id,
             paradas: buildParadasForRoute(lote),
-            horaSalidaBaseEstimada: "08:00",
-            duracionTotalEstimadaMin: 0,
-            distanciaTotalEstimadaKm: 0,
+            horaSalidaBaseEstimada: "08:00", // Valor por defecto
+            duracionTotalEstimadaMin: 0, // Se calculará
+            distanciaTotalEstimadaKm: 0, // Se calculará
             optimizadaEn: new Date().toISOString(),
         };
         newRoute.duracionTotalEstimadaMin = newRoute.paradas.reduce((sum, parada) => sum + parada.tiempoTrasladoDesdeAnteriorMin + 20, 0);
-        newRoute.distanciaTotalEstimadaKm = newRoute.paradas.length * 15;
+        newRoute.distanciaTotalEstimadaKm = newRoute.paradas.length * 15; // Simplificación
         mockRutas.push(newRoute);
         resolve({...newRoute});
       }
        else {
+        console.warn(`Lote ${loteId} no tiene rutaCalculadaId y no se encontró ruta existente.`);
         resolve(null);
       }
     }, 300);
@@ -171,21 +172,52 @@ export const getRutaCalculadaByLoteIdMock = (loteId: string, rutaId?: string): P
 export const updateParadaEstadoMock = (loteId: string, servicioId: string, newStatus: ParadaEstado): Promise<ParadaRuta | null> => {
     return new Promise((resolve) => {
       setTimeout(() => {
-        const ruta = mockRutas.find(r => r.loteId === loteId);
-        if (ruta) {
-          const paradaIndex = ruta.paradas.findIndex(p => p.servicioId === servicioId);
-          if (paradaIndex !== -1) {
-            ruta.paradas[paradaIndex].estado = newStatus;
-            const now = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
-            if (newStatus === 'enRutaRecogida') ruta.paradas[paradaIndex].horaRealLlegadaRecogida = undefined;
-            if (newStatus === 'pacienteRecogido') ruta.paradas[paradaIndex].horaRealSalidaRecogida = now;
-            if (newStatus === 'enDestino') ruta.paradas[paradaIndex].horaRealLlegadaDestino = now;
-
-            resolve({...ruta.paradas[paradaIndex]});
-            return;
-          }
+        const rutaIndex = mockRutas.findIndex(r => r.loteId === loteId);
+        if (rutaIndex === -1) {
+          console.error(`No se encontró ruta para el lote ID: ${loteId} en updateParadaEstadoMock.`);
+          resolve(null);
+          return;
         }
-        resolve(null);
+        const ruta = mockRutas[rutaIndex];
+        const paradaIndex = ruta.paradas.findIndex(p => p.servicioId === servicioId);
+
+        if (paradaIndex === -1) {
+          console.error(`No se encontró parada con servicio ID: ${servicioId} en la ruta del lote ${loteId}.`);
+          resolve(null);
+          return;
+        }
+
+        // Actualizar estado de la parada en mockRutas
+        ruta.paradas[paradaIndex].estado = newStatus;
+        const now = new Date().toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit' });
+        if (newStatus === 'enRutaRecogida') ruta.paradas[paradaIndex].horaRealLlegadaRecogida = undefined; // Reset
+        if (newStatus === 'pacienteRecogido') ruta.paradas[paradaIndex].horaRealSalidaRecogida = now;
+        if (newStatus === 'enDestino') ruta.paradas[paradaIndex].horaRealLlegadaDestino = now;
+
+
+        // Actualizar estado del ProgrammedTransportRequest correspondiente
+        const serviceReqIndex = mockProgrammedTransportRequests.findIndex(req => req.id === servicioId);
+        if (serviceReqIndex !== -1) {
+            if (newStatus === 'finalizado') mockProgrammedTransportRequests[serviceReqIndex].status = 'completed';
+            else if (newStatus === 'cancelado') mockProgrammedTransportRequests[serviceReqIndex].status = 'cancelled';
+            // Podríamos mapear otros estados de ParadaEstado a RequestStatus si fuera necesario.
+            // Por ahora, 'transporting', 'on-scene', etc., se mantienen como 'batched' o el estado que tuviera el lote.
+        } else {
+            console.warn(`No se encontró ProgrammedTransportRequest con ID: ${servicioId} para actualizar su estado general.`);
+        }
+
+        // Verificar si todas las paradas del lote están finalizadas para completar el lote
+        const allStopsFinalized = ruta.paradas.every(p => ['finalizado', 'cancelado', 'noPresentado'].includes(p.estado));
+        if (allStopsFinalized) {
+            const loteIndex = mockLotes.findIndex(l => l.id === loteId);
+            if (loteIndex !== -1 && mockLotes[loteIndex].estadoLote !== 'completado') {
+                mockLotes[loteIndex].estadoLote = 'completado';
+                mockLotes[loteIndex].updatedAt = new Date().toISOString();
+                console.log(`Lote ${loteId} marcado como completado.`);
+            }
+        }
+        
+        resolve({...ruta.paradas[paradaIndex]});
       }, 200);
     });
   };
@@ -229,32 +261,34 @@ export const createLoteWithServicesMock = (
             direccion: loteDetails.destinoPrincipalDireccion,
         },
         serviciosIds: serviceIds,
-        estadoLote: 'calculado',
+        estadoLote: 'calculado', // Estado inicial podría ser 'calculado' o 'pendienteCalculo'
         notasLote: loteDetails.notasLote,
         createdAt: new Date().toISOString(),
         updatedAt: new Date().toISOString(),
       };
 
+      // Crear y asociar una ruta para este nuevo lote
       const newRoute: RutaCalculada = {
         id: `ruta-${newLote.id}`,
         loteId: newLote.id,
         paradas: buildParadasForRoute(newLote),
-        horaSalidaBaseEstimada: "08:00",
-        duracionTotalEstimadaMin: 0,
-        distanciaTotalEstimadaKm: 0,
+        horaSalidaBaseEstimada: "08:00", // Default
+        duracionTotalEstimadaMin: 0, // Placeholder, se calcula abajo
+        distanciaTotalEstimadaKm: 0, // Placeholder, se calcula abajo
         optimizadaEn: new Date().toISOString(),
       };
       newRoute.duracionTotalEstimadaMin = newRoute.paradas.reduce((sum, parada) => sum + parada.tiempoTrasladoDesdeAnteriorMin + 20, 0);
-      newRoute.distanciaTotalEstimadaKm = newRoute.paradas.length * 15;
+      newRoute.distanciaTotalEstimadaKm = newRoute.paradas.length * 15; // Simple mock calculation
 
       newLote.rutaCalculadaId = newRoute.id;
       mockLotes.push(newLote);
       mockRutas.push(newRoute);
 
+      // Actualizar el estado de los servicios programados a 'batched' y asignarles el loteId
       mockProgrammedTransportRequests.forEach(req => {
         if (serviceIds.includes(req.id)) {
           req.loteId = newLote.id;
-          req.status = 'batched';
+          req.status = 'batched'; // Marcar como parte de un lote
         }
       });
       resolve({...newLote});
@@ -267,16 +301,23 @@ export const updateLoteServiciosMock = (loteId: string, newServiceIds: string[])
     setTimeout(() => {
       const loteIndex = mockLotes.findIndex(l => l.id === loteId);
       if (loteIndex > -1) {
+        // Actualizar IDs de servicios en el lote
         mockLotes[loteIndex].serviciosIds = [...newServiceIds];
         mockLotes[loteIndex].updatedAt = new Date().toISOString();
-        mockLotes[loteIndex].estadoLote = 'modificado';
+        mockLotes[loteIndex].estadoLote = 'modificado'; // Marcar como modificado
 
+        // Reconstruir y actualizar las paradas de la ruta asociada
         const rutaIndex = mockRutas.findIndex(r => r.loteId === loteId);
         if (rutaIndex > -1) {
             mockRutas[rutaIndex].paradas = buildParadasForRoute(mockLotes[loteIndex]);
-            mockRutas[rutaIndex].optimizadaEn = new Date().toISOString();
+            mockRutas[rutaIndex].optimizadaEn = new Date().toISOString(); // Marcar como re-optimizada (simulado)
+            // Recalcular duración y distancia
             mockRutas[rutaIndex].duracionTotalEstimadaMin = mockRutas[rutaIndex].paradas.reduce((sum, p) => sum + p.tiempoTrasladoDesdeAnteriorMin + 20,0);
-            mockRutas[rutaIndex].distanciaTotalEstimadaKm = mockRutas[rutaIndex].paradas.length * 15;
+            mockRutas[rutaIndex].distanciaTotalEstimadaKm = mockRutas[rutaIndex].paradas.length * 15; // Simple mock
+        } else {
+            // Si no hay ruta, y ahora hay servicios, se podría crear una nueva (más complejo)
+            // Por ahora, asumimos que la ruta existe si el lote existía.
+            console.warn(`Ruta no encontrada para lote ${loteId} al actualizar servicios, pero debería existir si el lote existe.`);
         }
 
         resolve({...mockLotes[loteIndex]});
@@ -286,3 +327,5 @@ export const updateLoteServiciosMock = (loteId: string, newServiceIds: string[])
     }, 250);
   });
 };
+
+    
