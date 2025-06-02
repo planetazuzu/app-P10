@@ -69,7 +69,7 @@ export default function LoginPage() {
      return (
       <div className="flex min-h-screen items-center justify-center bg-background p-4">
         <div className="flex flex-col items-center gap-2">
-          <Icons.Logo className="h-12 w-12 text-primary animate-pulse" data-ai-hint="logo company"/>
+          <Icons.Ambulance className="h-16 w-16 text-primary animate-pulse" data-ai-hint="ambulance vehicle" />
           <p className="text-xl font-semibold text-foreground">Cargando...</p>
         </div>
       </div>
@@ -78,9 +78,9 @@ export default function LoginPage() {
 
   return (
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
-      {/* Main Title */}
-      <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-secondary">P10 - Gestión de usuarios y flota</h1>
+      {/* Top Icon */}
+      <div className="mb-8 text-center">
+        <Icons.Ambulance className="h-16 w-16 mx-auto text-primary" data-ai-hint="ambulance vehicle" />
       </div>
       
       {/* Main Content - Centered */}
@@ -88,16 +88,16 @@ export default function LoginPage() {
         <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="text-center">
             <CardTitle className="text-2xl font-bold text-secondary">Iniciar sesión</CardTitle>
-            <CardDescription>Ingresa tus credenciales para acceder a la plataforma</CardDescription>
+            <CardDescription>Ingresa tus credenciales para acceder a P10 - Gestión de usuarios y flota.</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLoginSubmit} className="space-y-6">
               <div className="space-y-1.5">
-                <Label htmlFor="email">Email</Label>
+                <Label htmlFor="email">Usuario</Label>
                 <Input
                   id="email"
                   type="email"
-                  placeholder="correo@ejemplo.com"
+                  placeholder="usuario@ejemplo.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
@@ -121,8 +121,9 @@ export default function LoginPage() {
                   className="text-base"
                 />
               </div>
-              <Button type="submit" className="w-full text-base" variant="default" disabled={isSubmitting}>
+              <Button type="submit" className="w-full text-base btn-primary" disabled={isSubmitting}> 
                 {isSubmitting ? 'Iniciando Sesión...' : 'Iniciar sesión'}
+                {!isSubmitting && <ArrowRight className="ml-2 h-5 w-5" />}
               </Button>
             </form>
             <div className="mt-6 text-center">
@@ -140,7 +141,7 @@ export default function LoginPage() {
               {demoAccounts.map(acc => (
                 <Button 
                   key={acc.email} 
-                  variant="outline" 
+                  variant="secondary" 
                   className="w-full justify-between text-xs sm:text-sm"
                   onClick={() => handleDemoLogin(acc.email)}
                   disabled={isSubmitting}
