@@ -93,7 +93,7 @@ const paradaStatusIcons: Record<ParadaRuta['estado'], React.ElementType> = {
   pacienteRecogido: StopUser,
   enDestino: StopMapPin,
   finalizado: CheckCircle,
-  cancelado: Icons.UserX,
+  cancelado: Icons.UserX, // Using Icons.UserX as it implies cancellation or user-related issue
   noPresentado: UserMinus,
 };
 
@@ -162,7 +162,7 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
     <Card className="shadow-lg max-h-[calc(100vh-10rem)] overflow-y-auto rioja-card">
       <CardHeader className="relative bg-muted/30">
         <Button variant="ghost" size="icon" className="absolute top-2 right-2 h-7 w-7" onClick={onClose}>
-          <Icons.UserX className="h-4 w-4" />
+          <Icons.Close className="h-4 w-4" />
           <span className="sr-only">Cerrar</span>
         </Button>
         <CardTitle className="text-xl text-secondary">{ambulance.name}</CardTitle>
