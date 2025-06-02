@@ -37,7 +37,7 @@ export function AppSidebar() {
         <Link href="/dashboard" passHref>
           {/* El div del logo y texto se oculta cuando la barra está colapsada en modo icono */}
           <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden cursor-pointer">
-            <Icons.Logo className="h-8 w-8 text-sidebar-foreground" data-ai-hint="logo company" />
+            {/* Icons.Logo component removed from here */}
             <div className="flex flex-col">
               <h1 className="font-bold text-md text-sidebar-foreground leading-tight">P10</h1>
               <h1 className="font-bold text-md text-sidebar-foreground leading-tight">Gestión Flota</h1>
