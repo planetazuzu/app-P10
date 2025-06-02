@@ -6,39 +6,20 @@ import {
   SidebarHeader,
   SidebarContent,
   SidebarFooter,
-  // SidebarTrigger is now part of Header for mobile
-  // useSidebar, // Not directly needed here anymore if trigger is in header
-} from '@/components/ui/sidebar'; // Ensure useSidebar can be removed if not used
+  SidebarTrigger, // Importado para usarlo en el header de la sidebar
+} from '@/components/ui/sidebar'; 
 import { Icons } from '@/components/icons';
 import { Button } from '@/components/ui/button';
 import { SidebarNav } from './sidebar-nav';
 import { useAuth } from '@/hooks/use-auth';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import type { UserRole } from '@/types';
-import Link from 'next/link'; // Added for logo link
-
-// Helper para traducir el rol del usuario
-const translateUserRole = (role: UserRole): string => {
-  switch (role) {
-    case 'admin':
-      return 'Admin';
-    case 'hospital':
-      return 'Hospital';
-    case 'individual':
-      return 'Individual';
-    case 'centroCoordinador':
-      return 'Centro Coord.';
-    case 'ambulancia':
-      return 'Ambulancia'; // Updated
-    default:
-      return role;
-  }
-};
-
+import Link from 'next/link'; 
+import { useIsMobile } from '@/hooks/use-mobile'; // Importar para lógica de escritorio/móvil
 
 export function AppSidebar() {
-  // const { state, isMobile, toggleSidebar } = useSidebar(); // May not be needed if trigger is always in header
   const { user, logout } = useAuth();
+  const isMobile = useIsMobile(); // Determinar si es vista móvil
 
   const getInitials = (name: string = '') => {
     return name
@@ -52,8 +33,9 @@ export function AppSidebar() {
 
   return (
     <Sidebar collapsible="icon" variant="sidebar" side="left" className="border-r border-sidebar-border">
-      <SidebarHeader className="items-center justify-between p-4">
+      <SidebarHeader className="flex items-center justify-between p-4">
         <Link href="/dashboard" passHref>
+          {/* El div del logo y texto se oculta cuando la barra está colapsada en modo icono */}
           <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden cursor-pointer">
             <Icons.Logo className="h-8 w-8 text-sidebar-foreground" data-ai-hint="logo company" />
             <div className="flex flex-col">
@@ -62,8 +44,10 @@ export function AppSidebar() {
             </div>
           </div>
         </Link>
-        {/* SidebarTrigger is now in the main Header for mobile, so it's removed from here for desktop */}
-        {/* <SidebarTrigger className="group-data-[collapsible=icon]:hidden md:flex text-sidebar-foreground hover:bg-sidebar-accent" /> */}
+        {/* SidebarTrigger para escritorio: se oculta en móvil para evitar duplicado con el del Header principal */}
+        {!isMobile && (
+            <SidebarTrigger className="text-sidebar-foreground hover:bg-sidebar-accent" />
+        )}
       </SidebarHeader>
       
       <SidebarContent className="p-2">
@@ -75,12 +59,13 @@ export function AppSidebar() {
 
       <SidebarFooter className="p-4 border-t border-sidebar-border group-data-[collapsible=icon]:p-2">
         <div className="flex items-center gap-3 group-data-[collapsible=icon]:justify-center">
-           <Avatar className="h-8 w-8 border-2 border-primary"> {/* Active green border for avatar */}
+           <Avatar className="h-8 w-8 border-2 border-primary">
             <AvatarImage src={`https://placehold.co/100x100.png?text=${getInitials(user.name)}`} alt={user.name} data-ai-hint="profile avatar"/>
             <AvatarFallback className="bg-sidebar-accent text-sidebar-accent-foreground font-semibold">{getInitials(user.name)}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground">{user.name}</span>
+            {/* Ya no se muestra el rol aquí, según petición anterior */}
           </div>
           <Button 
             variant="ghost" 
@@ -97,4 +82,3 @@ export function AppSidebar() {
     </Sidebar>
   );
 }
-
