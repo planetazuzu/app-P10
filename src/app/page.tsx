@@ -4,7 +4,7 @@
 import { useAuth } from '@/hooks/use-auth';
 import { useRouter } from 'next/navigation';
 import { useEffect } from 'react';
-import { Globe } from 'lucide-react';
+import { Icons } from '@/components/icons';
 
 export default function HomePage() {
   const { isAuthenticated, isLoading } = useAuth();
@@ -23,7 +23,7 @@ export default function HomePage() {
   return (
     <div className="flex min-h-screen items-center justify-center bg-background p-4">
       <div className="flex flex-col items-center gap-2">
-        <Globe className="h-16 w-16 animate-pulse text-primary" />
+        <Icons.Logo className="h-16 w-16 text-primary animate-pulse" data-ai-hint="logo company" />
         <p className="text-xl font-semibold text-foreground">Iniciando p10 - Gestión de usuarios y flota...</p>
       </div>
     </div>
