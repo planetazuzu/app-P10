@@ -148,9 +148,7 @@ export function Header() {
 
             <ThemeToggle /> 
 
-            <div className="text-right hidden md:block">
-              <p className="font-semibold text-sm text-secondary">{user.name}</p>
-            </div>
+            {/* Removed user name display from here */}
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="ghost" className="relative h-10 w-10 rounded-full p-0">
