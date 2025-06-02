@@ -31,6 +31,7 @@ export const emptyAmbulance: Omit<Ambulance, "id"> = {
   walkingSeats: 0,
   
   specialEquipment: [],
+  personnel: [], // Initialize new field
   
   latitude: undefined, // Initially undefined for a new ambulance template
   longitude: undefined,

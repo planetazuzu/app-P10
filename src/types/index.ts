@@ -70,7 +70,7 @@ export interface Ambulance {
   walkingSeats: number;
 
   specialEquipment: string[];
-  // equipment?: AmbulanceEquipment; // Este campo se podría calcular o resolver al obtener la ambulancia
+  personnel?: string[]; // Nuevo campo para el personal
 
   latitude?: number;
   longitude?: number;

@@ -25,6 +25,7 @@ const mapFirestoreDocToAmbulance = (docSnapshot: any): Ambulance => {
     allowsWalking: data.allowsWalking === undefined ? true : Boolean(data.allowsWalking),
     walkingSeats: data.walkingSeats === undefined ? 0 : Number(data.walkingSeats),
     specialEquipment: Array.isArray(data.specialEquipment) ? data.specialEquipment : [],
+    personnel: Array.isArray(data.personnel) ? data.personnel : [], // Mapear nuevo campo
     latitude: data.latitude ? parseFloat(String(data.latitude)) : undefined,
     longitude: data.longitude ? parseFloat(String(data.longitude)) : undefined,
     currentPatients: data.currentPatients ? parseInt(String(data.currentPatients), 10) : 0,
@@ -49,6 +50,14 @@ const mapAmbulanceToFirestorePayload = (ambulanceData: Partial<Omit<Ambulance, '
   if (payload.hasMedicalBed !== undefined) payload.hasMedicalBed = Boolean(payload.hasMedicalBed);
   if (payload.hasWheelchair !== undefined) payload.hasWheelchair = Boolean(payload.hasWheelchair);
   if (payload.allowsWalking !== undefined) payload.allowsWalking = Boolean(payload.allowsWalking);
+
+  // Asegurar que personnel es un array, incluso si es vacío
+  if (payload.personnel === undefined) {
+    payload.personnel = [];
+  } else if (!Array.isArray(payload.personnel)) {
+    // Si no es un array (ej. null), convertirlo a array vacío
+    payload.personnel = [];
+  }
 
 
   // Eliminar campos undefined para no sobrescribir innecesariamente en Firestore con 'undefined'

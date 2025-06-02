@@ -7,7 +7,7 @@ import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { Icons } from '@/components/icons'; 
 import {
-    Users, Package, MapPin, Layers, ShieldAlert, Thermometer, CheckCircle, Tool, Info,
+    Users, Package, MapPin, Layers, ShieldAlert, Thermometer, CheckCircle, Tool, Info, UserCircle,
     Clock as StopClock, PlayCircle, User as StopUser, MapPin as StopMapPin, ArrowRight,
     AlertTriangle as StopAlert, UserMinus, Loader2
 } from 'lucide-react';
@@ -224,6 +224,21 @@ export function AmbulanceCard({ ambulance, onClose }: AmbulanceCardProps) {
                 <h4 className="font-semibold text-md text-secondary mb-1">Equipamiento Especial</h4>
                 <DetailItem icon={Package} label="Dotación" value={specialEquipmentLabels || 'Ninguno especificado'} />
             </>
+        )}
+
+        {ambulance.personnel && ambulance.personnel.length > 0 && (
+          <>
+            <div className="border-t my-3"></div>
+            <h4 className="font-semibold text-md text-secondary mb-1">Personal Asignado</h4>
+            <ul className="list-none space-y-1">
+              {ambulance.personnel.map((person, index) => (
+                <li key={index} className="flex items-center text-sm">
+                  <UserCircle className="h-4 w-4 mr-2 text-muted-foreground" />
+                  <span className="text-foreground">{person}</span>
+                </li>
+              ))}
+            </ul>
+          </>
         )}
 
         {ambulance.notes && (

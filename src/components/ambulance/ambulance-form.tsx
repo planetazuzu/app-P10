@@ -53,6 +53,15 @@ export const AmbulanceForm = ({
   onFieldChange,
   onSpecialEquipmentToggle,
 }: AmbulanceFormProps) => {
+  
+  const handlePersonnelChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+    const personnelArray = event.target.value
+      .split('\n')
+      .map(p => p.trim())
+      .filter(p => p !== '');
+    onFieldChange("personnel", personnelArray);
+  };
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
       <div className="space-y-2">
@@ -248,6 +257,18 @@ export const AmbulanceForm = ({
             </div>
         </div>
       </div>
+
+      <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-4 mt-4">
+        <Label htmlFor="personnel" className="font-semibold">Personal Asignado</Label>
+        <Textarea
+          id="personnel"
+          placeholder="Listar personal, un miembro por línea (Ej: Conductor TES, Enfermero/a DUE)."
+          value={ambulance.personnel?.join('\n') || ""}
+          onChange={handlePersonnelChange}
+          rows={3}
+        />
+        <p className="text-xs text-muted-foreground">Indique los roles o nombres del personal asignado a esta unidad, uno por línea.</p>
+      </div>
       
       <div className="col-span-1 md:col-span-2 space-y-2 border-t pt-4 mt-4">
         <Label htmlFor="notes" className="font-semibold">Notas internas</Label>
@@ -262,5 +283,3 @@ export const AmbulanceForm = ({
     </div>
   );
 };
-
-    

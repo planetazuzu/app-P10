@@ -100,6 +100,7 @@ export default function NewAmbulancePage() {
       allowsWalking: ambulance.allowsWalking === undefined ? true : ambulance.allowsWalking,
       walkingSeats: ambulance.walkingSeats || 0,
       specialEquipment: ambulance.specialEquipment || [],
+      personnel: ambulance.personnel || [], // Incluir nuevo campo personnel
       latitude: ambulance.latitude, // Puede ser undefined
       longitude: ambulance.longitude, // Puede ser undefined
       currentPatients: ambulance.currentPatients || 0,

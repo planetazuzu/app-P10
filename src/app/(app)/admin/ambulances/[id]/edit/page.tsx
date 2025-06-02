@@ -109,7 +109,14 @@ export default function EditAmbulancePage() {
     
     // Construir el payload para la API. No enviar 'id' en el cuerpo.
     const { id, ...dataToUpdate } = ambulance;
-    const updatedAmbulance = await updateAmbulanceAPI(ambulance.id, dataToUpdate as Omit<Ambulance, 'id'>);
+    // Ensure personnel is an array, even if it's empty
+    const payloadWithPersonnel = {
+      ...dataToUpdate,
+      personnel: ambulance.personnel || [],
+    };
+
+    const updatedAmbulance = await updateAmbulanceAPI(ambulance.id, payloadWithPersonnel as Omit<Ambulance, 'id'>);
+
 
     if (updatedAmbulance) {
         toast({
