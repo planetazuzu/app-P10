@@ -77,14 +77,17 @@ export default function LoginPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center">
+    <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
+      {/* Main Title */}
+      <div className="text-center mb-10">
+        <h1 className="text-3xl font-bold text-secondary">Gestión de Usuarios y Flota</h1>
+      </div>
+      
       {/* Main Content - Centered */}
-      <main className="flex flex-grow items-center justify-center py-12 px-4 sm:px-6 lg:px-8 w-full">
+      <main className="flex flex-col items-center w-full">
         <Card className="w-full max-w-md shadow-xl">
-          <CardHeader className="text-center"> {/* Centered header content */}
-            <Link href="/" passHref className="mx-auto mb-4">
-                <Icons.Logo className="h-10 w-10 text-primary" data-ai-hint="logo company"/>
-            </Link>
+          <CardHeader className="text-center">
+            {/* Logo removed from here */}
             <CardTitle className="text-2xl font-bold text-secondary">Iniciar sesión</CardTitle>
             <CardDescription>Ingresa tus credenciales para acceder a AmbulLink</CardDescription>
           </CardHeader>
@@ -134,7 +137,7 @@ export default function LoginPage() {
           </CardContent>
           <CardFooter className="flex-col items-start pt-6 mt-6 border-t">
             <p className="text-xs text-muted-foreground mb-3">Cuentas de prueba (usar contraseña: 123456)</p>
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full"> {/* Changed to 1 column on small screens */}
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 w-full">
               {demoAccounts.map(acc => (
                 <Button 
                   key={acc.email} 
