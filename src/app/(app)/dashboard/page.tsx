@@ -1,14 +1,14 @@
 
 'use client';
 
-import React from 'react'; // Added React import
+import React from 'react'; 
 import { useAuth } from '@/hooks/use-auth';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Icons } from '@/components/icons';
 import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, Legend, ResponsiveContainer } from 'recharts';
-import { Clock, CheckCircle, AlertTriangle, Users, Ambulance, Waypoints, Settings as SettingsIcon } from 'lucide-react'; // Explicit icons for KPIs
+import { Clock, CheckCircle, AlertTriangle, Users, Ambulance, Waypoints, Settings as SettingsIcon, ListChecks } from 'lucide-react';
 
 
 // Componente de tarjeta KPI adaptado para el nuevo diseño
@@ -73,9 +73,9 @@ export default function DashboardPage() {
     }
     if (user.role === 'ambulancia') {
       return {
-        assignedServices: 5, // Example
-        nextStopTime: '10:30 AM',
-        activeRouteId: 'LOTE-ABC-123',
+        assignedServices: stats.assignedServices || 5, // Example
+        nextStopTime: stats.nextStopTime || '10:30 AM',
+        activeRouteId: stats.activeRouteId || 'lote-demo-123',
       };
     }
     // Default for admin, hospital, centroCoordinador
@@ -103,35 +103,57 @@ export default function DashboardPage() {
       
       {/* KPI Section */}
       <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-6">
-        <KpiCard
-          title="Solicitudes Pendientes"
-          value={stats.pendingRequests}
-          description="Esperando asignación"
-          icon={<Clock />}
-          iconColor="text-yellow-500"
-        />
-        <KpiCard
-          title="En Proceso"
-          value={stats.inProgressRequests}
-          description="Asignadas y en ruta"
-          icon={<Icons.SmartDispatch />} // Using Zap for "in process"
-          iconColor="text-blue-500"
-        />
-        <KpiCard
-          title="Completadas"
-          value={stats.completedRequests}
-          description="Finalizadas correctamente"
-          icon={<CheckCircle />}
-          iconColor="text-green-500"
-        />
-        {isProviderRole && !isAdminOrCoordinator && ( // Specific for Hospital
-             <KpiCard
-                title="Ambulancias Activas"
-                value={stats.activeAmbulances || 0}
-                description="Disponibles o en servicio"
-                icon={<Ambulance />}
-                iconColor="text-primary"
+        {user.role === 'ambulancia' ? (
+          <>
+            <KpiCard
+              title="Servicios Asignados Hoy"
+              value={stats.assignedServices || 0}
+              description="Servicios en tu ruta actual"
+              icon={<Icons.ClipboardList />}
+              iconColor="text-blue-500"
             />
+            <KpiCard
+              title="Próxima Parada (Estimada)"
+              value={stats.nextStopTime || 'N/A'}
+              description="Hora estimada para tu siguiente parada"
+              icon={<Clock />}
+              iconColor="text-orange-500"
+            />
+            {/* Podemos añadir una tercera tarjeta aquí si es relevante, o dejarla con dos más anchas si usamos lg:grid-cols-2 */}
+          </>
+        ) : (
+          <>
+            <KpiCard
+              title="Solicitudes Pendientes"
+              value={stats.pendingRequests}
+              description="Esperando asignación"
+              icon={<Clock />}
+              iconColor="text-yellow-500"
+            />
+            <KpiCard
+              title="En Proceso"
+              value={stats.inProgressRequests}
+              description="Asignadas y en ruta"
+              icon={<Icons.SmartDispatch />} 
+              iconColor="text-blue-500"
+            />
+            <KpiCard
+              title="Completadas"
+              value={stats.completedRequests}
+              description="Finalizadas correctamente"
+              icon={<CheckCircle />}
+              iconColor="text-green-500"
+            />
+            {isProviderRole && !isAdminOrCoordinator && ( // Specific for Hospital
+                <KpiCard
+                    title="Ambulancias Activas"
+                    value={stats.activeAmbulances || 0}
+                    description="Disponibles o en servicio"
+                    icon={<Ambulance />}
+                    iconColor="text-primary"
+                />
+            )}
+          </>
         )}
       </div>
 
@@ -141,9 +163,9 @@ export default function DashboardPage() {
             <ActionCard 
                 title="Nueva Solicitud"
                 description="Crear una nueva solicitud de transporte sanitario."
-                link="/request-management/new-programmed" // Default to programmed for general new request
+                link="/request-management/new-programmed" 
                 linkText="Crear Solicitud"
-                buttonVariant="default" // Green button
+                buttonVariant="default" 
             />
         )}
          {(user.role === 'individual' || isProviderRole) && (
@@ -152,7 +174,7 @@ export default function DashboardPage() {
                 description="Ver y gestionar todas las solicitudes de transporte."
                 link="/request-management"
                 linkText="Ver Solicitudes"
-                buttonVariant="outline" // White button
+                buttonVariant="outline" 
             />
         )}
         <ActionCard 
@@ -230,10 +252,10 @@ export default function DashboardPage() {
                   contentStyle={{
                     backgroundColor: 'hsl(var(--card))',
                     borderColor: 'hsl(var(--border))',
-                    borderRadius: 'var(--radius-sm)', // Consistent radius
+                    borderRadius: 'var(--radius-sm)', 
                   }}
-                  labelStyle={{ color: 'hsl(var(--foreground))' }} // Ensure text visibility
-                  itemStyle={{ color: 'hsl(var(--foreground))' }}  // Ensure text visibility
+                  labelStyle={{ color: 'hsl(var(--foreground))' }} 
+                  itemStyle={{ color: 'hsl(var(--foreground))' }}  
                 />
                 <Legend wrapperStyle={{ fontSize: '12px' }} />
                 <Bar dataKey="Solicitudes" fill="hsl(var(--primary))" radius={[3, 3, 0, 0]} name="Total Solicitudes" />
