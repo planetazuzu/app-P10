@@ -26,17 +26,21 @@ const KpiCard = ({ title, value, description, icon, iconColor }: { title: string
 );
 
 // Tarjeta de acción rápida adaptada
-const ActionCard = ({ title, description, link, linkText, buttonVariant = "default" as "default" | "outline" }: { title: string, description: string, link: string, linkText: string, buttonVariant?: "default" | "outline" }) => (
-  <Card className="rioja-card p-6 flex flex-col"> {/* Generous padding for action cards */}
-    <CardHeader className="p-0 mb-3">
-      <CardTitle className="section-title">{title}</CardTitle>
+const ActionCard = ({ title, description, link, linkText, icon: IconComponent, buttonVariant = "default" as "default" | "outline" | "secondary" | "ghost" | "link" }: { title: string, description: string, link: string, linkText: string, icon: React.ElementType, buttonVariant?: "default" | "outline" | "secondary" | "ghost" | "link" }) => (
+  <Card className="bg-secondary text-secondary-foreground p-6 flex flex-col shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-200">
+    <CardHeader className="p-0 mb-3 flex-row items-center gap-3">
+      <IconComponent className="h-7 w-7 text-primary" />
+      <CardTitle className="text-xl font-semibold text-primary-foreground">{title}</CardTitle>
     </CardHeader>
     <CardContent className="p-0 flex-grow">
-      <p className="text-sm text-muted-foreground mb-4">{description}</p>
+      <p className="text-sm text-sidebar-foreground/80 mb-4">{description}</p>
     </CardContent>
-    <div className="mt-auto pt-3"> {/* Pushes button to bottom */}
+    <div className="mt-auto pt-3"> 
       <Link href={link} passHref>
-        <Button variant={buttonVariant} className="w-full"> 
+        <Button 
+          variant={buttonVariant === "default" ? "outline" : buttonVariant} 
+          className="w-full bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
+        > 
           {linkText}
         </Button>
       </Link>
@@ -64,27 +68,23 @@ export default function DashboardPage() {
 
   // Simulate dynamic data based on user for KPIs
   const getKpiStats = () => {
-    if (user.role === 'individual') {
-      return {
-        pendingRequests: 1,
-        inProgressRequests: 0,
-        completedRequests: 3,
-      };
-    }
     if (user.role === 'ambulancia') {
       return {
-        assignedServices: 5, // Simulated value
-        nextStopTime: '10:30 AM', // Simulated value
-        activeRouteId: 'lote-demo-123', // Simulated value for navigation
+        assignedServices: 5, 
+        nextStopTime: '10:30 AM', 
+        activeRouteId: 'lote-demo-123',
+        pendingRequests: 0,      // Not relevant for ambulance
+        inProgressRequests: 0,   // Not relevant for ambulance
+        completedRequests: 0,    // Not relevant for ambulance
       };
     }
-    // Default for admin, hospital, centroCoordinador
+    // Default for admin, hospital, centroCoordinador, individual
     return {
-      pendingRequests: 8,
-      inProgressRequests: 4,
-      completedRequests: 125,
+      pendingRequests: user.role === 'individual' ? 1 : 8,
+      inProgressRequests: user.role === 'individual' ? 0 : 4,
+      completedRequests: user.role === 'individual' ? 3 : 125,
       activeAmbulances: 15,
-      activeUsers: 120, // Only for admin/coord
+      activeUsers: 120, 
     };
   };
   const stats = getKpiStats();
@@ -119,7 +119,6 @@ export default function DashboardPage() {
               icon={<Clock />}
               iconColor="text-orange-500"
             />
-            {/* Podemos añadir una tercera tarjeta aquí si es relevante, o dejarla con dos más anchas si usamos lg:grid-cols-2 */}
           </>
         ) : (
           <>
@@ -165,7 +164,8 @@ export default function DashboardPage() {
                 description="Crear una nueva solicitud de transporte sanitario."
                 link="/request-management/new-programmed" 
                 linkText="Crear Solicitud"
-                buttonVariant="default" 
+                icon={Icons.PlusCircle}
+                buttonVariant="outline" 
             />
         )}
          {(user.role === 'individual' || isProviderRole) && (
@@ -174,6 +174,7 @@ export default function DashboardPage() {
                 description="Ver y gestionar todas las solicitudes de transporte."
                 link="/request-management"
                 linkText="Ver Solicitudes"
+                icon={Icons.ListChecks}
                 buttonVariant="outline" 
             />
         )}
@@ -182,6 +183,7 @@ export default function DashboardPage() {
             description="Comunícate con los usuarios y el centro coordinador."
             link="/messages"
             linkText="Ver Mensajes"
+            icon={Icons.Messages}
             buttonVariant="outline"
         />
         {isAdminOrCoordinator && (
@@ -191,6 +193,7 @@ export default function DashboardPage() {
                 description="Gestionar los usuarios del sistema y sus roles."
                 link="/admin/user-management"
                 linkText="Gestionar Usuarios"
+                icon={Icons.Users}
                 buttonVariant="outline"
             />
             <ActionCard
@@ -198,6 +201,7 @@ export default function DashboardPage() {
                 description="Gestionar la flota de vehículos disponibles."
                 link="/admin/ambulances"
                 linkText="Gestionar Ambulancias"
+                icon={Icons.Ambulance}
                 buttonVariant="outline"
             />
             <ActionCard
@@ -205,6 +209,7 @@ export default function DashboardPage() {
                 description="Crear, asignar y optimizar lotes de servicios."
                 link="/admin/lotes"
                 linkText="Gestionar Lotes"
+                icon={Icons.Waypoints}
                 buttonVariant="outline"
             />
             </>
@@ -215,6 +220,7 @@ export default function DashboardPage() {
                 description="Ver detalles y gestionar las paradas de tu ruta asignada."
                 link={`/driver/batch-view/${stats.activeRouteId || 'lote-demo-123'}`}
                 linkText="Ver Mi Ruta"
+                icon={Icons.Map}
                 buttonVariant="default"
             />
         )}
