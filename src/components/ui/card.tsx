@@ -24,7 +24,7 @@ const CardHeader = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex flex-col space-y-1.5 p-[var(--space-lg)]", className)} // Use --space-lg for padding (p-6 in new theme)
+    className={cn("flex flex-col space-y-1.5 p-[var(--space-md)]", className)} // Reducido de --space-lg a --space-md
     {...props}
   />
 ))
@@ -61,7 +61,7 @@ const CardContent = React.forwardRef<
   HTMLDivElement,
   React.HTMLAttributes<HTMLDivElement>
 >(({ className, ...props }, ref) => (
-  <div ref={ref} className={cn("p-[var(--space-lg)] pt-0", className)} {...props} />
+  <div ref={ref} className={cn("p-[var(--space-md)] pt-0", className)} {...props} /> // Reducido de --space-lg a --space-md
 ))
 CardContent.displayName = "CardContent"
 
@@ -71,7 +71,7 @@ const CardFooter = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("flex items-center p-[var(--space-lg)] pt-0", className)}
+    className={cn("flex items-center p-[var(--space-md)] pt-0", className)} // Reducido de --space-lg a --space-md
     {...props}
   />
 ))
