@@ -3,6 +3,7 @@
     import './globals.css';
     import { AuthProvider } from '@/context/auth-context';
     import { Toaster } from "@/components/ui/toaster";
+    import { ThemeProvider } from "next-themes";
 
     export const metadata: Metadata = {
       title: 'Gestión de Usuarios y Flota',
@@ -27,10 +28,17 @@
       return (
         <html lang="es" suppressHydrationWarning>
           <body className="antialiased">
-            <AuthProvider>
-              {children}
-              <Toaster />
-            </AuthProvider>
+            <ThemeProvider
+              attribute="class"
+              defaultTheme="system"
+              enableSystem
+              disableTransitionOnChange
+            >
+              <AuthProvider>
+                {children}
+                <Toaster />
+              </AuthProvider>
+            </ThemeProvider>
           </body>
         </html>
       );

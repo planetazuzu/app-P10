@@ -19,6 +19,7 @@ import type { UserRole } from '@/types';
 import Link from 'next/link';
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
+import { ThemeToggle } from "./ThemeToggle"; // Import ThemeToggle
 
 const translateUserRole = (role: UserRole): string => {
   switch (role) {
@@ -119,6 +120,7 @@ export function Header() {
                       onSelect={(e) => {
                         e.preventDefault(); 
                         handleMarkAsRead(notif.id);
+                        if (notif.link) router.push(notif.link); // Add router and import useRouter if you want to navigate
                       }}
                     >
                       <div className="flex-shrink-0 mt-0.5">{React.cloneElement(notif.icon as React.ReactElement, { className: "h-5 w-5"})}</div>
@@ -141,6 +143,8 @@ export function Header() {
                  )}
               </DropdownMenuContent>
             </DropdownMenu>
+
+            <ThemeToggle /> {/* Added ThemeToggle component here */}
 
             <div className="text-right hidden md:block">
               <p className="font-semibold text-sm text-secondary">{user.name}</p> {/* User name color */}
