@@ -30,67 +30,65 @@ interface NavItem {
 }
 
 const navItems: NavItem[] = [
-  { title: 'Panel', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
-  { title: 'Seguimiento Ambulancias', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital', 'centroCoordinador'] },
-  { title: 'Despacho Inteligente IA', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital', 'centroCoordinador'] },
+  { title: 'Panel Principal', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
+  { title: 'Seguimiento Flota', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital', 'centroCoordinador'] },
+  { title: 'Despacho IA', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital', 'centroCoordinador'] },
   {
-    title: 'Gestión Solicitudes',
+    title: 'Solicitudes',
     href: '/request-management',
-    icon: 'RequestManagement',
+    icon: 'ListChecks',
     roles: ['admin', 'hospital', 'individual', 'centroCoordinador'],
     submenu: [
-        { title: 'Ver Solicitudes', href: '/request-management', icon: 'ListChecks', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'], exactMatch: true },
-        { title: 'Nueva Solicitud (Urgente)', href: '/request-management/new', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
-        { title: 'Nueva Solicitud (Programada)', href: '/request-management/new-programmed', icon: 'RequestManagement', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
-        { title: 'Nueva Solicitud (Avanzada)', href: '/request-management/new-advanced', icon: 'RequestManagement', roles: ['admin', 'hospital', 'centroCoordinador'] },
+        { title: 'Nueva Urgente', href: '/request-management/new', icon: 'AlertTriangle', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
+        { title: 'Nueva Programada', href: '/request-management/new-programmed', icon: 'CalendarDays', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
+        { title: 'Nueva Avanzada', href: '/request-management/new-advanced', icon: 'Settings', roles: ['admin', 'hospital', 'centroCoordinador'] },
     ]
   },
-  { title: 'Mensajes', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
+  { title: 'Mensajería', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
   {
-    title: 'Mi Ruta de Hoy', 
-    href: '/driver/batch-view/lote-demo-123', 
-    icon: 'MapIcon', 
+    title: 'Mi Ruta Asignada',
+    href: '/driver/batch-view/lote-demo-123',
+    icon: 'Waypoints',
     roles: ['equipoMovil'],
   },
   {
-    title: 'Admin',
+    title: 'Administración',
     href: '/admin',
     icon: 'ShieldCheck',
     roles: ['admin', 'centroCoordinador'],
     submenu: [
-        { title: 'Panel Admin', href: '/admin', icon: 'ShieldCheck', roles: ['admin', 'centroCoordinador'], exactMatch: true },
-        { 
-          title: 'Gestión Usuarios', 
-          href: '/admin/user-management', 
-          icon: 'Users', 
+        {
+          title: 'Usuarios',
+          href: '/admin/user-management',
+          icon: 'Users',
           roles: ['admin', 'centroCoordinador'],
           submenu: [
-            { title: 'Listar Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin', 'centroCoordinador'], exactMatch: true },
+            { title: 'Ver Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin', 'centroCoordinador'], exactMatch: true },
             { title: 'Añadir Usuario', href: '/admin/user-management/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
           ]
         },
         {
-          title: 'Gestión Ambulancias',
+          title: 'Ambulancias',
           href: '/admin/ambulances',
           icon: 'Ambulance',
           roles: ['admin', 'centroCoordinador'],
           submenu: [
-            { title: 'Listar Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin', 'centroCoordinador'], exactMatch: true },
+            { title: 'Ver Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin', 'centroCoordinador'], exactMatch: true },
             { title: 'Añadir Ambulancia', href: '/admin/ambulances/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
           ]
         },
-        { 
-          title: 'Gestión Lotes y Rutas', 
-          href: '/admin/lotes', 
-          icon: 'Waypoints', 
+        {
+          title: 'Lotes y Rutas',
+          href: '/admin/lotes',
+          icon: 'Waypoints',
           roles: ['admin', 'centroCoordinador'],
           submenu: [
-            { title: 'Listar Lotes', href: '/admin/lotes', icon: 'Waypoints', roles: ['admin', 'centroCoordinador'], exactMatch: true },
+            { title: 'Ver Lotes', href: '/admin/lotes', icon: 'Waypoints', roles: ['admin', 'centroCoordinador'], exactMatch: true },
             { title: 'Crear Lote', href: '/admin/lotes/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
-            { title: 'Planificar Servicios', href: '/admin/services-planning', icon: 'CalendarDays', roles: ['admin', 'centroCoordinador'] },
+            { title: 'Planificar Servicios Prog.', href: '/admin/services-planning', icon: 'CalendarDays', roles: ['admin', 'centroCoordinador'] },
           ]
         },
-        { title: 'Config. Sistema', href: '/admin/system-settings', icon: 'Settings', roles: ['admin', 'centroCoordinador'] },
+        { title: 'Configuración General', href: '/admin/system-settings', icon: 'Settings', roles: ['admin', 'centroCoordinador'] },
     ]
   },
 ];
@@ -139,6 +137,8 @@ export function SidebarNav() {
     
     let isActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
     
+    // If it's a parent item with a submenu, and it's not directly active,
+    // check if any of its children (or grandchildren) are active.
     if (item.submenu && item.submenu.length > 0 && !isActive) {
       const isChildActive = (childItems: NavItem[]): boolean => {
         return childItems.some(child => {
@@ -158,7 +158,11 @@ export function SidebarNav() {
     
     const buttonContent = (
         <>
-            <Icon className={cn("h-5 w-5", isActive && !hasSubmenu && !isSubmenuItem && !item.disabled ? "text-sidebar-primary-foreground" : (isActive && (isSubmenuItem || (hasSubmenu && isMenuOpen)) && !item.disabled ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground"))} />
+            <Icon className={cn(
+                "h-5 w-5",
+                isActive && !hasSubmenu && !isSubmenuItem && !item.disabled ? "text-sidebar-primary-foreground" : 
+                (isActive && (isSubmenuItem || (hasSubmenu && isMenuOpen)) && !item.disabled ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground")
+            )} />
             <span className={cn({"pl-1" : level > 0 && isSubmenuItem})}>{item.title}</span>
             {item.label && <span className="ml-auto text-xs">{item.label}</span>}
             {hasSubmenu && (
@@ -177,7 +181,8 @@ export function SidebarNav() {
             disabled={item.disabled}
             className={cn(
                 {"bg-sidebar-primary text-sidebar-primary-foreground hover:bg-sidebar-primary/90": effectiveIsActiveForButton && !hasSubmenu && !isSubmenuItem },
-                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isSubmenuItem},
+                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isSubmenuItem && hasSubmenu && isMenuOpen}, // Submenu parent active
+                {"bg-sidebar-accent text-sidebar-accent-foreground": effectiveIsActiveForButton && isSubmenuItem && !hasSubmenu}, // Submenu item active
                 {"hover:bg-sidebar-accent hover:text-sidebar-accent-foreground": !effectiveIsActiveForButton && !item.disabled },
                 item.disabled && "opacity-50 cursor-not-allowed hover:bg-transparent hover:text-sidebar-foreground" 
             )}
@@ -224,4 +229,3 @@ export function SidebarNav() {
     </SidebarMenu>
   );
 }
-

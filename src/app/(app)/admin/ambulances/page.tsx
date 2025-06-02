@@ -27,6 +27,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
+import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 
 const getAmbulanceTypeLabel = (type: AmbulanceType): string => {
   switch (type) {
@@ -191,8 +192,8 @@ export default function ManageAmbulancesPage() {
     <div className="rioja-container">
        <div className="flex items-center justify-between mb-6">
         <Breadcrumbs items={[
-            { label: 'Admin', href: '/admin' },
-            { label: 'Gestión de Ambulancias' }
+            { label: 'Administración', href: '/admin' },
+            { label: 'Ambulancias' }
         ]} />
       </div>
       <div className="flex items-center justify-between mb-6">

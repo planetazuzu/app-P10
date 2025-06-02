@@ -138,8 +138,8 @@ export default function ManageLotesPage() {
     <div className="rioja-container">
       <div className="flex items-center justify-between mb-6">
         <Breadcrumbs items={[
-            { label: 'Admin', href: '/admin' },
-            { label: 'Gestión de Lotes y Rutas' }
+            { label: 'Administración', href: '/admin' },
+            { label: 'Lotes y Rutas' }
         ]} />
       </div>
       <div className="flex items-center justify-between mb-6">

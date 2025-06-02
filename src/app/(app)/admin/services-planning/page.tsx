@@ -166,9 +166,9 @@ export default function ServicesPlanningPage() {
     <div className="rioja-container">
       <div className="mb-6">
         <Breadcrumbs items={[
-            { label: 'Admin', href: '/admin' },
-            { label: 'Gestión de Lotes', href: '/admin/lotes' },
-            { label: 'Planificación de Servicios' }
+            { label: 'Administración', href: '/admin' },
+            { label: 'Lotes y Rutas', href: '/admin/lotes' },
+            { label: 'Planificar Servicios Prog.' }
         ]} />
       </div>
       <div className="flex items-center justify-between mb-6">
