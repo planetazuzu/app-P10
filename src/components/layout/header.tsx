@@ -89,7 +89,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             
             <span className="font-bold text-secondary sm:inline-block text-lg"> 
-              Sistema de Gestión de Ambulancias
+              p10 - Gestión de usuarios y flota
             </span>
           </div>
         </div>
@@ -149,8 +149,7 @@ export function Header() {
             <ThemeToggle /> 
 
             <div className="text-right hidden md:block">
-              <p className="font-semibold text-sm text-secondary">{user.name}</p> 
-              <p className="text-xs text-muted-foreground">{translateUserRole(user.role)}</p>
+              <p className="font-semibold text-sm text-secondary">{user.name}</p>
             </div>
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
@@ -163,9 +162,14 @@ export function Header() {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent className="w-auto min-w-[10rem]" align="end" forceMount>
-                <DropdownMenuItem className="font-medium cursor-default focus:bg-transparent select-none !opacity-100">
-                  {user.name}
-                </DropdownMenuItem>
+                 <DropdownMenuLabel className="font-normal">
+                    <div className="flex flex-col space-y-1">
+                        <p className="text-sm font-medium leading-none">{user.name}</p>
+                        <p className="text-xs leading-none text-muted-foreground">
+                        {translateUserRole(user.role)}
+                        </p>
+                    </div>
+                </DropdownMenuLabel>
                 <DropdownMenuSeparator />
                 <DropdownMenuItem onClick={logout} className="cursor-pointer text-destructive focus:text-destructive hover:!bg-destructive/10 focus:bg-destructive/10">
                   <Icons.Logout className="mr-2 h-4 w-4" />

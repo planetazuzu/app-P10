@@ -57,8 +57,8 @@ export function AppSidebar() {
           <div className="flex items-center gap-2 group-data-[collapsible=icon]:hidden cursor-pointer">
             <Icons.Logo className="h-8 w-8 text-sidebar-foreground" data-ai-hint="logo company" />
             <div className="flex flex-col">
-              <h1 className="font-bold text-md text-sidebar-foreground leading-tight">Gestión</h1>
-              <h1 className="font-bold text-md text-sidebar-foreground leading-tight">Ambulancias</h1>
+              <h1 className="font-bold text-md text-sidebar-foreground leading-tight">p10</h1>
+              <h1 className="font-bold text-md text-sidebar-foreground leading-tight">Gestión Flota</h1>
             </div>
           </div>
         </Link>
@@ -81,7 +81,6 @@ export function AppSidebar() {
           </Avatar>
           <div className="flex flex-col group-data-[collapsible=icon]:hidden">
             <span className="text-sm font-semibold text-sidebar-foreground">{user.name}</span>
-            {/* Rol del usuario eliminado de aquí */}
           </div>
           <Button 
             variant="ghost" 

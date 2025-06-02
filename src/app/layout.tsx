@@ -6,8 +6,8 @@
     import { ThemeProvider } from "next-themes";
 
     export const metadata: Metadata = {
-      title: 'Gestión de Usuarios y Flota',
-      description: 'Plataforma para la Gestión de Usuarios y Flotas de Transporte',
+      title: 'p10 - Gestión de usuarios y flota',
+      description: 'p10 - Plataforma para la Gestión de Usuarios y Flotas de Transporte',
       manifest: '/manifest.json',
       // themeColor has been moved to generateViewport
       icons: {

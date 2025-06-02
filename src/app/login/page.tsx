@@ -80,16 +80,15 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
       {/* Main Title */}
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-secondary">Gestión de Usuarios y Flota</h1>
+        <h1 className="text-3xl font-bold text-secondary">p10 - Gestión de usuarios y flota</h1>
       </div>
       
       {/* Main Content - Centered */}
       <main className="flex flex-col items-center w-full">
         <Card className="w-full max-w-md shadow-xl">
           <CardHeader className="text-center">
-            {/* Logo removed from here */}
             <CardTitle className="text-2xl font-bold text-secondary">Iniciar sesión</CardTitle>
-            <CardDescription>Ingresa tus credenciales para acceder a AmbulLink</CardDescription>
+            <CardDescription>Ingresa tus credenciales para acceder a la plataforma</CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleLoginSubmit} className="space-y-6">

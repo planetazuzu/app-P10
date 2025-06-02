@@ -1,6 +1,6 @@
 
-# Gestión de Usuarios y Flota
+# p10 - Gestión de usuarios y flota
 
-Este es un proyecto Next.js para una plataforma de Gestión de Usuarios y Flota.
+Este es un proyecto Next.js para la plataforma p10 - Gestión de usuarios y flota.
 
 Para comenzar, echa un vistazo a `src/app/page.tsx`.
