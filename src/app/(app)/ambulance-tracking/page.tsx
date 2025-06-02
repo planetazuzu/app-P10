@@ -79,9 +79,6 @@ export default function AmbulanceTrackingPage() {
     setSelectedAmbulance(null);
   }
 
-  // This condition now primarily gates the very first render until client is mounted
-  // and the initial data load is complete. Subsequent updates from interval
-  // should not trigger this skeleton if isLoading is not set to true by them.
   if (!isMounted || (isLoading && allAmbulances.length === 0)) {
     return (
       <div>
@@ -103,7 +100,7 @@ export default function AmbulanceTrackingPage() {
     <div>
       <h1 className="page-title mb-8">Seguimiento de Ambulancias</h1>
       <div className="grid md:grid-cols-3 lg:grid-cols-4 gap-6 items-start">
-        <div className="md:col-span-2 lg:col-span-3 h-[calc(100vh-12rem)] min-h-[500px] rounded-lg overflow-hidden shadow-md">
+        <div className="md:col-span-2 lg:col-span-3 h-[50vh] md:h-[calc(100vh-12rem)] rounded-lg overflow-hidden shadow-md">
           <AmbulanceMap 
             ambulances={filteredAmbulances} 
             selectedAmbulance={selectedAmbulance}
