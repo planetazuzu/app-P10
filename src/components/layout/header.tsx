@@ -20,7 +20,7 @@ import Link from 'next/link';
 import React, { useState } from 'react';
 import { cn } from '@/lib/utils';
 import { ThemeToggle } from "./ThemeToggle"; 
-import { useRouter } from 'next/navigation'; // Added useRouter
+import { useRouter } from 'next/navigation'; 
 
 const translateUserRole = (role: UserRole): string => {
   switch (role) {
@@ -61,7 +61,7 @@ export function Header() {
   const { user, logout } = useAuth();
   const { isMobile } = useSidebar(); 
   const [notifications, setNotifications] = useState<MockNotification[]>(mockNotificationsData);
-  const router = useRouter(); // Initialize router
+  const router = useRouter(); 
 
   const unreadCount = notifications.filter(n => !n.read).length;
 
@@ -89,7 +89,7 @@ export function Header() {
           <div className="flex items-center gap-2">
             
             <span className="font-bold text-secondary sm:inline-block text-lg"> 
-              p10 - Gestión de usuarios y flota
+              P10 - Gestión de usuarios y flota
             </span>
           </div>
         </div>

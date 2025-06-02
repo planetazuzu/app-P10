@@ -7,8 +7,8 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { useAuth } from '@/hooks/use-auth';
 import { MOCK_USERS } from '@/lib/auth';
-import { Globe, ArrowRight } from 'lucide-react'; // Globe might be replaced by Icons.Logo
-import { Icons } from '@/components/icons'; // Assuming Icons.Logo is the ambulance+plus icon
+import { ArrowRight } from 'lucide-react'; 
+import { Icons } from '@/components/icons'; 
 import { useRouter } from 'next/navigation';
 import React, { useState, useEffect } from 'react';
 import { useToast } from "@/hooks/use-toast";
@@ -80,7 +80,7 @@ export default function LoginPage() {
     <div className="min-h-screen bg-background text-foreground flex flex-col items-center justify-center p-4">
       {/* Main Title */}
       <div className="text-center mb-10">
-        <h1 className="text-3xl font-bold text-secondary">p10 - Gestión de usuarios y flota</h1>
+        <h1 className="text-3xl font-bold text-secondary">P10 - Gestión de usuarios y flota</h1>
       </div>
       
       {/* Main Content - Centered */}
