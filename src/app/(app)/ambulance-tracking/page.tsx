@@ -32,8 +32,10 @@ export default function AmbulanceTrackingPage() {
   const [isMounted, setIsMounted] = useState(false);
   const { toast } = useToast();
 
-  const fetchData = useCallback(async () => {
-    setIsLoading(true);
+  const fetchData = useCallback(async (isInitialLoad: boolean = false) => {
+    if (isInitialLoad) {
+      setIsLoading(true);
+    }
     try {
       const data = await getAmbulances();
       setAllAmbulances(data);
@@ -42,16 +44,18 @@ export default function AmbulanceTrackingPage() {
       toast({ title: "Error de Carga", description: "No se pudieron cargar las ambulancias desde la API.", variant: "destructive" });
       setAllAmbulances([]);
     }
-    setIsLoading(false);
-  }, [toast]);
+    if (isInitialLoad) {
+      setIsLoading(false);
+    }
+  }, [toast, setIsLoading, setAllAmbulances]);
 
   useEffect(() => {
     setIsMounted(true);
-    fetchData();
+    fetchData(true); // Indicate initial load
     
-    const intervalId = setInterval(fetchData, 30000); 
+    const intervalId = setInterval(() => fetchData(false), 30000); // Subsequent loads are not "initial"
     return () => clearInterval(intervalId);
-  }, [fetchData]);
+  }, [fetchData, setIsMounted]);
 
   useEffect(() => {
     let ambulances = allAmbulances;
@@ -75,6 +79,9 @@ export default function AmbulanceTrackingPage() {
     setSelectedAmbulance(null);
   }
 
+  // This condition now primarily gates the very first render until client is mounted
+  // and the initial data load is complete. Subsequent updates from interval
+  // should not trigger this skeleton if isLoading is not set to true by them.
   if (!isMounted || (isLoading && allAmbulances.length === 0)) {
     return (
       <div>
