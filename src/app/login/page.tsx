@@ -48,7 +48,7 @@ export default function LoginPage() {
     setPassword('123456'); 
     const success = await login(demoEmail);
     if (success) {
-      toast({ title: `Iniciando como ${demoEmail}...`, description: "¡Bienvenido!" });
+      toast({ title: `Iniciando como ${MOCK_USERS[demoEmail]?.name || demoEmail}...`, description: "¡Bienvenido!" });
     } else {
       // Should not happen with mock users, but good to have
       toast({ title: "Error de Cuenta Demo", description: "No se pudo iniciar sesión con la cuenta demo.", variant: "destructive" });
@@ -60,7 +60,8 @@ export default function LoginPage() {
     { label: 'Administrador', email: 'admin@gmr.com' },
     { label: 'Centro sanitario', email: 'hospital@gmr.com' },
     { label: 'Usuario particular', email: 'individual@gmr.com' },
-    { label: 'Empresa de ambulancias', email: 'coordinador@gmr.com' } // Using coordinador for "Empresa de ambulancias"
+    { label: 'Empresa de ambulancias', email: 'coordinador@gmr.com' },
+    { label: 'Ambulancia', email: 'vehiculo.AMB101@gmr.com' },
   ];
 
 
