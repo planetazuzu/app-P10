@@ -50,29 +50,18 @@ const otherSpecificUsers = [
 ].filter(Boolean);
 
 
-export let mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) => {
+export let mockRequests: AmbulanceRequest[] = Array.from({ length: 300 }, (_, i) => { // Increased from 15 to 300
   const baseLocation = { lat: 42.4659, lng: -2.4487 };
   const coords = getRandomCoords(baseLocation.lat, baseLocation.lng, 0.2);
-  const createdAt = new Date(Date.now() - Math.floor(Math.random() * 24 * 3 * 60 * 60 * 1000));
+  const createdAt = new Date(Date.now() - Math.floor(Math.random() * 72 * 60 * 60 * 1000)); // Within last 3 days
   const statusOptions: RequestStatus[] = ['pending', 'dispatched', 'on-scene', 'transporting', 'completed', 'cancelled'];
   const status = getRandomElement<RequestStatus>(statusOptions);
   let assignedAmbulanceId: string | undefined = undefined;
 
-  let assignedRequesterId: string;
-
-  if (individualUser && i < 3) {
-    assignedRequesterId = individualUser.id;
-  } else if (otherSpecificUsers.length > 0 && i < 3 + otherSpecificUsers.length) {
-    assignedRequesterId = otherSpecificUsers[(i - 3) % otherSpecificUsers.length]!.id;
-  } else {
-    let randomOtherUser = getRandomElement(mockUserValues.filter(u => u.id !== individualUser?.id && otherSpecificUsers.every(su => su!.id !== u.id) ));
-    if (!randomOtherUser && otherSpecificUsers.length > 0) {
-        randomOtherUser = getRandomElement(otherSpecificUsers)!;
-    } else if (!randomOtherUser) {
-        randomOtherUser = adminUser || hospitalUser || centroCoordinadorUser || mockUserValues[0];
-    }
-    assignedRequesterId = randomOtherUser.id;
-  }
+  // Distribute requesterId more evenly among all mock users
+  const allMockUsers = Object.values(MOCK_USERS);
+  const requester = allMockUsers.length > 0 ? allMockUsers[i % allMockUsers.length] : { id: 'fallback-user-id' }; // Fallback if MOCK_USERS is empty
+  const assignedRequesterId = requester.id;
 
   return {
     id: `req-${101 + i}-${Math.random().toString(36).substring(2, 7)}`,
@@ -86,7 +75,7 @@ export let mockRequests: AmbulanceRequest[] = Array.from({ length: 15 }, (_, i) 
     status,
     assignedAmbulanceId,
     createdAt: createdAt.toISOString(),
-    updatedAt: new Date(createdAt.getTime() + Math.floor(Math.random() * 60 * 60 * 1000)).toISOString(),
+    updatedAt: new Date(createdAt.getTime() + Math.floor(Math.random() * 60 * 60 * 1000)).toISOString(), // Updated within an hour of creation
     notes: Math.random() > 0.7 ? `Información adicional para la solicitud ${101+i}. Contactar antes de llegar.` : undefined,
     priority: getRandomElement<'high' | 'medium' | 'low'>(['high', 'medium', 'low']),
   };
