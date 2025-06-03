@@ -27,13 +27,13 @@ const KpiCard = ({ title, value, description, icon, iconColor }: { title: string
 
 // Tarjeta de acción rápida adaptada
 const ActionCard = ({ title, description, link, linkText, icon: IconComponent, buttonClassName = "btn-outline" }: { title: string, description: string, link: string, linkText: string, icon: React.ElementType, buttonClassName?: string }) => (
-  <Card className="rioja-card p-6 flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-200"> {/* Removed bg-secondary text-secondary-foreground, defaults to rioja-card */}
+  <Card className="rioja-card p-6 flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-200">
     <CardHeader className="p-0 mb-3 flex-row items-center gap-3">
-      <IconComponent className="h-7 w-7 text-primary" /> {/* Icon color is primary (green) */}
-      <CardTitle className="text-xl font-semibold text-primary-foreground">{title}</CardTitle> {/* Title text color is primary-foreground (dark) */}
+      <IconComponent className="h-7 w-7 text-primary" />
+      <CardTitle className="text-xl font-semibold text-card-foreground">{title}</CardTitle> {/* Changed to text-card-foreground */}
     </CardHeader>
     <CardContent className="p-0 flex-grow">
-      <p className="text-sm text-muted-foreground mb-4">{description}</p> {/* Description text color to muted-foreground */}
+      <p className="text-sm text-muted-foreground mb-4">{description}</p>
     </CardContent>
     <div className="mt-auto pt-3"> 
       <Link href={link} passHref>
