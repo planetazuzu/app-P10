@@ -17,7 +17,7 @@ interface StepProps {
 export default function Step3Locations({ formData, updateFormData, errors }: StepProps) {
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4 text-secondary">Ubicaciones</h2>
+      <h2 className="section-title mb-4">Ubicaciones</h2>
       <CardDescription className="mb-6">Especifique el origen y el destino del transporte. Los campos con * son obligatorios.</CardDescription>
       
       <div className="space-y-6">

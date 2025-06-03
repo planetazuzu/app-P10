@@ -170,19 +170,19 @@ export function AdvancedTransportForm() {
         </div>
         <div className="mt-8 flex justify-between pt-6 border-t">
           <Button
-            variant="outline"
+            className="btn-outline"
             onClick={handlePrevious}
             disabled={currentStep === 1 || isSubmitting}
           >
             Anterior
           </Button>
           {currentStep < steps.length && (
-            <Button onClick={handleNext} disabled={isSubmitting}>
+            <Button onClick={handleNext} disabled={isSubmitting} className="btn-primary">
               Siguiente
             </Button>
           )}
           {currentStep === steps.length && (
-            <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(formData).length === 0} className="bg-green-600 hover:bg-green-700 text-white">
+            <Button onClick={handleSubmit} disabled={isSubmitting || Object.keys(formData).length === 0} className="btn-primary">
               {isSubmitting ? 'Creando Solicitudes...' : 'Crear Solicitudes'}
             </Button>
           )}

@@ -1,4 +1,3 @@
-
 'use client';
 
 import React, { useEffect, useState } from 'react';
@@ -86,7 +85,7 @@ export default function EditRequestPage() {
       <div className="rioja-container text-center py-10">
         <p className="text-red-500 text-lg">No se pudo cargar la solicitud o no tiene permisos.</p>
          <Link href="/request-management" passHref>
-            <Button variant="outline" className="mt-4">Volver al listado</Button>
+            <Button className="btn-outline mt-4">Volver al listado</Button>
         </Link>
       </div>
     );

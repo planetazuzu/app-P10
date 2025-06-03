@@ -18,7 +18,7 @@ interface StepProps {
 export default function Step2Scheduling({ formData, updateFormData, errors }: StepProps) {
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4 text-secondary">Programación</h2>
+      <h2 className="section-title mb-4">Programación</h2>
       <CardDescription className="mb-6">Configure la recurrencia, fechas y horarios para los traslados. Los campos con * son obligatorios.</CardDescription>
       
       <div className="space-y-6">

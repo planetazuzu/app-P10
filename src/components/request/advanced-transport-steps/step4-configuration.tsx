@@ -41,7 +41,7 @@ export default function Step4Configuration({ formData, updateFormData, errors }:
 
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4 text-secondary">Configuración del Traslado</h2>
+      <h2 className="section-title mb-4">Configuración del Traslado</h2>
       <CardDescription className="mb-6">Seleccione el tipo de transporte, necesidades de movilidad y equipamiento adicional. Los campos con * son obligatorios.</CardDescription>
       
       <div className="space-y-6">

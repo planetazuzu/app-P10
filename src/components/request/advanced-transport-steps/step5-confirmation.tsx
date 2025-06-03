@@ -73,13 +73,13 @@ export default function Step5Confirmation({ formData }: StepProps) {
 
   return (
     <div>
-      <h2 className="text-xl font-semibold text-secondary">Confirmación</h2>
+      <h2 className="section-title">Confirmación</h2>
       <CardDescription className="mb-1">Revise los traslados que se generarán a partir de la información proporcionada. Pulse "Actualizar vista previa" si ha realizado cambios en pasos anteriores.</CardDescription>
       
       <Card className="mt-6 shadow-md">
         <CardHeader className="flex flex-row items-center justify-between pb-4">
           <CardTitle className="text-lg text-secondary">Vista previa de traslados</CardTitle>
-          <Button variant="outline" onClick={handleUpdatePreview} disabled={Object.keys(formData).length === 0}>Actualizar vista previa</Button>
+          <Button className="btn-outline" onClick={handleUpdatePreview} disabled={Object.keys(formData).length === 0}>Actualizar vista previa</Button>
         </CardHeader>
         <CardContent>
           {!previewGenerated && Object.keys(formData).length === 0 && (

@@ -17,7 +17,7 @@ interface StepProps {
 export default function Step1PatientInfo({ formData, updateFormData, errors }: StepProps) {
   return (
     <div>
-      <h2 className="text-xl font-semibold mb-4 text-secondary">Información del paciente</h2>
+      <h2 className="section-title mb-4">Información del paciente</h2>
       <CardDescription className="mb-6">Proporcione los datos del paciente y el tipo de servicio requerido. Los campos con * son obligatorios.</CardDescription>
       
       <div className="space-y-4">
