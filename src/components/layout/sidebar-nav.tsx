@@ -31,8 +31,8 @@ interface NavItem {
 
 const navItems: NavItem[] = [
   { title: 'Panel Principal', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
-  { title: 'Seguimiento Flota', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'hospital', 'centroCoordinador'] },
-  { title: 'Despacho IA', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'hospital', 'centroCoordinador'] },
+  { title: 'Seguimiento Flota', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'centroCoordinador'] },
+  { title: 'Despacho IA', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'centroCoordinador'] },
   {
     title: 'Solicitudes',
     href: '/request-management',
@@ -169,7 +169,7 @@ export function SidebarNav() {
                  (isActive && (isSubmenuItem || (hasSubmenu && isMenuOpen)) && !item.disabled ? "text-sidebar-accent-foreground" : "text-sidebar-foreground group-hover:text-sidebar-accent-foreground")
             )} />
             <span className={cn(
-                "inline-block truncate", // Added inline-block and truncate
+                "inline-block truncate", 
                 {"pl-1" : level > 0 && isSubmenuItem},
                 "group-data-[collapsible=icon]:hidden" 
             )}>{item.title}</span>
