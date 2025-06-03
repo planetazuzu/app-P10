@@ -27,13 +27,13 @@ const KpiCard = ({ title, value, description, icon, iconColor }: { title: string
 
 // Tarjeta de acción rápida adaptada
 const ActionCard = ({ title, description, link, linkText, icon: IconComponent, buttonClassName = "btn-outline" }: { title: string, description: string, link: string, linkText: string, icon: React.ElementType, buttonClassName?: string }) => (
-  <Card className="bg-secondary text-secondary-foreground p-6 flex flex-col shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-200">
+  <Card className="rioja-card p-6 flex flex-col shadow-lg hover:shadow-xl transition-shadow duration-200"> {/* Removed bg-secondary text-secondary-foreground, defaults to rioja-card */}
     <CardHeader className="p-0 mb-3 flex-row items-center gap-3">
-      <IconComponent className="h-7 w-7 text-primary" />
-      <CardTitle className="text-xl font-semibold text-primary-foreground">{title}</CardTitle>
+      <IconComponent className="h-7 w-7 text-primary" /> {/* Icon color is primary (green) */}
+      <CardTitle className="text-xl font-semibold text-primary-foreground">{title}</CardTitle> {/* Title text color is primary-foreground (dark) */}
     </CardHeader>
     <CardContent className="p-0 flex-grow">
-      <p className="text-sm text-sidebar-foreground/80 mb-4">{description}</p>
+      <p className="text-sm text-muted-foreground mb-4">{description}</p> {/* Description text color to muted-foreground */}
     </CardContent>
     <div className="mt-auto pt-3"> 
       <Link href={link} passHref>
@@ -164,7 +164,7 @@ export default function DashboardPage() {
                 link="/request-management/new-programmed" 
                 linkText="Crear Solicitud"
                 icon={Icons.PlusCircle}
-                buttonClassName="btn-outline" 
+                buttonClassName="btn-primary" 
             />
         )}
          {(user.role === 'individual' || isProviderRole) && (
@@ -193,7 +193,7 @@ export default function DashboardPage() {
                 link="/admin/user-management"
                 linkText="Gestionar Usuarios"
                 icon={Icons.Users}
-                buttonClassName="btn-outline"
+                buttonClassName="btn-secondary"
             />
             <ActionCard
                 title="Ambulancias"
@@ -201,7 +201,7 @@ export default function DashboardPage() {
                 link="/admin/ambulances"
                 linkText="Gestionar Ambulancias"
                 icon={Icons.Ambulance}
-                buttonClassName="btn-outline"
+                buttonClassName="btn-secondary"
             />
             <ActionCard
                 title="Lotes y Rutas"
@@ -209,7 +209,7 @@ export default function DashboardPage() {
                 link="/admin/lotes"
                 linkText="Gestionar Lotes"
                 icon={Icons.Waypoints}
-                buttonClassName="btn-outline"
+                buttonClassName="btn-secondary"
             />
             </>
         )}
@@ -228,7 +228,7 @@ export default function DashboardPage() {
 
       {/* Solicitudes Recientes Section (Simplified) */}
       { (isProviderRole || user.role === 'individual') && (
-      <Card>
+      <Card className="rioja-card">
         <CardHeader>
           <CardTitle>Solicitudes Recientes</CardTitle>
         </CardHeader>
@@ -243,7 +243,7 @@ export default function DashboardPage() {
 
       {/* Bar Chart - Kept for Admin/Coordinator roles */}
       {isAdminOrCoordinator && (
-        <Card className="mt-6">
+        <Card className="mt-6 rioja-card">
           <CardHeader>
             <CardTitle>Rendimiento (Últimos 6 Meses)</CardTitle>
           </CardHeader>
