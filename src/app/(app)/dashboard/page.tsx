@@ -72,16 +72,26 @@ export default function DashboardPage() {
         assignedServices: 5, 
         nextStopTime: '10:30 AM', 
         activeRouteId: 'lote-demo-123',
-        pendingRequests: 0,      // Not relevant for ambulance
-        inProgressRequests: 0,   // Not relevant for ambulance
-        completedRequests: 0,    // Not relevant for ambulance
       };
+    } else if (user.role === 'individual') {
+        return {
+            pendingRequests: 1,
+            inProgressRequests: 0,
+            completedRequests: 3,
+        };
+    } else if (user.role === 'hospital') {
+        return {
+            pendingRequests: 3, // Simula las solicitudes propias del hospital
+            inProgressRequests: 1,
+            completedRequests: 25,
+            // No activeAmbulances para el rol hospital
+        };
     }
-    // Default for admin, hospital, centroCoordinador, individual
+    // Default for admin, centroCoordinador
     return {
-      pendingRequests: user.role === 'individual' ? 1 : 8,
-      inProgressRequests: user.role === 'individual' ? 0 : 4,
-      completedRequests: user.role === 'individual' ? 3 : 125,
+      pendingRequests: 8,
+      inProgressRequests: 4,
+      completedRequests: 125,
       activeAmbulances: 15,
       activeUsers: 120, 
     };
@@ -123,29 +133,29 @@ export default function DashboardPage() {
           <>
             <KpiCard
               title="Solicitudes Pendientes"
-              value={stats.pendingRequests}
+              value={stats.pendingRequests || 0}
               description="Esperando asignación"
               icon={<Clock />}
               iconColor="text-yellow-500"
             />
             <KpiCard
               title="En Proceso"
-              value={stats.inProgressRequests}
+              value={stats.inProgressRequests || 0}
               description="Asignadas y en ruta"
               icon={<Icons.SmartDispatch />} 
               iconColor="text-blue-500"
             />
             <KpiCard
               title="Completadas"
-              value={stats.completedRequests}
+              value={stats.completedRequests || 0}
               description="Finalizadas correctamente"
               icon={<CheckCircle />}
               iconColor="text-green-500"
             />
-            {isProviderRole && !isAdminOrCoordinator && ( // Specific for Hospital
+            {isAdminOrCoordinator && stats.activeAmbulances && stats.activeAmbulances > 0 && (
                 <KpiCard
                     title="Ambulancias Activas"
-                    value={stats.activeAmbulances || 0}
+                    value={stats.activeAmbulances}
                     description="Disponibles o en servicio"
                     icon={<Ambulance />}
                     iconColor="text-primary"
