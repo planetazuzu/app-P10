@@ -28,7 +28,7 @@ export default function AdminPage() {
 
   if (authIsLoading || (!user || !['admin', 'centroCoordinador'].includes(user.role))) {
     return (
-      <div className="rioja-container flex items-center justify-center min-h-[calc(100vh-10rem)]">
+      <div className="flex items-center justify-center min-h-[calc(100vh-10rem)]">
         <Loader2 className="h-12 w-12 animate-spin text-primary" />
       </div>
     );
@@ -41,12 +41,12 @@ export default function AdminPage() {
         <CardHeader>
           <div className="flex items-center gap-2">
             <ShieldCheck className="h-7 w-7 text-primary" />
-            <CardTitle className="section-title">Administración del Sistema</CardTitle>
+            <CardTitle>Administración del Sistema</CardTitle>
           </div>
           <CardDescription>Gestionar usuarios, configuraciones del sistema, ambulancias, lotes, rutas y monitorear la salud de la aplicación.</CardDescription>
         </CardHeader>
         <CardContent className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
-          <Card className="card-stats border-secondary">
+          <Card> {/* Removed card-stats and border-secondary, will use default rioja-card style */}
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2"><Users className="text-secondary"/>Gestión de Usuarios</CardTitle>
             </CardHeader>
@@ -55,11 +55,11 @@ export default function AdminPage() {
                 Ver, agregar o modificar cuentas de usuario y roles.
               </p>
               <Link href="/admin/user-management" passHref>
-                <Button variant="secondary">Gestionar Usuarios</Button>
+                <Button className="btn-secondary">Gestionar Usuarios</Button>
               </Link>
             </CardContent>
           </Card>
-          <Card className="card-stats border-secondary">
+          <Card> {/* Removed card-stats and border-secondary */}
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2"><Ambulance className="text-secondary"/>Gestión de Ambulancias</CardTitle>
             </CardHeader>
@@ -68,11 +68,11 @@ export default function AdminPage() {
                 Añadir, ver y editar las unidades de ambulancia del sistema.
               </p>
               <Link href="/admin/ambulances" passHref>
-                 <Button variant="secondary">Gestionar Ambulancias</Button>
+                 <Button className="btn-secondary">Gestionar Ambulancias</Button>
               </Link>
             </CardContent>
           </Card>
-           <Card className="card-stats border-secondary">
+           <Card> {/* Removed card-stats and border-secondary */}
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2"><Waypoints className="text-secondary"/>Gestión de Lotes y Rutas</CardTitle>
             </CardHeader>
@@ -81,11 +81,11 @@ export default function AdminPage() {
                 Crear y asignar lotes de servicios programados, y optimizar rutas.
               </p>
               <Link href="/admin/lotes" passHref>
-                 <Button variant="secondary">Gestionar Lotes</Button>
+                 <Button className="btn-secondary">Gestionar Lotes</Button>
               </Link>
             </CardContent>
           </Card>
-          <Card className="card-stats border-secondary">
+          <Card> {/* Removed card-stats and border-secondary */}
             <CardHeader>
               <CardTitle className="text-lg flex items-center gap-2"><Settings className="text-secondary"/>Configuración del Sistema</CardTitle>
             </CardHeader>
@@ -94,7 +94,7 @@ export default function AdminPage() {
                 Configurar parámetros de la aplicación e integraciones. (Funcionalidad en desarrollo)
               </p>
                <Link href="/admin/system-settings" passHref>
-                <Button variant="outline" disabled>Configurar Ajustes</Button>
+                <Button className="btn-outline" disabled>Configurar Ajustes</Button>
               </Link>
             </CardContent>
           </Card>
@@ -103,5 +103,3 @@ export default function AdminPage() {
     </div>
   );
 }
-
-    

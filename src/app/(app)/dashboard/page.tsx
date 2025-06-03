@@ -13,7 +13,7 @@ import { Clock, CheckCircle, AlertTriangle, Users, Ambulance, Waypoints, Setting
 
 // Componente de tarjeta KPI adaptado para el nuevo diseño
 const KpiCard = ({ title, value, description, icon, iconColor }: { title: string, value: string | number, description?: string, icon: React.ReactNode, iconColor?: string }) => (
-  <Card className="rioja-card p-4 flex flex-col justify-between"> {/* Adjusted padding for KPI cards */}
+  <Card className="card-stats p-4 flex flex-col justify-between"> {/* Use card-stats and adjust padding */}
     <div>
       <div className="flex flex-row items-center justify-between space-y-0 pb-1">
         <h3 className="kpi-title">{title}</h3>
@@ -26,7 +26,7 @@ const KpiCard = ({ title, value, description, icon, iconColor }: { title: string
 );
 
 // Tarjeta de acción rápida adaptada
-const ActionCard = ({ title, description, link, linkText, icon: IconComponent, buttonVariant = "default" as "default" | "outline" | "secondary" | "ghost" | "link" }: { title: string, description: string, link: string, linkText: string, icon: React.ElementType, buttonVariant?: "default" | "outline" | "secondary" | "ghost" | "link" }) => (
+const ActionCard = ({ title, description, link, linkText, icon: IconComponent, buttonClassName = "btn-outline" }: { title: string, description: string, link: string, linkText: string, icon: React.ElementType, buttonClassName?: string }) => (
   <Card className="bg-secondary text-secondary-foreground p-6 flex flex-col shadow-lg rounded-lg hover:shadow-xl transition-shadow duration-200">
     <CardHeader className="p-0 mb-3 flex-row items-center gap-3">
       <IconComponent className="h-7 w-7 text-primary" />
@@ -38,8 +38,7 @@ const ActionCard = ({ title, description, link, linkText, icon: IconComponent, b
     <div className="mt-auto pt-3"> 
       <Link href={link} passHref>
         <Button 
-          variant={buttonVariant === "default" ? "outline" : buttonVariant} 
-          className="w-full bg-sidebar-accent text-sidebar-accent-foreground hover:bg-sidebar-accent/80"
+          className={buttonClassName}
         > 
           {linkText}
         </Button>
@@ -165,7 +164,7 @@ export default function DashboardPage() {
                 link="/request-management/new-programmed" 
                 linkText="Crear Solicitud"
                 icon={Icons.PlusCircle}
-                buttonVariant="outline" 
+                buttonClassName="btn-outline" 
             />
         )}
          {(user.role === 'individual' || isProviderRole) && (
@@ -175,7 +174,7 @@ export default function DashboardPage() {
                 link="/request-management"
                 linkText="Ver Solicitudes"
                 icon={Icons.ListChecks}
-                buttonVariant="outline" 
+                buttonClassName="btn-outline" 
             />
         )}
         <ActionCard 
@@ -184,7 +183,7 @@ export default function DashboardPage() {
             link="/messages"
             linkText="Ver Mensajes"
             icon={Icons.Messages}
-            buttonVariant="outline"
+            buttonClassName="btn-outline"
         />
         {isAdminOrCoordinator && (
             <>
@@ -194,7 +193,7 @@ export default function DashboardPage() {
                 link="/admin/user-management"
                 linkText="Gestionar Usuarios"
                 icon={Icons.Users}
-                buttonVariant="outline"
+                buttonClassName="btn-outline"
             />
             <ActionCard
                 title="Ambulancias"
@@ -202,7 +201,7 @@ export default function DashboardPage() {
                 link="/admin/ambulances"
                 linkText="Gestionar Ambulancias"
                 icon={Icons.Ambulance}
-                buttonVariant="outline"
+                buttonClassName="btn-outline"
             />
             <ActionCard
                 title="Lotes y Rutas"
@@ -210,7 +209,7 @@ export default function DashboardPage() {
                 link="/admin/lotes"
                 linkText="Gestionar Lotes"
                 icon={Icons.Waypoints}
-                buttonVariant="outline"
+                buttonClassName="btn-outline"
             />
             </>
         )}
@@ -221,7 +220,7 @@ export default function DashboardPage() {
                 link={`/driver/batch-view/${stats.activeRouteId || 'lote-demo-123'}`}
                 linkText="Ver Mi Ruta"
                 icon={Icons.Map}
-                buttonVariant="default"
+                buttonClassName="btn-primary"
             />
         )}
       </div>
@@ -229,14 +228,14 @@ export default function DashboardPage() {
 
       {/* Solicitudes Recientes Section (Simplified) */}
       { (isProviderRole || user.role === 'individual') && (
-      <Card className="rioja-card">
+      <Card>
         <CardHeader>
-          <CardTitle className="section-title">Solicitudes Recientes</CardTitle>
+          <CardTitle>Solicitudes Recientes</CardTitle>
         </CardHeader>
         <CardContent className="text-center py-8">
           <p className="text-muted-foreground mb-4">No hay solicitudes recientes para mostrar. (Simulado)</p>
           <Link href="/request-management" passHref>
-            <Button variant="outline">Ver todas las solicitudes</Button>
+            <Button className="btn-outline">Ver todas las solicitudes</Button>
           </Link>
         </CardContent>
       </Card>
@@ -244,9 +243,9 @@ export default function DashboardPage() {
 
       {/* Bar Chart - Kept for Admin/Coordinator roles */}
       {isAdminOrCoordinator && (
-        <Card className="rioja-card mt-6">
+        <Card className="mt-6">
           <CardHeader>
-            <CardTitle className="section-title">Rendimiento (Últimos 6 Meses)</CardTitle>
+            <CardTitle>Rendimiento (Últimos 6 Meses)</CardTitle>
           </CardHeader>
           <CardContent className="h-[300px] p-0">
             <ResponsiveContainer width="100%" height="100%">
