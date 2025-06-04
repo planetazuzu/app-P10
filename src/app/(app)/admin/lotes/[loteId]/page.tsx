@@ -14,7 +14,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/com
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { ArrowLeft, Loader2, Waypoints, AlertTriangle, Ambulance as AmbulanceIcon, User, Clock, MapPin, Edit2, Unlink, ListPlus } from 'lucide-react';
+import { ArrowLeft, Loader2, Waypoints, AlertTriangle, Ambulance as AmbulanceIcon, User, Clock, MapPin, Edit2, Unlink, ListPlus, Shuffle } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { format, parseISO } from 'date-fns';
 import { es } from 'date-fns/locale';
@@ -225,6 +225,16 @@ export default function LoteDetailPage() {
     }
     setIsLoadingData(false);
     return success;
+  };
+
+  const handleReassignService = (serviceId: string, patientName: string) => {
+    // TODO: Open ReassignServiceModal here
+    toast({
+        title: "Reasignar Servicio (Próximamente)",
+        description: `Se reasignará el servicio ${serviceId.substring(0,8)} para ${patientName}. Modal pendiente de implementación.`,
+        duration: 5000,
+    });
+    console.log(`Reasignar servicio: ${serviceId}, Lote: ${loteId}`);
   };
 
   if (authIsLoading || isLoadingData) {
@@ -451,7 +461,10 @@ export default function LoteDetailPage() {
                                 {translateParadaStatus(parada.estado)}
                               </Badge>
                             </TableCell>
-                            <TableCell className="text-right">
+                            <TableCell className="text-right space-x-1">
+                                <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary" title="Reasignar Ambulancia" onClick={() => handleReassignService(parada.servicioId, parada.paciente.nombre)}>
+                                  <Shuffle className="h-4 w-4" />
+                                </Button>
                                 <Link href={`/request-management/programmed/${parada.servicioId}/edit`} passHref>
                                   <Button variant="ghost" size="icon" className="h-7 w-7 hover:text-primary" title="Editar Servicio">
                                       <Edit2 className="h-4 w-4" />
@@ -479,5 +492,7 @@ export default function LoteDetailPage() {
     </div>
   );
 }
+
+    
 
     

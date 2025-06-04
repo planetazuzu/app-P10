@@ -1,5 +1,5 @@
 
-import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapPin as MapPinIcon, UserX, Waypoints, ListChecks, Unlink, SendHorizonal, Hash, ClipboardList, ListFilter, Edit3, PlusCircle, RefreshCw, Loader2, Eye, AlertTriangle, Info, CalendarDays, ArrowLeft, ListPlus, Edit2, Bell, MapPinned, X as XIcon, ArrowRight, Wrench } from 'lucide-react';
+import { Globe, Ambulance, ShieldCheck, UserCircle, Hospital, Users, Settings, LayoutDashboard, Map, Zap, FileText, MessageSquare, LogOut, ChevronDown, ChevronRight, MapPin as MapPinIcon, UserX, Waypoints, ListChecks, Unlink, SendHorizonal, Hash, ClipboardList, ListFilter, Edit3, PlusCircle, RefreshCw, Loader2, Eye, AlertTriangle, Info, CalendarDays, ArrowLeft, ListPlus, Edit2, Bell, MapPinned, X as XIcon, ArrowRight, Wrench, Shuffle } from 'lucide-react';
 import type { LucideProps } from 'lucide-react';
 import Image from 'next/image';
 
@@ -58,6 +58,9 @@ export const Icons = {
   Close: (props: LucideProps) => <XIcon {...props} />,
   ArrowRight: (props: LucideProps) => <ArrowRight {...props} />,
   Wrench: (props: LucideProps) => <Wrench {...props} />,
+  Shuffle: (props: LucideProps) => <Shuffle {...props} />,
 };
 
 export type IconName = keyof typeof Icons;
+
+    
