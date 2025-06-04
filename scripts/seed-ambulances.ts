@@ -10,28 +10,6 @@ import type { Ambulance, AmbulanceType, AmbulanceStatus } from '../src/types'; /
 // OPCIÓN B: O descomenta la siguiente línea y reemplaza con la ruta a tu archivo de clave de servicio
 // const serviceAccount = require('/ruta/absoluta/a/tu/serviceAccountKey.json');
 
-try {
-  if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
-    admin.initializeApp({
-      credential: admin.credential.applicationDefault(),
-    });
-    console.log("Firebase Admin SDK inicializado con credenciales por defecto (GOOGLE_APPLICATION_CREDENTIALS).");
-  } else {
-    // Descomenta y ajusta si usas la OPCIÓN B:
-    // admin.initializeApp({
-    //   credential: admin.credential.cert(serviceAccount),
-    // });
-    // console.log("Firebase Admin SDK inicializado con archivo de clave de servicio local.");
-    throw new Error("Credenciales de Firebase Admin no configuradas. Define GOOGLE_APPLICATION_CREDENTIALS o configura 'serviceAccount' en el script.");
-  }
-} catch (error: any) {
-  console.error("Error inicializando Firebase Admin SDK:", error.message);
-  console.log("Por favor, asegúrate de tener un archivo de clave de cuenta de servicio válido y de haber configurado las credenciales correctamente.");
-  process.exit(1);
-}
-
-const db = admin.firestore();
-
 const sampleAmbulances: Omit<Ambulance, 'id'>[] = [
   {
     name: "Alfa 101",
@@ -155,7 +133,7 @@ const sampleAmbulances: Omit<Ambulance, 'id'>[] = [
   },
 ];
 
-async function seedAmbulances() {
+async function seedAmbulances(db: admin.firestore.Firestore) {
   const ambulancesCollection = db.collection('ambulances');
   let successfulWrites = 0;
   let failedWrites = 0;
@@ -164,7 +142,6 @@ async function seedAmbulances() {
 
   for (const ambulanceData of sampleAmbulances) {
     try {
-      // Comprobar si ya existe una ambulancia con la misma matrícula para evitar duplicados
       const existingAmbulanceQuery = await ambulancesCollection.where('licensePlate', '==', ambulanceData.licensePlate).limit(1).get();
       if (existingAmbulanceQuery.empty) {
         const docRef = await ambulancesCollection.add(ambulanceData);
@@ -189,12 +166,46 @@ async function seedAmbulances() {
   console.log("--------------------------------------");
 }
 
-seedAmbulances()
-  .then(() => {
-    console.log("Proceso de siembra de ambulancias completado.");
-    process.exit(0);
-  })
-  .catch((error) => {
-    console.error("Error general en el script de siembra:", error);
-    process.exit(1);
-  });
+async function main() {
+  let db: admin.firestore.Firestore;
+
+  try {
+    if (process.env.GOOGLE_APPLICATION_CREDENTIALS) {
+      admin.initializeApp({
+        credential: admin.credential.applicationDefault(),
+      });
+      console.log("Firebase Admin SDK inicializado con credenciales por defecto (GOOGLE_APPLICATION_CREDENTIALS).");
+    } else {
+      // Descomenta y ajusta si usas la OPCIÓN B:
+      // const serviceAccount = require('/ruta/absoluta/a/tu/serviceAccountKey.json');
+      // admin.initializeApp({
+      //   credential: admin.credential.cert(serviceAccount),
+      // });
+      // console.log("Firebase Admin SDK inicializado con archivo de clave de servicio local.");
+      console.error("Credenciales de Firebase Admin no configuradas. Define GOOGLE_APPLICATION_CREDENTIALS o configura 'serviceAccount' en el script. LA SIEMBRA DE DATOS NO SE EJECUTARÁ.");
+      console.log("Por favor, asegúrate de tener un archivo de clave de cuenta de servicio válido y de haber configurado las credenciales correctamente para ejecutar este script.");
+      return; // Salir de la función main si no hay credenciales, en lugar de lanzar un error que podría detener un servidor.
+    }
+    db = admin.firestore();
+  } catch (error: any) {
+    console.error("Error inicializando Firebase Admin SDK:", error.message);
+    process.exit(1); // Salir del script si la inicialización falla.
+  }
+
+  await seedAmbulances(db);
+}
+
+// Solo ejecutar main si este script es ejecutado directamente
+if (require.main === module) {
+  main()
+    .then(() => {
+      console.log("Proceso de siembra de ambulancias completado.");
+      process.exit(0);
+    })
+    .catch((error) => {
+      console.error("Error general en el script de siembra:", error);
+      process.exit(1);
+    });
+} else {
+  // console.log("El script seed-ambulances.ts fue importado, no se ejecutará la siembra automáticamente.");
+}
