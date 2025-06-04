@@ -10,9 +10,8 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@
 import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/icons';
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
-import { getAmbulances, deleteAmbulanceAPI } from '@/lib/ambulance-data'; 
-import { Input } from '@/components/ui/input';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { getAmbulances, deleteAmbulanceAPI } from '@/lib/ambulance-data';
+// Input and Select are no longer directly used here, they are in AmbulanceListFilters
 import { ALL_AMBULANCE_TYPES, ALL_AMBULANCE_STATUSES } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,6 +27,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
+import { AmbulanceListFilters } from '@/components/admin/ambulances/AmbulanceListFilters';
 
 const getAmbulanceTypeLabel = (type: AmbulanceType): string => {
   switch (type) {
@@ -216,36 +216,18 @@ export default function ManageAmbulancesPage() {
         <CardHeader className="p-0 mb-4">
           <CardTitle className="section-title">Listado de Unidades</CardTitle>
           <CardDescription>Ver, editar o eliminar ambulancias del sistema.</CardDescription>
-          <div className="mt-4 flex flex-col sm:flex-row gap-2">
-            <div className="relative flex-grow">
-              <Icons.Search className="absolute left-2.5 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input 
-                type="search"
-                placeholder="Buscar por nombre, matrícula, modelo..."
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-                className="pl-8 w-full"
-              />
-            </div>
-            <Select value={filterType} onValueChange={(value) => setFilterType(value as AmbulanceType | 'all')}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filtrar por tipo" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los Tipos</SelectItem>
-                {ALL_AMBULANCE_TYPES.map(type => <SelectItem key={type} value={type}>{getAmbulanceTypeLabel(type)}</SelectItem>)}
-              </SelectContent>
-            </Select>
-            <Select value={filterStatus} onValueChange={(value) => setFilterStatus(value as AmbulanceStatus | 'all')}>
-              <SelectTrigger className="w-full sm:w-[180px]">
-                <SelectValue placeholder="Filtrar por estado" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="all">Todos los Estados</SelectItem>
-                {ALL_AMBULANCE_STATUSES.map(status => <SelectItem key={status} value={status}>{getAmbulanceStatusLabel(status)}</SelectItem>)}
-              </SelectContent>
-            </Select>
-          </div>
+          <AmbulanceListFilters
+            searchTerm={searchTerm}
+            filterType={filterType}
+            filterStatus={filterStatus}
+            onSearchTermChange={setSearchTerm}
+            onFilterTypeChange={setFilterType}
+            onFilterStatusChange={setFilterStatus}
+            allAmbulanceTypes={ALL_AMBULANCE_TYPES}
+            allAmbulanceStatuses={ALL_AMBULANCE_STATUSES}
+            getAmbulanceTypeLabel={getAmbulanceTypeLabel}
+            getAmbulanceStatusLabel={getAmbulanceStatusLabel}
+          />
         </CardHeader>
         <CardContent className="p-0">
           {filteredAmbulances.length === 0 && !isLoading ? (
@@ -329,3 +311,4 @@ export default function ManageAmbulancesPage() {
     </div>
   );
 }
+
