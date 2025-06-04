@@ -49,6 +49,12 @@ export const navItems: NavItemConfig[] = [
     roles: ['equipoMovil'],
   },
   {
+    title: 'Revisión Vehículo',
+    href: '/driver/vehicle-check',
+    icon: 'Wrench',
+    roles: ['equipoMovil'],
+  },
+  {
     title: 'Administración',
     href: '/admin',
     icon: 'ShieldCheck',
