@@ -6,12 +6,9 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
-import { Badge } from '@/components/ui/badge';
 import { Icons } from '@/components/icons';
 import type { Ambulance, AmbulanceStatus, AmbulanceType } from '@/types';
 import { getAmbulances, deleteAmbulanceAPI } from '@/lib/ambulance-data';
-// Input and Select are no longer directly used here, they are in AmbulanceListFilters
 import { ALL_AMBULANCE_TYPES, ALL_AMBULANCE_STATUSES } from '@/types';
 import { useToast } from '@/hooks/use-toast';
 import { useAuth } from '@/hooks/use-auth';
@@ -28,8 +25,12 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Breadcrumbs } from '@/components/ui/breadcrumbs';
 import { AmbulanceListFilters } from '@/components/admin/ambulances/AmbulanceListFilters';
+import { AmbulanceTable } from '@/components/admin/ambulances/AmbulanceTable'; // Import the new table component
 
-const getAmbulanceTypeLabel = (type: AmbulanceType): string => {
+// Helper functions getAmbulanceTypeLabel & getAmbulanceStatusLabel are now in AmbulanceTable.tsx
+// but kept here as they are also used by AmbulanceListFilters if not passed down.
+// For this example, assume AmbulanceListFilters uses them internally or they are passed.
+const getAmbulanceTypeLabelForFilters = (type: AmbulanceType): string => {
   switch (type) {
     case "SVB": return "SVB";
     case "SVA": return "SVA";
@@ -42,7 +43,7 @@ const getAmbulanceTypeLabel = (type: AmbulanceType): string => {
   }
 };
 
-const getAmbulanceStatusLabel = (status: AmbulanceStatus): string => {
+const getAmbulanceStatusLabelForFilters = (status: AmbulanceStatus): string => {
     switch (status) {
       case "available": return "Disponible";
       case "busy": return "Ocupada";
@@ -52,16 +53,6 @@ const getAmbulanceStatusLabel = (status: AmbulanceStatus): string => {
     }
 };
 
-// Updated status badge classes according to new visual guidelines
-const getStatusBadgeVariantClass = (status: AmbulanceStatus) => {
-    switch (status) {
-        case 'available': return 'bg-green-100 text-green-700'; // Verde claro
-        case 'busy': return 'bg-blue-100 text-blue-700'; // Azul (En ruta)
-        case 'maintenance': return 'bg-yellow-100 text-yellow-800'; // Amarillo alerta
-        case 'unavailable': return 'bg-red-100 text-red-800'; // Rojo suave
-        default: return 'bg-gray-300 text-gray-800'; // Gris (Pendiente)
-    }
-}
 
 export default function ManageAmbulancesPage() {
   const [ambulances, setAmbulances] = useState<Ambulance[]>([]);
@@ -147,7 +138,8 @@ export default function ManageAmbulancesPage() {
     );
   }
 
-  if (isLoading) {
+  // Skeleton loader structure remains similar, but we simplify the table skeleton
+  if (isLoading && ambulances.length === 0) {
     return (
         <div className="rioja-container">
             <div className="flex items-center justify-between mb-6">
@@ -170,16 +162,16 @@ export default function ManageAmbulancesPage() {
                 <CardContent className="p-0">
                     <div className="space-y-3">
                         {[...Array(5)].map((_, i) => (
-                             <TableRow key={i} className="flex items-center space-x-4 p-2">
-                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
-                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
-                                <TableCell className="w-1/12 p-0"><Skeleton className="h-8 w-full" /></TableCell>
-                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
-                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
-                                <TableCell className="w-1/6 p-0"><Skeleton className="h-8 w-full" /></TableCell>
-                                <TableCell className="w-1/12 p-0"><Skeleton className="h-8 w-full" /></TableCell>
-                                <TableCell className="w-1/12 p-0 text-right"><Skeleton className="h-8 w-full" /></TableCell>
-                            </TableRow>
+                             <div key={i} className="flex items-center space-x-4 p-2 border-b">
+                                <div className="w-1/6"><Skeleton className="h-8 w-full" /></div>
+                                <div className="w-1/6"><Skeleton className="h-8 w-full" /></div>
+                                <div className="w-1/12"><Skeleton className="h-8 w-full" /></div>
+                                <div className="w-1/6"><Skeleton className="h-8 w-full" /></div>
+                                <div className="w-1/6"><Skeleton className="h-8 w-full" /></div>
+                                <div className="w-1/6"><Skeleton className="h-8 w-full" /></div>
+                                <div className="w-1/12"><Skeleton className="h-8 w-full" /></div>
+                                <div className="w-1/12 text-right"><Skeleton className="h-8 w-full" /></div>
+                            </div>
                         ))}
                     </div>
                 </CardContent>
@@ -225,69 +217,16 @@ export default function ManageAmbulancesPage() {
             onFilterStatusChange={setFilterStatus}
             allAmbulanceTypes={ALL_AMBULANCE_TYPES}
             allAmbulanceStatuses={ALL_AMBULANCE_STATUSES}
-            getAmbulanceTypeLabel={getAmbulanceTypeLabel}
-            getAmbulanceStatusLabel={getAmbulanceStatusLabel}
+            getAmbulanceTypeLabel={getAmbulanceTypeLabelForFilters}
+            getAmbulanceStatusLabel={getAmbulanceStatusLabelForFilters}
           />
         </CardHeader>
         <CardContent className="p-0">
-          {filteredAmbulances.length === 0 && !isLoading ? (
-            <p className="text-center text-muted-foreground py-8">No se encontraron ambulancias con los filtros actuales.</p>
-          ) : (
-            <div className="rioja-table-responsive-wrapper">
-              <Table className="rioja-table">
-                <TableHeader>
-                  <TableRow>
-                    <TableHead>Nombre</TableHead>
-                    <TableHead>Matrícula</TableHead>
-                    <TableHead>Tipo</TableHead>
-                    <TableHead>Modelo</TableHead>
-                    <TableHead>Base</TableHead>
-                    <TableHead>Ubicación (Lat, Lon)</TableHead>
-                    <TableHead>Estado</TableHead>
-                    <TableHead className="text-right">Acciones</TableHead>
-                  </TableRow>
-                </TableHeader>
-                <TableBody>
-                  {filteredAmbulances.map((ambulance) => (
-                    <TableRow key={ambulance.id}>
-                      <TableCell className="font-medium">{ambulance.name}</TableCell>
-                      <TableCell>{ambulance.licensePlate}</TableCell>
-                      <TableCell>
-                        <Badge variant="secondary" className="whitespace-nowrap bg-opacity-80">{getAmbulanceTypeLabel(ambulance.type)}</Badge>
-                      </TableCell>
-                      <TableCell>{ambulance.model || 'N/A'}</TableCell>
-                      <TableCell>{ambulance.baseLocation}</TableCell>
-                       <TableCell className="text-xs">
-                        {ambulance.latitude && ambulance.longitude ? (
-                          <div className="flex items-center gap-1">
-                            <Icons.MapPin className="h-3 w-3 text-muted-foreground"/> 
-                            {`${ambulance.latitude.toFixed(3)}, ${ambulance.longitude.toFixed(3)}`}
-                          </div>
-                        ) : (
-                          'N/A'
-                        )}
-                      </TableCell>
-                      <TableCell>
-                        <Badge className={`${getStatusBadgeVariantClass(ambulance.status)} text-xs border`}>
-                          {getAmbulanceStatusLabel(ambulance.status)}
-                        </Badge>
-                      </TableCell>
-                      <TableCell className="text-right">
-                        <Link href={`/admin/ambulances/${ambulance.id}/edit`} passHref>
-                          <Button variant="ghost" size="icon" className="hover:text-primary">
-                            <Icons.Edit3 className="h-4 w-4" />
-                          </Button>
-                        </Link>
-                        <Button variant="ghost" size="icon" onClick={() => openDeleteConfirmDialog(ambulance.id, ambulance.name)} className="hover:text-destructive">
-                          <Icons.Trash2 className="h-4 w-4" />
-                        </Button>
-                      </TableCell>
-                    </TableRow>
-                  ))}
-                </TableBody>
-              </Table>
-            </div>
-          )}
+          <AmbulanceTable
+            ambulances={filteredAmbulances}
+            isLoading={isLoading}
+            onDeleteAmbulance={openDeleteConfirmDialog}
+          />
         </CardContent>
       </Card>
 
@@ -311,4 +250,3 @@ export default function ManageAmbulancesPage() {
     </div>
   );
 }
-
