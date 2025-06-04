@@ -15,90 +15,8 @@ import {
   SidebarMenuSubButton,
 } from '@/components/ui/sidebar';
 import React, { useState, useEffect } from 'react';
+import { navItems, type NavItemConfig } from '@/config/navigation'; // Importar desde el nuevo archivo
 
-
-interface NavItem {
-  title: string;
-  href: string;
-  icon: IconName;
-  roles: UserRole[];
-  disabled?: boolean;
-  external?: boolean;
-  label?: string;
-  submenu?: NavItem[];
-  exactMatch?: boolean;
-}
-
-const navItems: NavItem[] = [
-  { title: 'Panel Principal', href: '/dashboard', icon: 'Dashboard', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
-  { title: 'Seguimiento Flota', href: '/ambulance-tracking', icon: 'Map', roles: ['admin', 'centroCoordinador'] },
-  { title: 'Despacho IA', href: '/smart-dispatch', icon: 'SmartDispatch', roles: ['admin', 'centroCoordinador'] },
-  {
-    title: 'Solicitudes',
-    href: '/request-management',
-    icon: 'ListChecks',
-    roles: ['admin', 'hospital', 'individual', 'centroCoordinador'],
-    exactMatch: true, // El padre lleva a la lista principal
-    submenu: [
-        { title: 'Ver Solicitudes', href: '/request-management', icon: 'ListChecks', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'], exactMatch: true },
-        { title: 'Nueva Urgente', href: '/request-management/new', icon: 'AlertTriangle', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
-        { title: 'Nueva Programada', href: '/request-management/new-programmed', icon: 'CalendarDays', roles: ['admin', 'hospital', 'individual', 'centroCoordinador'] },
-        { title: 'Nueva Avanzada', href: '/request-management/new-advanced', icon: 'Settings', roles: ['admin', 'hospital', 'centroCoordinador'] },
-    ]
-  },
-  { title: 'Mensajería', href: '/messages', icon: 'Messages', roles: ['admin', 'hospital', 'individual', 'centroCoordinador', 'equipoMovil'] },
-  {
-    title: 'Mi Ruta Asignada',
-    href: '/driver/batch-view/lote-demo-123', // ID de ejemplo, se podría actualizar dinámicamente
-    icon: 'Waypoints',
-    roles: ['equipoMovil'],
-  },
-  {
-    title: 'Administración',
-    href: '/admin',
-    icon: 'ShieldCheck',
-    roles: ['admin', 'centroCoordinador'],
-    exactMatch: true, // El padre lleva al panel de admin
-    submenu: [
-        { title: 'Panel Admin', href: '/admin', icon: 'ShieldCheck', roles: ['admin', 'centroCoordinador'], exactMatch: true },
-        {
-          title: 'Usuarios',
-          href: '/admin/user-management',
-          icon: 'Users',
-          roles: ['admin', 'centroCoordinador'],
-          exactMatch: true,
-          submenu: [
-            { title: 'Ver Usuarios', href: '/admin/user-management', icon: 'Users', roles: ['admin', 'centroCoordinador'], exactMatch: true },
-            { title: 'Añadir Usuario', href: '/admin/user-management/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
-          ]
-        },
-        {
-          title: 'Ambulancias',
-          href: '/admin/ambulances',
-          icon: 'Ambulance',
-          roles: ['admin', 'centroCoordinador'],
-          exactMatch: true,
-          submenu: [
-            { title: 'Ver Ambulancias', href: '/admin/ambulances', icon: 'Ambulance', roles: ['admin', 'centroCoordinador'], exactMatch: true },
-            { title: 'Añadir Ambulancia', href: '/admin/ambulances/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
-          ]
-        },
-        {
-          title: 'Lotes y Rutas',
-          href: '/admin/lotes',
-          icon: 'Waypoints',
-          roles: ['admin', 'centroCoordinador'],
-          exactMatch: true,
-          submenu: [
-            { title: 'Ver Lotes', href: '/admin/lotes', icon: 'Waypoints', roles: ['admin', 'centroCoordinador'], exactMatch: true },
-            { title: 'Crear Lote', href: '/admin/lotes/new', icon: 'PlusCircle', roles: ['admin', 'centroCoordinador'] },
-            { title: 'Planificar Servicios Prog.', href: '/admin/services-planning', icon: 'CalendarDays', roles: ['admin', 'centroCoordinador'] },
-          ]
-        },
-        { title: 'Configuración', href: '/admin/system-settings', icon: 'Settings', roles: ['admin', 'centroCoordinador'] },
-    ]
-  },
-];
 
 export function SidebarNav() {
   const pathname = usePathname();
@@ -108,7 +26,7 @@ export function SidebarNav() {
 
   useEffect(() => {
     const initialOpen: Record<string, boolean> = {};
-    const checkAndSetOpen = (items: NavItem[], parentPath = '') => {
+    const checkAndSetOpen = (items: NavItemConfig[], parentPath = '') => {
       items.forEach(item => {
         const currentItemPath = item.href;
         if (item.submenu) {
@@ -137,7 +55,7 @@ export function SidebarNav() {
     setOpenMenus(prev => ({ ...prev, [href]: !prev[href] }));
   };
 
-  const renderNavItem = (item: NavItem, isSubmenuItem = false, level = 0): JSX.Element | null => {
+  const renderNavItem = (item: NavItemConfig, isSubmenuItem = false, level = 0): JSX.Element | null => {
     if (!userHasRole(item.roles)) return null;
 
     const Icon = Icons[item.icon];
@@ -145,7 +63,7 @@ export function SidebarNav() {
     let isActive = item.exactMatch ? pathname === item.href : pathname.startsWith(item.href);
     
     if (item.submenu && item.submenu.length > 0 && !isActive) {
-      const isChildActive = (childItems: NavItem[]): boolean => {
+      const isChildActive = (childItems: NavItemConfig[]): boolean => {
         return childItems.some(child => {
           const childIsActiveCurrentLevel = child.exactMatch ? pathname === child.href : pathname.startsWith(child.href);
           if (childIsActiveCurrentLevel) return true;
